@@ -14,7 +14,27 @@
     <link rel="stylesheet" href="assets/css/styles.css" />
   </head>
   <body class="bg-slate-100 text-slate-800">
-    <div class="container mx-auto max-w-4xl p-4 sm:p-6 lg:p-8">
+    <!-- Login Modal -->
+    <div id="login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 bg-opacity-60 hidden">
+      <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm">
+        <h2 class="text-xl font-bold mb-4 text-slate-900">Sign in to CEO Review</h2>
+        <form id="login-form" class="space-y-4">
+          <div>
+            <label for="login-email" class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+            <input id="login-email" type="email" required class="w-full p-2 border border-slate-300 rounded-md" autocomplete="username" />
+          </div>
+          <div>
+            <label for="login-password" class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+            <input id="login-password" type="password" required class="w-full p-2 border border-slate-300 rounded-md" autocomplete="current-password" />
+          </div>
+          <div id="login-error" class="text-red-600 text-sm min-h-[1.5em]"></div>
+          <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition">Sign In</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app-container" class="container mx-auto max-w-4xl p-4 sm:p-6 lg:p-8">
       <header class="mb-8 text-center">
         <h1 class="text-3xl md:text-4xl font-bold text-slate-900">
           REAP Marlborough – CEO Self-Review
@@ -442,7 +462,7 @@
           </div>
         </section>
 
-        <!-- Submission & PDF Export -->
+        <!-- Submission, PDF Export, and Logout -->
         <div class="flex flex-col sm:flex-row justify-end items-center pt-4 space-y-3 sm:space-y-0 sm:space-x-4">
           <span id="save-status" class="text-sm text-slate-500"></span>
           <button type="button" id="save-progress-btn" class="w-full sm:w-auto px-6 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all shadow-md">
@@ -454,11 +474,17 @@
           <button type="submit" class="w-full sm:w-auto px-8 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all shadow-lg print:hidden">
             Submit Review
           </button>
+          <button type="button" id="logout-btn" class="w-full sm:w-auto px-6 py-2 bg-slate-400 text-white font-semibold rounded-lg hover:bg-slate-500 focus:outline-none focus:ring-4 focus:ring-slate-300 transition-all shadow-md ml-2">Log Out</button>
         </div>
       </form>
     </div>
 
   <link rel="stylesheet" href="assets/css/print.css" media="print" />
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase.js" defer></script>
   <script src="assets/js/app.js" defer></script>
   </body>
 </html>

@@ -1,3 +1,92 @@
+// --- Firebase Auth Integration ---
+function showLoginModal(show) {
+  document.getElementById('login-modal').classList.toggle('hidden', !show);
+  document.getElementById('app-container').style.display = show ? 'none' : '';
+}
+
+// Called by firebase.js on auth state change
+window.onFirebaseAuthStateChanged = function(user) {
+  if (user) {
+    showLoginModal(false);
+    // Load review data from Firestore
+    window.firebaseHelpers.loadReviewData(user.uid).then(doc => {
+      if (doc && doc.data) {
+        // Save to localStorage for hydration
+        localStorage.setItem('ceoReviewFormData', JSON.stringify({timestamp: doc.timestamp, data: doc.data}));
+        // Hydrate form
+        loadProgress();
+      }
+    });
+  } else {
+    showLoginModal(true);
+    // Optionally clear form/localStorage on logout
+    // localStorage.removeItem('ceoReviewFormData');
+  }
+};
+
+
+function attachLogoutHandler() {
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn && window.firebaseHelpers && window.firebaseHelpers.logout) {
+    logoutBtn.onclick = function() {
+      window.firebaseHelpers.logout();
+    };
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Login form handler
+  const loginForm = document.getElementById('login-form');
+  if (loginForm) {
+    loginForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      document.getElementById('login-error').textContent = '';
+      if (window.firebaseHelpers && window.firebaseHelpers.loginWithEmail) {
+        window.firebaseHelpers.loginWithEmail(email, password)
+          .catch(err => {
+            document.getElementById('login-error').textContent = err.message;
+          });
+      }
+    });
+  }
+  // Attach logout handler when firebaseHelpers is ready
+  if (window.firebaseHelpers && window.firebaseHelpers.logout) {
+    attachLogoutHandler();
+  } else {
+    // Try again when firebaseHelpers is defined
+    const interval = setInterval(() => {
+      if (window.firebaseHelpers && window.firebaseHelpers.logout) {
+        attachLogoutHandler();
+        clearInterval(interval);
+      }
+    }, 100);
+  }
+  // Save Progress: also save to Firestore if logged in
+  const saveBtn = document.getElementById('save-progress-btn');
+  if (saveBtn) {
+    const origSave = saveProgress;
+    saveBtn.addEventListener('click', function() {
+      origSave();
+      const user = window.firebaseHelpers && window.firebaseHelpers.auth ? window.firebaseHelpers.auth.currentUser : null;
+      if (user) {
+        // Save to Firestore
+        const savedData = localStorage.getItem('ceoReviewFormData');
+        if (savedData) {
+          const parsed = JSON.parse(savedData);
+          window.firebaseHelpers.saveReviewData(user.uid, parsed.data)
+            .then(() => {
+              // Optionally show a cloud save confirmation
+            })
+            .catch(err => {
+              alert('Cloud save failed: ' + err.message);
+            });
+        }
+      }
+    });
+  }
+});
 // PDF export button handler
 document.addEventListener('DOMContentLoaded', () => {
   const pdfBtn = document.getElementById('save-pdf-btn');
