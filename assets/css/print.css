@@ -16,11 +16,14 @@
     background: #fff !important;
     padding: 0 !important;
     max-width: 100% !important;
+    margin: 0 !important;
   }
   section, header, form {
     background: #fff !important;
     box-shadow: none !important;
     border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
   textarea, input, select {
     border: none !important;
@@ -29,11 +32,15 @@
     color: #222 !important;
     resize: none !important;
     outline: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
   textarea, input {
     min-height: 1em !important;
     height: auto !important;
     overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
   /* Remove page breaks inside sections */
   section, .repeater-item {
@@ -41,6 +48,11 @@
   }
   /* Minimise gaps between sections for compact PDF */
   section {
-    margin-bottom: 0.5em !important;
+    margin-bottom: 0.2em !important;
+  }
+  .p-4, .p-6, .p-8, .px-4, .py-2, .py-3, .px-6, .py-6, .mb-8, .mb-6, .mb-4, .mt-2, .mt-3, .mt-4, .mt-6, .mt-8, .mb-2, .mb-1, .mt-1, .mt-0, .mb-0, .space-y-1, .space-y-3, .space-y-4, .space-y-6, .space-y-8, .space-x-2, .space-x-4 {
+    padding: 0 !important;
+    margin: 0 !important;
+    gap: 0 !important;
   }
 }
