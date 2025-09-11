@@ -8,8 +8,8 @@ function showLoginModal(show) {
 window.onFirebaseAuthStateChanged = function(user) {
   if (user) {
     showLoginModal(false);
-    // Load review data from Firestore
-    window.firebaseHelpers.loadReviewData(user.uid).then(doc => {
+    // Load draft data from Firestore
+    window.firebaseHelpers.loadReviewData(user.uid, 'drafts').then(doc => {
       if (doc && doc.data) {
         // Save to localStorage for hydration
         localStorage.setItem('ceoReviewFormData', JSON.stringify({timestamp: doc.timestamp, data: doc.data}));
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }, 100);
   }
-  // Save Progress: also save to Firestore if logged in
+  // Save Progress: also save to Firestore drafts if logged in
   const saveBtn = document.getElementById('save-progress-btn');
   if (saveBtn) {
     const origSave = saveProgress;
@@ -71,11 +71,11 @@ document.addEventListener('DOMContentLoaded', () => {
       origSave();
       const user = window.firebaseHelpers && window.firebaseHelpers.auth ? window.firebaseHelpers.auth.currentUser : null;
       if (user) {
-        // Save to Firestore
+        // Save to Firestore drafts
         const savedData = localStorage.getItem('ceoReviewFormData');
         if (savedData) {
           const parsed = JSON.parse(savedData);
-          window.firebaseHelpers.saveReviewData(user.uid, parsed.data)
+          window.firebaseHelpers.saveReviewData(user.uid, parsed.data, 'drafts')
             .then(() => {
               // Optionally show a cloud save confirmation
             })
@@ -561,8 +561,24 @@ document.addEventListener('DOMContentLoaded', () => {
   if (form) {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
+      saveProgress();
+      // Also save to Firestore submissions if logged in
+      const user = window.firebaseHelpers && window.firebaseHelpers.auth ? window.firebaseHelpers.auth.currentUser : null;
+      if (user) {
+        const savedData = localStorage.getItem('ceoReviewFormData');
+        if (savedData) {
+          const parsed = JSON.parse(savedData);
+          window.firebaseHelpers.saveReviewData(user.uid, parsed.data, 'submissions')
+            .then(() => {
+              alert('Thank you for completing the review. Your responses have been recorded and submitted.');
+            })
+            .catch(err => {
+              alert('Cloud save failed: ' + err.message);
+            });
+          return;
+        }
+      }
       alert('Thank you for completing the review. Your responses have been recorded.');
-      console.log('Submission intercepted – integrate backend POST here.');
     });
   }
 });

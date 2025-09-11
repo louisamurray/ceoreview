@@ -13,9 +13,9 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Helper: get review doc ref for current user
-function getReviewDocRef(uid) {
-  return db.collection('reviews').doc(uid);
+// Helper: get review doc ref for current user and collection
+function getReviewDocRef(uid, collection) {
+  return db.collection(collection).doc(uid);
 }
 
 // Login
@@ -28,18 +28,18 @@ function logout() {
   return auth.signOut();
 }
 
-// Save review data
-function saveReviewData(uid, data) {
-  return getReviewDocRef(uid).set({
+// Save review data to a collection ("drafts" or "submissions")
+function saveReviewData(uid, data, collection) {
+  return getReviewDocRef(uid, collection).set({
     uid,
     timestamp: new Date().toISOString(),
     data
   });
 }
 
-// Load review data
-function loadReviewData(uid) {
-  return getReviewDocRef(uid).get().then(doc => doc.exists ? doc.data() : null);
+// Load review data from a collection
+function loadReviewData(uid, collection) {
+  return getReviewDocRef(uid, collection).get().then(doc => doc.exists ? doc.data() : null);
 }
 
 // Auth state listener
