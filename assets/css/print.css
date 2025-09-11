@@ -33,11 +33,25 @@
     color: #222 !important;
     resize: none !important;
     outline: none !important;
-  }
-  textarea, input {
-    min-height: 1em !important;
+    padding: 0 !important;
+    margin: 0 !important;
     height: auto !important;
-    overflow: visible !important;
+    min-height: 0 !important;
+    line-height: 1.2 !important;
+    font-size: 1em !important;
+    vertical-align: middle !important;
+  }
+  textarea {
+    min-height: 1.2em !important;
+    height: 1.2em !important;
+    max-height: 2.4em !important;
+    overflow: hidden !important;
+  }
+  input[type="text"], select {
+    height: 1.2em !important;
+    min-height: 0 !important;
+    max-height: 1.2em !important;
+    overflow: hidden !important;
   }
   /* Remove page breaks inside sections */
   section, .repeater-item {
