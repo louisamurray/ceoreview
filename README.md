@@ -10,12 +10,13 @@ An interactive, client‑side (no backend) self‑review form for the REAP Marlb
 - Local persistence via `localStorage` (Save Progress button)
 - Minimum enforced future goals (3) with guarded removal
 - Accessible, responsive UI using Tailwind CSS (CDN) + Inter font
-- Lightweight: single HTML file, no build step
+- Lightweight: no build step (static HTML + external CSS/JS assets)
 
 ## Tech Stack
-- HTML5 + vanilla JavaScript
-- Tailwind CSS via CDN (no config required)
+- HTML5 + vanilla JavaScript (single-page app style)
+- Tailwind CSS via CDN (no build pipeline)
 - LocalStorage for offline persistence (data stays in the user’s browser)
+- Simple modular separation: `index.html` (structure), `assets/css/styles.css` (custom styles), `assets/js/app.js` (logic & data)
 
 ## Quick Start
 1. Open `index.html` directly in a modern browser (Chrome, Edge, Firefox, Safari).
@@ -35,9 +36,12 @@ All content is stored under the key `ceoReviewFormData` in `localStorage`:
 Clearing browser storage or using another device/browser will remove access to saved progress.
 
 ## Customisation
-- Add / remove KPI labels: edit the `kpis` array in `index.html`.
-- Adjust strategic priorities, JD areas, or rating descriptions by modifying the corresponding arrays / object.
-- To persist to a server, replace the `submit` handler with a `fetch()` POST containing the assembled structure (see `saveProgress()` for shape).
+- Add / remove KPI labels: edit the `kpis` array in `assets/js/app.js`.
+- Update strategic priorities (`strategicPriorities`) or job description areas (`jdAreas`) in `assets/js/app.js`.
+- Change rating scale text in `ratingDescriptions` (also in `assets/js/app.js`).
+- Adjust minimum required future goals by editing the guard inside `removeFutureGoal()`.
+- To persist to a server: in `assets/js/app.js`, replace the submit handler (inside the `DOMContentLoaded` block) with a `fetch()` POST sending the object produced in `saveProgress()`.
+- To add autosave: attach a debounced wrapper to `input` / `change` events that calls `saveProgress()`.
 
 ## Potential Enhancements
 - Export to PDF / printable summary
@@ -60,6 +64,29 @@ README.md                # Project documentation
 
 If you later modularise templates / components, consider splitting `app.js` into:
 `config.js`, `templates.js`, `persistence.js`, `init.js`.
+
+## Development Workflow
+1. Edit HTML structure in `index.html` (avoid inline scripts/styles to keep separation clean).
+2. Add logic or data arrays in `assets/js/app.js`.
+3. Add or override styles in `assets/css/styles.css` (prefer utility classes first; only add bespoke CSS when utilities are insufficient).
+4. Open the file in the browser and use DevTools for quick iteration.
+5. Commit with conventional short messages (e.g., `feat: add PDF export`, `fix: restore repeater hydration`).
+
+## Troubleshooting
+| Issue | Resolution |
+|-------|------------|
+| Data not loading after refresh | Ensure `localStorage` still contains key `ceoReviewFormData`; if JSON corrupted, clear it and re-enter data. |
+| Buttons unresponsive | Check for console errors—likely a JS syntax error in modified templates. |
+| Styles missing | Confirm the path `assets/css/styles.css` is correct relative to `index.html`. |
+| Old data after changing arrays | Clear `localStorage` so new structure is generated. |
+
+## Planned (Optional) Enhancements
+- Print / PDF export page (CSS print stylesheet or `html2pdf.js`)
+- JSON import/export for portability
+- Field validation + progress indicator
+- Autosave with idle/debounce logic
+- Accessibility refinements (labelling dynamic repeater groups)
+
 
 ## Contributing
 Small, focused PRs welcome. Keep everything self‑contained unless a build system is introduced. Prefer progressive enhancement and no framework unless justified.
