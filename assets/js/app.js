@@ -1,3 +1,12 @@
+// PDF export button handler
+document.addEventListener('DOMContentLoaded', () => {
+  const pdfBtn = document.getElementById('save-pdf-btn');
+  if (pdfBtn) {
+    pdfBtn.addEventListener('click', () => {
+      window.print();
+    });
+  }
+});
 // --- CONFIG DATA ---
 const kpis = [
   "Strategic Leadership",

@@ -1,0 +1,46 @@
+/* Print stylesheet for PDF export */
+@media print {
+  body {
+    background: #fff !important;
+    color: #222 !important;
+  }
+  .print\:hidden, .print\:hidden * {
+    display: none !important;
+  }
+  button, .tooltip, #save-status {
+    display: none !important;
+  }
+  .container {
+    box-shadow: none !important;
+    border: none !important;
+    background: #fff !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+  section, header, form {
+    background: #fff !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  textarea, input, select {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #222 !important;
+    resize: none !important;
+    outline: none !important;
+  }
+  textarea, input {
+    min-height: 1em !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  /* Remove page breaks inside sections */
+  section, .repeater-item {
+    page-break-inside: avoid !important;
+  }
+  /* Add some margin for readability */
+  section {
+    margin-bottom: 2em !important;
+  }
+}

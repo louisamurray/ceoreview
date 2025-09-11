@@ -1,204 +1,464 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>REAP Marlborough – CEO Self-Review</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="assets/css/styles.css" />
-</head>
-<body class="bg-slate-100 text-slate-800">
-
+  </head>
+  <body class="bg-slate-100 text-slate-800">
     <div class="container mx-auto max-w-4xl p-4 sm:p-6 lg:p-8">
-        
-        <header class="mb-8 text-center">
-            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">REAP Marlborough – CEO Self-Review</h1>
-            <p class="mt-2 text-slate-600">A comprehensive review of the past year's performance and a framework for future goals.</p>
-            <div class="mt-6 bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg text-left text-sm">
-                <h3 class="font-bold mb-2">Instructions:</h3>
-                <ul class="list-disc list-inside space-y-1">
-                    <li>Please complete this form at least one week before the review meeting.</li>
-                    <li>Provide clear, specific, and measurable responses. Use bullet points wherever possible.</li>
-                </ul>
-                <h3 class="font-bold mt-4 mb-2">Rating Scale for KPI Table:</h3>
-                <ul class="list-none space-y-1">
-                    <li><strong>5</strong> = Consistently exceeds expectations</li>
-                    <li><strong>4</strong> = Meets and often exceeds expectations</li>
-                    <li><strong>3</strong> = Meets expectations</li>
-                    <li><strong>2</strong> = Partially meets expectations</li>
-                    <li><strong>1</strong> = Unacceptable</li>
-                    <li><strong>0</strong> = Don’t know</li>
-                </ul>
+      <header class="mb-8 text-center">
+        <h1 class="text-3xl md:text-4xl font-bold text-slate-900">
+          REAP Marlborough – CEO Self-Review
+        </h1>
+        <p class="mt-2 text-slate-600">
+          A comprehensive review of the past year's performance and a framework
+          for future goals.
+        </p>
+        <div
+          class="mt-6 bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg text-left text-sm"
+        >
+          <h3 class="font-bold mb-2">Instructions:</h3>
+          <ul class="list-disc list-inside space-y-1">
+            <li>
+              Please complete this form at least one week before the review
+              meeting.
+            </li>
+            <li>
+              Provide clear, specific, and measurable responses. Use bullet
+              points wherever possible.
+            </li>
+          </ul>
+          <h3 class="font-bold mt-4 mb-2">Rating Scale for KPI Table:</h3>
+          <ul class="list-none space-y-1">
+            <li><strong>5</strong> = Consistently exceeds expectations</li>
+            <li><strong>4</strong> = Meets and often exceeds expectations</li>
+            <li><strong>3</strong> = Meets expectations</li>
+            <li><strong>2</strong> = Partially meets expectations</li>
+            <li><strong>1</strong> = Unacceptable</li>
+            <li><strong>0</strong> = Don’t know</li>
+          </ul>
+        </div>
+      </header>
+
+      <form id="reviewForm" class="space-y-10">
+        <!-- Part 1: Performance Reflection -->
+        <section class="bg-white p-6 rounded-lg shadow-md">
+          <div class="flex justify-between items-center border-b pb-3 mb-6">
+            <div class="tooltip">
+              <h2 class="text-2xl font-bold text-slate-900">
+                Part 1: Performance Reflection
+              </h2>
+              <svg
+                class="w-5 h-5 tooltip-icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              <span class="tooltip-text"
+                >Reflect on your successes, challenges, and overall performance
+                over the last 12 months.</span
+              >
             </div>
-        </header>
-        
-        <form id="reviewForm" class="space-y-10">
-
-            <!-- Part 1: Performance Reflection -->
-            <section class="bg-white p-6 rounded-lg shadow-md">
-                <div class="flex justify-between items-center border-b pb-3 mb-6">
-                     <div class="tooltip">
-                        <h2 class="text-2xl font-bold text-slate-900">Part 1: Performance Reflection</h2>
-                        <svg class="w-5 h-5 tooltip-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span class="tooltip-text">Reflect on your successes, challenges, and overall performance over the last 12 months.</span>
-                    </div>
-                </div>
-                <div class="space-y-6">
-                    <div>
-                        <label for="successes" class="block text-sm font-medium text-slate-700 mb-1">1.1. Key Successes & What Went Well</label>
-                        <textarea id="successes" name="successes" rows="4" class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Describe key successes, wins, or positive outcomes..."></textarea>
-                    </div>
-                     <div>
-                        <label for="not-well" class="block text-sm font-medium text-slate-700 mb-1">1.2. What Did Not Go Well</label>
-                        <textarea id="not-well" name="not-well" rows="4" class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Describe areas that fell short and why..."></textarea>
-                    </div>
-                    <div>
-                        <h3 class="text-md font-semibold text-slate-800 mb-2">1.3. Challenges & How They Were Dealt With</h3>
-                        <div id="challenges-container" class="space-y-4"></div>
-                        <button type="button" onclick="addChallenge()" class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition">+ Add Challenge</button>
-                    </div>
-                    <div>
-                        <label for="comparative-reflection" class="block text-sm font-medium text-slate-700 mb-1 tooltip">
-                            1.4. Comparative Reflection
-                            <svg class="w-4 h-4 tooltip-icon inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            <span class="tooltip-text">Compare this year's performance to the previous year. Highlight specific areas of growth or decline.</span>
-                        </label>
-                        <textarea id="comparative-reflection" name="comparative-reflection" rows="4" class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Compared to the previous year, how do you feel about your performance overall? In what areas have you improved? Where do you feel performance has declined or stalled?"></textarea>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Part 2: Review of Previous Goals & KPIs -->
-            <section class="bg-white p-6 rounded-lg shadow-md">
-                 <div class="flex justify-between items-center border-b pb-3 mb-6">
-                    <div class="tooltip">
-                        <h2 class="text-2xl font-bold text-slate-900">Part 2: Review of Previous Goals & KPIs</h2>
-                        <svg class="w-5 h-5 tooltip-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span class="tooltip-text">Assess performance against the goals and Key Performance Indicators (KPIs) set for the last year.</span>
-                    </div>
-                </div>
-                <div class="space-y-8">
-                    <div>
-                        <h3 class="text-md font-semibold text-slate-800 mb-4">2.1. Goals from Last Year</h3>
-                        <div id="last-year-goals-container" class="space-y-6">
-                            <!-- JS will add goals here -->
-                        </div>
-                         <button type="button" onclick="addLastYearGoal()" class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition">+ Add Goal</button>
-                    </div>
-                    <div>
-                        <h3 class="text-md font-semibold text-slate-800 mb-4">2.2. KPI & Competency Ratings</h3>
-                        <div id="kpi-container" class="space-y-6">
-                            <!-- KPIs will be added by JS -->
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- Part 3: Job Description Alignment -->
-            <section class="bg-white p-6 rounded-lg shadow-md">
-                 <div class="flex justify-between items-center border-b pb-3 mb-6">
-                     <div class="tooltip">
-                        <h2 class="text-2xl font-bold text-slate-900">Part 3: Job Description Alignment</h2>
-                        <svg class="w-5 h-5 tooltip-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span class="tooltip-text">Reflect on how your performance aligns with the core responsibilities outlined in your job description.</span>
-                    </div>
-                </div>
-                <div id="jd-alignment-container" class="space-y-6">
-                     <!-- JD areas will be added by JS -->
-                </div>
-            </section>
-
-            <!-- Part 4: Strategic Priorities -->
-            <section class="bg-white p-6 rounded-lg shadow-md">
-                <div class="flex justify-between items-center border-b pb-3 mb-6">
-                    <div class="tooltip">
-                         <h2 class="text-2xl font-bold text-slate-900">Part 4: Strategic Priorities (2022–2024) Review</h2>
-                         <svg class="w-5 h-5 tooltip-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span class="tooltip-text">Evaluate progress against the multi-year strategic goals of the organization.</span>
-                    </div>
-                </div>
-                <div id="strategic-priorities-container" class="space-y-6">
-                    <!-- Strategic priorities will be added by JS -->
-                </div>
-            </section>
-
-            <!-- Part 5: Personal Assessment & Development -->
-            <section class="bg-white p-6 rounded-lg shadow-md">
-                 <div class="flex justify-between items-center border-b pb-3 mb-6">
-                     <div class="tooltip">
-                        <h2 class="text-2xl font-bold text-slate-900">Part 5: Personal Assessment & Development</h2>
-                        <svg class="w-5 h-5 tooltip-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span class="tooltip-text">A self-reflection on personal strengths, limitations, and professional growth over the past year and for the future.</span>
-                    </div>
-                </div>
-                <div class="space-y-6">
-                    <div>
-                        <label for="strengths" class="block text-sm font-medium text-slate-700 mb-1">5.1. Key Strengths</label>
-                        <textarea id="strengths" name="strengths" rows="3" class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="What do you see as your key strengths in your role?"></textarea>
-                    </div>
-                    <div>
-                        <label for="limitations" class="block text-sm font-medium text-slate-700 mb-1">5.2. Limitations / Restrictions</label>
-                        <textarea id="limitations" name="limitations" rows="3" class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="What factors restrict you from being most effective?"></textarea>
-                    </div>
-                    <div>
-                        <h3 class="text-md font-semibold text-slate-800 mb-2">5.3. Professional Development (PD) Undertaken</h3>
-                        <div id="pd-undertaken-container" class="space-y-4"></div>
-                        <button type="button" onclick="addPDUndertaken()" class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition">+ Add PD Programme</button>
-                    </div>
-                    <div>
-                        <h3 class="text-md font-semibold text-slate-800 mb-2">5.4. Future Professional Development Needs</h3>
-                        <div id="pd-needed-container" class="space-y-4"></div>
-                        <button type="button" onclick="addPDNeeded()" class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition">+ Add PD Need</button>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- Part 6: Future Focus -->
-            <section class="bg-white p-6 rounded-lg shadow-md">
-                 <div class="flex justify-between items-center border-b pb-3 mb-6">
-                     <div class="tooltip">
-                        <h2 class="text-2xl font-bold text-slate-900">Part 6: Future Focus (Next 12 Months)</h2>
-                        <svg class="w-5 h-5 tooltip-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span class="tooltip-text">Define clear, actionable goals for the upcoming 12-month period.</span>
-                    </div>
-                </div>
-                 <div>
-                    <h3 class="text-md font-semibold text-slate-800 mb-2">Goals for the Next 12 Months</h3>
-                    <div id="future-goals-container" class="space-y-4"></div>
-                    <button type="button" onclick="addFutureGoal()" class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition">+ Add Goal</button>
-                </div>
-            </section>
-
-            <!-- Part 7: Dialogue with the Board -->
-            <section class="bg-white p-6 rounded-lg shadow-md">
-                 <div class="flex justify-between items-center border-b pb-3 mb-6">
-                     <div class="tooltip">
-                        <h2 class="text-2xl font-bold text-slate-900">Part 7: Dialogue with the Board</h2>
-                         <svg class="w-5 h-5 tooltip-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span class="tooltip-text">Use this section to communicate specific needs or requests directly to the board.</span>
-                    </div>
-                </div>
-                 <div>
-                    <h3 class="text-md font-semibold text-slate-800 mb-2">Requests for the Board</h3>
-                    <div id="board-requests-container" class="space-y-4"></div>
-                    <button type="button" onclick="addBoardRequest()" class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition">+ Add Request</button>
-                </div>
-            </section>
-
-            <!-- Submission -->
-            <div class="flex flex-col sm:flex-row justify-end items-center pt-4 space-y-3 sm:space-y-0 sm:space-x-4">
-                <span id="save-status" class="text-sm text-slate-500"></span>
-                <button type="button" id="save-progress-btn" class="w-full sm:w-auto px-6 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all shadow-md">Save Progress</button>
-                <button type="submit" class="w-full sm:w-auto px-8 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all shadow-lg">Submit Review</button>
+          </div>
+          <div class="space-y-6">
+            <div>
+              <label
+                for="successes"
+                class="block text-sm font-medium text-slate-700 mb-1"
+                >1.1. Key Successes & What Went Well</label
+              >
+              <textarea
+                id="successes"
+                name="successes"
+                rows="4"
+                class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                placeholder="Describe key successes, wins, or positive outcomes..."
+              ></textarea>
             </div>
-        </form>
+            <div>
+              <label
+                for="not-well"
+                class="block text-sm font-medium text-slate-700 mb-1"
+                >1.2. What Did Not Go Well</label
+              >
+              <textarea
+                id="not-well"
+                name="not-well"
+                rows="4"
+                class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                placeholder="Describe areas that fell short and why..."
+              ></textarea>
+            </div>
+            <div>
+              <h3 class="text-md font-semibold text-slate-800 mb-2">
+                1.3. Challenges & How They Were Dealt With
+              </h3>
+              <div id="challenges-container" class="space-y-4"></div>
+              <button
+                type="button"
+                onclick="addChallenge()"
+                class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition"
+              >
+                + Add Challenge
+              </button>
+            </div>
+            <div>
+              <label
+                for="comparative-reflection"
+                class="block text-sm font-medium text-slate-700 mb-1 tooltip"
+              >
+                1.4. Comparative Reflection
+                <svg
+                  class="w-4 h-4 tooltip-icon inline"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
+                <span class="tooltip-text"
+                  >Compare this year's performance to the previous year.
+                  Highlight specific areas of growth or decline.</span
+                >
+              </label>
+              <textarea
+                id="comparative-reflection"
+                name="comparative-reflection"
+                rows="4"
+                class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                placeholder="Compared to the previous year, how do you feel about your performance overall? In what areas have you improved? Where do you feel performance has declined or stalled?"
+              ></textarea>
+            </div>
+          </div>
+        </section>
 
+        <!-- Part 2: Review of Previous Goals & KPIs -->
+        <section class="bg-white p-6 rounded-lg shadow-md">
+          <div class="flex justify-between items-center border-b pb-3 mb-6">
+            <div class="tooltip">
+              <h2 class="text-2xl font-bold text-slate-900">
+                Part 2: Review of Previous Goals & KPIs
+              </h2>
+              <svg
+                class="w-5 h-5 tooltip-icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              <span class="tooltip-text"
+                >Assess performance against the goals and Key Performance
+                Indicators (KPIs) set for the last year.</span
+              >
+            </div>
+          </div>
+          <div class="space-y-8">
+            <div>
+              <h3 class="text-md font-semibold text-slate-800 mb-4">
+                2.1. Goals from Last Year
+              </h3>
+              <div id="last-year-goals-container" class="space-y-6">
+                <!-- JS will add goals here -->
+              </div>
+              <button
+                type="button"
+                onclick="addLastYearGoal()"
+                class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition"
+              >
+                + Add Goal
+              </button>
+            </div>
+            <div>
+              <h3 class="text-md font-semibold text-slate-800 mb-4">
+                2.2. KPI & Competency Ratings
+              </h3>
+              <div id="kpi-container" class="space-y-6">
+                <!-- KPIs will be added by JS -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Part 3: Job Description Alignment -->
+        <section class="bg-white p-6 rounded-lg shadow-md">
+          <div class="flex justify-between items-center border-b pb-3 mb-6">
+            <div class="tooltip">
+              <h2 class="text-2xl font-bold text-slate-900">
+                Part 3: Job Description Alignment
+              </h2>
+              <svg
+                class="w-5 h-5 tooltip-icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              <span class="tooltip-text"
+                >Reflect on how your performance aligns with the core
+                responsibilities outlined in your job description.</span
+              >
+            </div>
+          </div>
+          <div id="jd-alignment-container" class="space-y-6">
+            <!-- JD areas will be added by JS -->
+          </div>
+        </section>
+
+        <!-- Part 4: Strategic Priorities -->
+        <section class="bg-white p-6 rounded-lg shadow-md">
+          <div class="flex justify-between items-center border-b pb-3 mb-6">
+            <div class="tooltip">
+              <h2 class="text-2xl font-bold text-slate-900">
+                Part 4: Strategic Priorities (2022–2024) Review
+              </h2>
+              <svg
+                class="w-5 h-5 tooltip-icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              <span class="tooltip-text"
+                >Evaluate progress against the multi-year strategic goals of the
+                organization.</span
+              >
+            </div>
+          </div>
+          <div id="strategic-priorities-container" class="space-y-6">
+            <!-- Strategic priorities will be added by JS -->
+          </div>
+        </section>
+
+        <!-- Part 5: Personal Assessment & Development -->
+        <section class="bg-white p-6 rounded-lg shadow-md">
+          <div class="flex justify-between items-center border-b pb-3 mb-6">
+            <div class="tooltip">
+              <h2 class="text-2xl font-bold text-slate-900">
+                Part 5: Personal Assessment & Development
+              </h2>
+              <svg
+                class="w-5 h-5 tooltip-icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              <span class="tooltip-text"
+                >A self-reflection on personal strengths, limitations, and
+                professional growth over the past year and for the future.</span
+              >
+            </div>
+          </div>
+          <div class="space-y-6">
+            <div>
+              <label
+                for="strengths"
+                class="block text-sm font-medium text-slate-700 mb-1"
+                >5.1. Key Strengths</label
+              >
+              <textarea
+                id="strengths"
+                name="strengths"
+                rows="3"
+                class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                placeholder="What do you see as your key strengths in your role?"
+              ></textarea>
+            </div>
+            <div>
+              <label
+                for="limitations"
+                class="block text-sm font-medium text-slate-700 mb-1"
+                >5.2. Limitations / Restrictions</label
+              >
+              <textarea
+                id="limitations"
+                name="limitations"
+                rows="3"
+                class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                placeholder="What factors restrict you from being most effective?"
+              ></textarea>
+            </div>
+            <div>
+              <h3 class="text-md font-semibold text-slate-800 mb-2">
+                5.3. Professional Development (PD) Undertaken
+              </h3>
+              <div id="pd-undertaken-container" class="space-y-4"></div>
+              <button
+                type="button"
+                onclick="addPDUndertaken()"
+                class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition"
+              >
+                + Add PD Programme
+              </button>
+            </div>
+            <div>
+              <h3 class="text-md font-semibold text-slate-800 mb-2">
+                5.4. Future Professional Development Needs
+              </h3>
+              <div id="pd-needed-container" class="space-y-4"></div>
+              <button
+                type="button"
+                onclick="addPDNeeded()"
+                class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition"
+              >
+                + Add PD Need
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Part 6: Future Focus -->
+        <section class="bg-white p-6 rounded-lg shadow-md">
+          <div class="flex justify-between items-center border-b pb-3 mb-6">
+            <div class="tooltip">
+              <h2 class="text-2xl font-bold text-slate-900">
+                Part 6: Future Focus (Next 12 Months)
+              </h2>
+              <svg
+                class="w-5 h-5 tooltip-icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              <span class="tooltip-text"
+                >Define clear, actionable goals for the upcoming 12-month
+                period.</span
+              >
+            </div>
+          </div>
+          <div>
+            <h3 class="text-md font-semibold text-slate-800 mb-2">
+              Goals for the Next 12 Months
+            </h3>
+            <div id="future-goals-container" class="space-y-4"></div>
+            <button
+              type="button"
+              onclick="addFutureGoal()"
+              class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition"
+            >
+              + Add Goal
+            </button>
+          </div>
+        </section>
+
+        <!-- Part 7: Dialogue with the Board -->
+        <section class="bg-white p-6 rounded-lg shadow-md">
+          <div class="flex justify-between items-center border-b pb-3 mb-6">
+            <div class="tooltip">
+              <h2 class="text-2xl font-bold text-slate-900">
+                Part 7: Dialogue with the Board
+              </h2>
+              <svg
+                class="w-5 h-5 tooltip-icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              <span class="tooltip-text"
+                >Use this section to communicate specific needs or requests
+                directly to the board.</span
+              >
+            </div>
+          </div>
+          <div>
+            <h3 class="text-md font-semibold text-slate-800 mb-2">
+              Requests for the Board
+            </h3>
+            <div id="board-requests-container" class="space-y-4"></div>
+            <button
+              type="button"
+              onclick="addBoardRequest()"
+              class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition"
+            >
+              + Add Request
+            </button>
+          </div>
+        </section>
+
+        <!-- Submission & PDF Export -->
+        <div class="flex flex-col sm:flex-row justify-end items-center pt-4 space-y-3 sm:space-y-0 sm:space-x-4">
+          <span id="save-status" class="text-sm text-slate-500"></span>
+          <button type="button" id="save-progress-btn" class="w-full sm:w-auto px-6 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all shadow-md">
+            Save Progress
+          </button>
+          <button type="button" id="save-pdf-btn" class="w-full sm:w-auto px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition-all shadow-md print:hidden">
+            Save as PDF
+          </button>
+          <button type="submit" class="w-full sm:w-auto px-8 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all shadow-lg print:hidden">
+            Submit Review
+          </button>
+        </div>
+      </form>
     </div>
 
-    <script src="assets/js/app.js" defer></script>
-</body>
+  <link rel="stylesheet" href="assets/css/print.css" media="print" />
+  <script src="assets/js/app.js" defer></script>
+  </body>
 </html>
-
