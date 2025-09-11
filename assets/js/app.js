@@ -123,6 +123,25 @@ window.onFirebaseAuthStateChanged = function(user) {
 };
 
 // --- Initialise Form App ---
+// --- Hydrate Form from LocalStorage ---
+function loadProgress() {
+  const savedDataJSON = localStorage.getItem(STORAGE_KEY);
+  if (!savedDataJSON) return;
+  let savedData;
+  try {
+    savedData = JSON.parse(savedDataJSON);
+  } catch (e) {
+    alert('Saved progress could not be loaded due to a data error. The form will start fresh.');
+    localStorage.removeItem(STORAGE_KEY);
+    return;
+  }
+  const formData = savedData.data;
+  for (const id in formData.simple) {
+    const el = document.getElementById(id);
+    if (el) el.value = formData.simple[id];
+  }
+  // Add more hydration logic here if you have repeaters, KPIs, etc.
+}
 document.addEventListener('DOMContentLoaded', () => {
   attachLogoutHandler();
 
