@@ -33,6 +33,7 @@ function logout() {
 // Save review data
 function saveReviewData(uid, data) {
   return getReviewDocRef(uid).set({
+    uid,
     timestamp: new Date().toISOString(),
     data
   });
