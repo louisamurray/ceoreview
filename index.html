@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REAP Marlborough – CEO Self-Review</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Simple animation for new sections */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .new-item {
+            animation: fadeIn 0.3s ease-out;
+        }
+        .modal-hidden {
+            display: none;
+        }
+        .loader {
+            border-top-color: #3498db;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            cursor: help;
+        }
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 240px;
+            background-color: #334155; /* slate-700 */
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 10;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+            font-weight: 400;
+            line-height: 1.4;
+            pointer-events: none;
+        }
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        .tooltip-icon {
+            margin-left: 6px;
+            color: #94a3b8; /* slate-400 */
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+    <div class="container mx-auto max-w-4xl p-4 sm:p-6 lg:p-8">
+        
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">REAP Marlborough – CEO Self-Review</h1>
+            <p class="mt-2 text-slate-600">A comprehensive review of the past year's performance and a framework for future goals.</p>
+            <div class="mt-6 bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg text-left text-sm">
+                <h3 class="font-bold mb-2">Instructions:</h3>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>Please complete this form at least one week before the review meeting.</li>
+                    <li>Provide clear, specific, and measurable responses. Use bullet points wherever possible.</li>
+                </ul>
+                <h3 class="font-bold mt-4 mb-2">Rating Scale for KPI Table:</h3>
+                <ul class="list-none space-y-1">
+                    <li><strong>5</strong> = Consistently exceeds expectations</li>
+                    <li><strong>4</strong> = Meets and often exceeds expectations</li>
+                    <li><strong>3</strong> = Meets expectations</li>
+                    <li><strong>2</strong> = Partially meets expectations</li>
+                    <li><strong>1</strong> = Unacceptable</li>
+                    <li><strong>0</strong> = Don’t know</li>
+                </ul>
+            </div>
+        </header>
+        
+        <form id="reviewForm" class="space-y-10">
+
+            <!-- Part 1: Performance Reflection -->
+            <section class="bg-white p-6 rounded-lg shadow-md">
+                <div class="flex justify-between items-center border-b pb-3 mb-6">
+                     <div class="tooltip">
+                        <h2 class="text-2xl font-bold text-slate-900">Part 1: Performance Reflection</h2>
+                        <svg class="w-5 h-5 tooltip-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="tooltip-text">Reflect on your successes, challenges, and overall performance over the last 12 months.</span>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <div>
+                        <label for="successes" class="block text-sm font-medium text-slate-700 mb-1">1.1. Key Successes & What Went Well</label>
+                        <textarea id="successes" name="successes" rows="4" class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Describe key successes, wins, or positive outcomes..."></textarea>
+                    </div>
+                     <div>
+                        <label for="not-well" class="block text-sm font-medium text-slate-700 mb-1">1.2. What Did Not Go Well</label>
+                        <textarea id="not-well" name="not-well" rows="4" class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Describe areas that fell short and why..."></textarea>
+                    </div>
+                    <div>
+                        <h3 class="text-md font-semibold text-slate-800 mb-2">1.3. Challenges & How They Were Dealt With</h3>
+                        <div id="challenges-container" class="space-y-4"></div>
+                        <button type="button" onclick="addChallenge()" class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition">+ Add Challenge</button>
+                    </div>
+                    <div>
+                        <label for="comparative-reflection" class="block text-sm font-medium text-slate-700 mb-1 tooltip">
+                            1.4. Comparative Reflection
+                            <svg class="w-4 h-4 tooltip-icon inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span class="tooltip-text">Compare this year's performance to the previous year. Highlight specific areas of growth or decline.</span>
+                        </label>
+                        <textarea id="comparative-reflection" name="comparative-reflection" rows="4" class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Compared to the previous year, how do you feel about your performance overall? In what areas have you improved? Where do you feel performance has declined or stalled?"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Part 2: Review of Previous Goals & KPIs -->
+            <section class="bg-white p-6 rounded-lg shadow-md">
+                 <div class="flex justify-between items-center border-b pb-3 mb-6">
+                    <div class="tooltip">
+                        <h2 class="text-2xl font-bold text-slate-900">Part 2: Review of Previous Goals & KPIs</h2>
+                        <svg class="w-5 h-5 tooltip-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="tooltip-text">Assess performance against the goals and Key Performance Indicators (KPIs) set for the last year.</span>
+                    </div>
+                </div>
+                <div class="space-y-8">
+                    <div>
+                        <h3 class="text-md font-semibold text-slate-800 mb-4">2.1. Goals from Last Year</h3>
+                        <div id="last-year-goals-container" class="space-y-6">
+                            <!-- JS will add goals here -->
+                        </div>
+                         <button type="button" onclick="addLastYearGoal()" class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition">+ Add Goal</button>
+                    </div>
+                    <div>
+                        <h3 class="text-md font-semibold text-slate-800 mb-4">2.2. KPI & Competency Ratings</h3>
+                        <div id="kpi-container" class="space-y-6">
+                            <!-- KPIs will be added by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Part 3: Job Description Alignment -->
+            <section class="bg-white p-6 rounded-lg shadow-md">
+                 <div class="flex justify-between items-center border-b pb-3 mb-6">
+                     <div class="tooltip">
+                        <h2 class="text-2xl font-bold text-slate-900">Part 3: Job Description Alignment</h2>
+                        <svg class="w-5 h-5 tooltip-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="tooltip-text">Reflect on how your performance aligns with the core responsibilities outlined in your job description.</span>
+                    </div>
+                </div>
+                <div id="jd-alignment-container" class="space-y-6">
+                     <!-- JD areas will be added by JS -->
+                </div>
+            </section>
+
+            <!-- Part 4: Strategic Priorities -->
+            <section class="bg-white p-6 rounded-lg shadow-md">
+                <div class="flex justify-between items-center border-b pb-3 mb-6">
+                    <div class="tooltip">
+                         <h2 class="text-2xl font-bold text-slate-900">Part 4: Strategic Priorities (2022–2024) Review</h2>
+                         <svg class="w-5 h-5 tooltip-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="tooltip-text">Evaluate progress against the multi-year strategic goals of the organization.</span>
+                    </div>
+                </div>
+                <div id="strategic-priorities-container" class="space-y-6">
+                    <!-- Strategic priorities will be added by JS -->
+                </div>
+            </section>
+
+            <!-- Part 5: Personal Assessment & Development -->
+            <section class="bg-white p-6 rounded-lg shadow-md">
+                 <div class="flex justify-between items-center border-b pb-3 mb-6">
+                     <div class="tooltip">
+                        <h2 class="text-2xl font-bold text-slate-900">Part 5: Personal Assessment & Development</h2>
+                        <svg class="w-5 h-5 tooltip-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="tooltip-text">A self-reflection on personal strengths, limitations, and professional growth over the past year and for the future.</span>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <div>
+                        <label for="strengths" class="block text-sm font-medium text-slate-700 mb-1">5.1. Key Strengths</label>
+                        <textarea id="strengths" name="strengths" rows="3" class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="What do you see as your key strengths in your role?"></textarea>
+                    </div>
+                    <div>
+                        <label for="limitations" class="block text-sm font-medium text-slate-700 mb-1">5.2. Limitations / Restrictions</label>
+                        <textarea id="limitations" name="limitations" rows="3" class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="What factors restrict you from being most effective?"></textarea>
+                    </div>
+                    <div>
+                        <h3 class="text-md font-semibold text-slate-800 mb-2">5.3. Professional Development (PD) Undertaken</h3>
+                        <div id="pd-undertaken-container" class="space-y-4"></div>
+                        <button type="button" onclick="addPDUndertaken()" class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition">+ Add PD Programme</button>
+                    </div>
+                    <div>
+                        <h3 class="text-md font-semibold text-slate-800 mb-2">5.4. Future Professional Development Needs</h3>
+                        <div id="pd-needed-container" class="space-y-4"></div>
+                        <button type="button" onclick="addPDNeeded()" class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition">+ Add PD Need</button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Part 6: Future Focus -->
+            <section class="bg-white p-6 rounded-lg shadow-md">
+                 <div class="flex justify-between items-center border-b pb-3 mb-6">
+                     <div class="tooltip">
+                        <h2 class="text-2xl font-bold text-slate-900">Part 6: Future Focus (Next 12 Months)</h2>
+                        <svg class="w-5 h-5 tooltip-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="tooltip-text">Define clear, actionable goals for the upcoming 12-month period.</span>
+                    </div>
+                </div>
+                 <div>
+                    <h3 class="text-md font-semibold text-slate-800 mb-2">Goals for the Next 12 Months</h3>
+                    <div id="future-goals-container" class="space-y-4"></div>
+                    <button type="button" onclick="addFutureGoal()" class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition">+ Add Goal</button>
+                </div>
+            </section>
+
+            <!-- Part 7: Dialogue with the Board -->
+            <section class="bg-white p-6 rounded-lg shadow-md">
+                 <div class="flex justify-between items-center border-b pb-3 mb-6">
+                     <div class="tooltip">
+                        <h2 class="text-2xl font-bold text-slate-900">Part 7: Dialogue with the Board</h2>
+                         <svg class="w-5 h-5 tooltip-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="tooltip-text">Use this section to communicate specific needs or requests directly to the board.</span>
+                    </div>
+                </div>
+                 <div>
+                    <h3 class="text-md font-semibold text-slate-800 mb-2">Requests for the Board</h3>
+                    <div id="board-requests-container" class="space-y-4"></div>
+                    <button type="button" onclick="addBoardRequest()" class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition">+ Add Request</button>
+                </div>
+            </section>
+
+            <!-- Submission -->
+            <div class="flex flex-col sm:flex-row justify-end items-center pt-4 space-y-3 sm:space-y-0 sm:space-x-4">
+                <span id="save-status" class="text-sm text-slate-500"></span>
+                <button type="button" id="save-progress-btn" class="w-full sm:w-auto px-6 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all shadow-md">Save Progress</button>
+                <button type="submit" class="w-full sm:w-auto px-8 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all shadow-lg">Submit Review</button>
+            </div>
+        </form>
+
+    </div>
+
+    <script>
+        // --- DATA ---
+        const kpis = [
+            'Strategic Leadership', 'Organisational Performance', 'Financial Stewardship', 
+            'Stakeholder Engagement', 'People Leadership & Culture', 'Conflict Resolution', 
+            'Financial Resilience', 'Board–CEO Communication', 'Values Alignment'
+        ];
+
+        const strategicPriorities = [
+            'Strengthen Iwi relationships', 'Increase trusted relationships & social cohesion',
+            'Contribute to intergenerational wellbeing', 'Operate a positive & professional organisation'
+        ];
+
+        const jdAreas = [
+            'Strategic Leadership', 'People & Resources', 'Partnerships', 
+            'Growth Opportunities', 'Accountability', 'Team & Culture'
+        ];
+        
+        const ratingDescriptions = {
+            5: 'Consistently exceeds expectations',
+            4: 'Meets and often exceeds expectations',
+            3: 'Meets expectations',
+            2: 'Partially meets expectations',
+            1: 'Unacceptable',
+            0: 'Don’t know'
+        };
+
+        const STORAGE_KEY = 'ceoReviewFormData';
+
+        // --- UTILITY FUNCTIONS ---
+        // Generic function to add a repeatable item
+        function addItem(containerId, templateFunction) {
+            const container = document.getElementById(containerId);
+            const itemCount = container.children.length;
+            const newItem = document.createElement('div');
+            newItem.className = 'new-item';
+            newItem.innerHTML = templateFunction(itemCount);
+            container.appendChild(newItem);
+            return newItem;
+        }
+
+        // Generic function to remove a repeatable item
+        function removeItem(button) {
+            button.closest('.repeater-item').remove();
+        }
+
+        // --- TEMPLATE FUNCTIONS ---
+        const challengeTemplate = (index) => `
+            <div class="repeater-item p-4 border border-slate-200 rounded-md space-y-3 bg-slate-50">
+                <div class="flex justify-between items-center">
+                    <p class="font-semibold text-slate-600">Challenge #${index + 1}</p>
+                    <button type="button" onclick="removeItem(this)" class="px-2 py-1 text-xs font-medium text-red-600 bg-red-100 rounded hover:bg-red-200">&times; Remove</button>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Challenge</label>
+                    <textarea data-field="challenge" rows="2" class="w-full p-2 border border-slate-300 rounded-md" placeholder="Describe the challenge..."></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Action Taken</label>
+                    <textarea data-field="action" rows="2" class="w-full p-2 border border-slate-300 rounded-md" placeholder="What action was taken?"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Result</label>
+                    <textarea data-field="result" rows="2" class="w-full p-2 border border-slate-300 rounded-md" placeholder="What was the outcome?"></textarea>
+                </div>
+            </div>`;
+
+        const lastYearGoalTemplate = (index) => `
+            <div class="repeater-item p-4 border border-slate-200 rounded-md space-y-3 bg-slate-50">
+                 <div class="flex justify-between items-center">
+                    <p class="font-semibold text-slate-600">Goal from Last Year #${index + 1}</p>
+                    <button type="button" onclick="removeItem(this)" class="px-2 py-1 text-xs font-medium text-red-600 bg-red-100 rounded hover:bg-red-200">&times; Remove</button>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Goal</label>
+                    <input type="text" data-field="goal" class="w-full p-2 border border-slate-300 rounded-md" placeholder="Enter the goal statement...">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Status</label>
+                    <select data-field="status" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                        <option>Achieved</option>
+                        <option>Partially Achieved</option>
+                        <option>Not Achieved</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Evidence / Examples</label>
+                    <textarea data-field="evidence" rows="3" class="w-full p-2 border border-slate-300 rounded-md" placeholder="Provide supporting evidence..."></textarea>
+                </div>
+            </div>`;
+
+        const pdUndertakenTemplate = (index) => `
+            <div class="repeater-item p-4 border border-slate-200 rounded-md space-y-3 bg-slate-50">
+                <div class="flex justify-between items-center">
+                    <p class="font-semibold text-slate-600">Programme/Course #${index + 1}</p>
+                    <button type="button" onclick="removeItem(this)" class="px-2 py-1 text-xs font-medium text-red-600 bg-red-100 rounded hover:bg-red-200">&times; Remove</button>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Programme/Course Title</label>
+                    <input type="text" data-field="title" class="w-full p-2 border border-slate-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Key Learnings</label>
+                    <textarea data-field="learnings" rows="2" class="w-full p-2 border border-slate-300 rounded-md"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">How Learnings Were Applied</label>
+                    <textarea data-field="applied" rows="2" class="w-full p-2 border border-slate-300 rounded-md"></textarea>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                     <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Was This Requested Previously?</label>
+                        <select data-field="requested" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                            <option>No</option>
+                            <option>Yes</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Usefulness vs Last Year</label>
+                        <select data-field="usefulness" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                            <option>More Useful</option>
+                            <option>Same</option>
+                            <option>Less Useful</option>
+                        </select>
+                    </div>
+                </div>
+            </div>`;
+        
+        const pdNeededTemplate = (index) => `
+             <div class="repeater-item p-4 border border-slate-200 rounded-md space-y-3 bg-slate-50">
+                <div class="flex justify-between items-center">
+                    <p class="font-semibold text-slate-600">Development Need #${index + 1}</p>
+                    <button type="button" onclick="removeItem(this)" class="px-2 py-1 text-xs font-medium text-red-600 bg-red-100 rounded hover:bg-red-200">&times; Remove</button>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Area of Need</label>
+                    <input type="text" data-field="area" name="area-of-need" class="w-full p-2 border border-slate-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Expected Impact</label>
+                    <textarea data-field="impact" name="expected-impact" rows="2" class="w-full p-2 border border-slate-300 rounded-md" placeholder="Describe the expected impact of this PD..."></textarea>
+                </div>
+            </div>`;
+            
+        const futureGoalTemplate = (index) => `
+             <div class="repeater-item p-4 border border-slate-200 rounded-md space-y-3 bg-slate-50">
+                <div class="flex justify-between items-center">
+                    <p class="font-semibold text-slate-600">Future Goal #${index + 1}</p>
+                    <button type="button" onclick="removeFutureGoal(this)" class="px-2 py-1 text-xs font-medium text-red-600 bg-red-100 rounded hover:bg-red-200">&times; Remove</button>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Goal Statement</label>
+                    <input type="text" data-field="statement" name="goal-statement" class="w-full p-2 border border-slate-300 rounded-md" placeholder="Enter the goal statement...">
+                </div>
+                 <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Desired Outcome</label>
+                    <textarea data-field="outcome" name="desired-outcome" rows="2" class="w-full p-2 border border-slate-300 rounded-md" placeholder="What will success look like?"></textarea>
+                </div>
+                 <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Why It Matters (Alignment to strategic priorities)</label>
+                    <textarea data-field="matters" name="why-it-matters" rows="2" class="w-full p-2 border border-slate-300 rounded-md" placeholder="How does this align with strategic priorities?"></textarea>
+                </div>
+            </div>`;
+
+        const boardRequestTemplate = (index) => `
+             <div class="repeater-item p-4 border border-slate-200 rounded-md space-y-3 bg-slate-50">
+                <div class="flex justify-between items-center">
+                    <p class="font-semibold text-slate-600">Board Request #${index + 1}</p>
+                    <button type="button" onclick="removeItem(this)" class="px-2 py-1 text-xs font-medium text-red-600 bg-red-100 rounded hover:bg-red-200">&times; Remove</button>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Request</label>
+                    <textarea data-field="request" rows="2" class="w-full p-2 border border-slate-300 rounded-md"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Why is this needed?</label>
+                    <textarea data-field="needed" rows="2" class="w-full p-2 border border-slate-300 rounded-md"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Was this requested previously?</label>
+                     <select data-field="previously_requested" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                        <option>No</option>
+                        <option>Yes</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">If Yes, what has changed since last year?</label>
+                    <textarea data-field="changed" rows="2" class="w-full p-2 border border-slate-300 rounded-md" placeholder="e.g., Still not in place, workload pressure continues..."></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Expected Impact</label>
+                    <textarea data-field="impact" rows="2" class="w-full p-2 border border-slate-300 rounded-md"></textarea>
+                </div>
+            </div>`;
+
+
+        // --- ADD ITEM FUNCTION CALLS ---
+        const addChallenge = () => addItem('challenges-container', challengeTemplate);
+        const addLastYearGoal = () => addItem('last-year-goals-container', lastYearGoalTemplate);
+        const addPDUndertaken = () => addItem('pd-undertaken-container', pdUndertakenTemplate);
+        const addPDNeeded = () => addItem('pd-needed-container', pdNeededTemplate);
+        const addFutureGoal = () => addItem('future-goals-container', futureGoalTemplate);
+        const addBoardRequest = () => addItem('board-requests-container', boardRequestTemplate);
+
+        // --- CUSTOM REMOVE FUNCTIONS ---
+        function removeFutureGoal(button) {
+            const container = document.getElementById('future-goals-container');
+            if (container.children.length > 3) {
+                removeItem(button);
+            } else {
+                alert('A minimum of 3 goals is required.');
+            }
+        }
+
+        // --- SAVE & LOAD FUNCTIONS ---
+        function saveProgress() {
+            const formData = {
+                simple: {},
+                repeaters: {},
+                kpis: [],
+                priorities: [],
+                jdAlignment: []
+            };
+
+            // Save simple text fields
+            document.querySelectorAll('textarea[id], input[type="text"][id]').forEach(el => {
+                formData.simple[el.id] = el.value;
+            });
+            
+            // Save repeater sections
+            document.querySelectorAll('[id$="-container"]').forEach(container => {
+                const key = container.id.replace('-container', '');
+                formData.repeaters[key] = [];
+                container.querySelectorAll('.repeater-item').forEach(item => {
+                    const itemData = {};
+                    item.querySelectorAll('[data-field]').forEach(field => {
+                        itemData[field.dataset.field] = field.value;
+                    });
+                    formData.repeaters[key].push(itemData);
+                });
+            });
+
+            // Save KPIs
+            document.querySelectorAll('#kpi-container > div').forEach((kpiDiv, index) => {
+                const rating = kpiDiv.querySelector('input[type="radio"]:checked')?.value || null;
+                const evidence = kpiDiv.querySelector('textarea').value;
+                const comparison = kpiDiv.querySelector('select').value;
+                const why = kpiDiv.querySelector('input[type="text"]').value;
+                formData.kpis.push({ name: kpis[index], rating, evidence, comparison, why });
+            });
+
+            // Save Strategic Priorities
+            document.querySelectorAll('#strategic-priorities-container > div').forEach((div, index) => {
+                const textareas = div.querySelectorAll('textarea');
+                formData.priorities.push({
+                    name: strategicPriorities[index],
+                    progress: textareas[0].value,
+                    challenges: textareas[1].value,
+                    trend: div.querySelector('select').value
+                });
+            });
+
+            // Save JD Alignment
+            document.querySelectorAll('#jd-alignment-container > div').forEach((div, index) => {
+                 const textareas = div.querySelectorAll('textarea');
+                 formData.jdAlignment.push({
+                    name: jdAreas[index],
+                    well: textareas[0].value,
+                    notWell: textareas[1].value,
+                 });
+            });
+
+            const savedData = {
+                timestamp: new Date().toISOString(),
+                data: formData
+            };
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
+            
+            const saveStatus = document.getElementById('save-status');
+            saveStatus.textContent = `Last saved: ${new Date(savedData.timestamp).toLocaleTimeString()}`;
+            alert('Progress Saved!');
+        }
+
+        function loadProgress() {
+            const savedDataJSON = localStorage.getItem(STORAGE_KEY);
+            if (!savedDataJSON) return;
+
+            const savedData = JSON.parse(savedDataJSON);
+            const formData = savedData.data;
+
+            // Load simple fields
+            for (const id in formData.simple) {
+                const el = document.getElementById(id);
+                if (el) el.value = formData.simple[id];
+            }
+
+            // Load repeaters
+            for (const key in formData.repeaters) {
+                const container = document.getElementById(`${key}-container`);
+                if (!container) continue;
+                container.innerHTML = ''; // Clear defaults
+                
+                let addFunc;
+                if (key === 'challenges') addFunc = addChallenge;
+                if (key === 'last-year-goals') addFunc = addLastYearGoal;
+                if (key === 'pd-undertaken') addFunc = addPDUndertaken;
+                if (key === 'pd-needed') addFunc = addPDNeeded;
+                if (key === 'future-goals') addFunc = addFutureGoal;
+                if (key === 'board-requests') addFunc = addBoardRequest;
+
+                if (addFunc) {
+                    formData.repeaters[key].forEach(itemData => {
+                        const newItem = addItem(container.id, window[addFunc.name + 'Template']);
+                        for(const fieldKey in itemData) {
+                            const field = newItem.querySelector(`[data-field="${fieldKey}"]`);
+                            if (field) field.value = itemData[fieldKey];
+                        }
+                    });
+                }
+            }
+
+            // Load KPIs
+            document.querySelectorAll('#kpi-container > div').forEach((kpiDiv, index) => {
+                const kpiData = formData.kpis[index];
+                if (!kpiData) return;
+                if(kpiData.rating) kpiDiv.querySelector(`input[type="radio"][value="${kpiData.rating}"]`).checked = true;
+                kpiDiv.querySelector('textarea').value = kpiData.evidence;
+                kpiDiv.querySelector('select').value = kpiData.comparison;
+                kpiDiv.querySelector('input[type="text"]').value = kpiData.why;
+            });
+
+            // Load priorities
+            document.querySelectorAll('#strategic-priorities-container > div').forEach((div, index) => {
+                const priorityData = formData.priorities[index];
+                if (!priorityData) return;
+                const textareas = div.querySelectorAll('textarea');
+                textareas[0].value = priorityData.progress;
+                textareas[1].value = priorityData.challenges;
+                div.querySelector('select').value = priorityData.trend;
+            });
+            
+             // Load JD Alignment
+            document.querySelectorAll('#jd-alignment-container > div').forEach((div, index) => {
+                const jdData = formData.jdAlignment[index];
+                if (!jdData) return;
+                 const textareas = div.querySelectorAll('textarea');
+                 textareas[0].value = jdData.well;
+                 textareas[1].value = jdData.notWell;
+            });
+
+            document.getElementById('save-status').textContent = `Last saved: ${new Date(savedData.timestamp).toLocaleString()}`;
+        }
+        
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const kpiContainer = document.getElementById('kpi-container');
+            kpis.forEach((kpi, index) => {
+                const kpiId = `kpi-${index}`;
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <div>
+                        <p class="font-medium text-slate-700">${kpi}</p>
+                        <fieldset class="mt-2">
+                            <legend class="sr-only">Rating for ${kpi}</legend>
+                            <div class="flex items-center space-x-2 sm:space-x-4">
+                                ${Object.entries(ratingDescriptions).reverse().map(([val, desc]) => `
+                                    <div class="tooltip">
+                                        <label for="${kpiId}-${val}" class="cursor-pointer text-center">
+                                            <input type="radio" id="${kpiId}-${val}" name="${kpiId}" value="${val}" class="sr-only peer">
+                                            <span class="block w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-slate-200 text-slate-600 peer-checked:bg-blue-600 peer-checked:text-white peer-focus:ring-2 peer-focus:ring-blue-500 transition">${val}</span>
+                                        </label>
+                                        <span class="tooltip-text">${desc}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </fieldset>
+                        <textarea class="w-full mt-3 p-2 border border-slate-300 rounded-md" rows="2" placeholder="Evidence / Examples for ${kpi}..."></textarea>
+                        <div class="mt-3 p-3 bg-slate-50 rounded-md border">
+                             <label class="block text-sm font-medium text-slate-600 mb-2">Compared to Last Year</label>
+                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                 <div>
+                                     <select class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                         <option>Better</option>
+                                         <option>Same</option>
+                                         <option>Worse</option>
+                                     </select>
+                                 </div>
+                                 <div>
+                                     <input type="text" class="w-full p-2 border border-slate-300 rounded-md" placeholder="Why? (briefly)">
+                                 </div>
+                             </div>
+                        </div>
+                    </div>
+                `;
+                kpiContainer.appendChild(div);
+            });
+
+            const prioritiesContainer = document.getElementById('strategic-priorities-container');
+            strategicPriorities.forEach(priority => {
+                 const div = document.createElement('div');
+                 div.innerHTML = `
+                    <div class="p-4 border border-slate-200 rounded-md bg-slate-50">
+                        <label class="block text-sm font-bold text-slate-700 mb-1">${priority}</label>
+                        <div class="space-y-2 mt-2">
+                           <textarea class="w-full p-2 border border-slate-300 rounded-md" rows="2" placeholder="Progress & Achievements..."></textarea>
+                           <textarea class="w-full p-2 border border-slate-300 rounded-md" rows="2" placeholder="Challenges..."></textarea>
+                        </div>
+                        <div class="mt-3">
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Trend vs Last Year</label>
+                             <select class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                <option>Improving</option>
+                                <option>Stable</option>
+                                <option>Declining</option>
+                            </select>
+                        </div>
+                    </div>
+                 `;
+                 prioritiesContainer.appendChild(div);
+            });
+            
+            const jdContainer = document.getElementById('jd-alignment-container');
+            jdAreas.forEach(area => {
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <div class="p-4 border border-slate-200 rounded-md bg-slate-50">
+                        <label class="block text-sm font-bold text-slate-700 mb-1">${area}</label>
+                         <div class="space-y-2 mt-2">
+                           <textarea class="w-full p-2 border border-slate-300 rounded-md" rows="2" placeholder="What Went Well..."></textarea>
+                           <textarea class="w-full p-2 border border-slate-300 rounded-md" rows="2" placeholder="What Did Not Go Well..."></textarea>
+                        </div>
+                    </div>
+                `;
+                jdContainer.appendChild(div);
+            });
+
+            // Add default items if no saved data
+            if (!localStorage.getItem(STORAGE_KEY)) {
+                addChallenge();
+                addLastYearGoal();
+                addPDUndertaken();
+                addPDNeeded();
+                for (let i = 0; i < 3; i++) {
+                    addFutureGoal();
+                }
+                addBoardRequest();
+            }
+
+            // Load any saved progress
+            loadProgress();
+
+            // Event Listeners
+            document.getElementById('save-progress-btn').addEventListener('click', saveProgress);
+            
+            document.getElementById('reviewForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                alert('Thank you for completing the review. Your responses have been recorded.');
+                // Optionally clear saved data on successful submission
+                // localStorage.removeItem(STORAGE_KEY);
+                console.log('Form submission prevented. In a real application, data would be sent to a server here.');
+            });
+        });
+
+    </script>
+</body>
+</html>
+
