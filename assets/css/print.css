@@ -39,8 +39,8 @@
   section, .repeater-item {
     page-break-inside: avoid !important;
   }
-  /* Add some margin for readability */
+  /* Minimise gaps between sections for compact PDF */
   section {
-    margin-bottom: 2em !important;
+    margin-bottom: 0.5em !important;
   }
 }
