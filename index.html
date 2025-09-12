@@ -213,7 +213,7 @@
               <button
                 type="button"
                 onclick="addLastYearGoal()"
-                class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition"
+                class="mt-4 w-full px-4 py-2 bg-blue-50 text-blue-800 text-base font-semibold rounded-md hover:bg-blue-100 transition border border-blue-200"
               >
                 + Add Goal
               </button>
@@ -223,7 +223,38 @@
                 2.2. KPI & Competency Ratings
               </h3>
               <div id="kpi-container" class="space-y-6">
-                <!-- KPIs will be added by JS -->
+                <!-- Example static card for one KPI (JS will generate all) -->
+                <div class="p-6 bg-slate-50 border border-slate-200 rounded-xl shadow-sm mb-4">
+                  <div class="mb-2 font-semibold text-slate-800">Strategic Leadership</div>
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="text-sm text-slate-700">Rating:</span>
+                    <div class="flex gap-2">
+                      <label><input type="radio" name="kpi-strategic-leadership" value="1" class="accent-blue-600"> 1</label>
+                      <label><input type="radio" name="kpi-strategic-leadership" value="2" class="accent-blue-600"> 2</label>
+                      <label><input type="radio" name="kpi-strategic-leadership" value="3" class="accent-blue-600"> 3</label>
+                      <label><input type="radio" name="kpi-strategic-leadership" value="4" class="accent-blue-600"> 4</label>
+                      <label><input type="radio" name="kpi-strategic-leadership" value="5" class="accent-blue-600"> 5</label>
+                    </div>
+                  </div>
+                  <div class="mb-2">
+                    <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="Evidence / Examples for Strategic Leadership..."></textarea>
+                  </div>
+                  <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="flex-1">
+                      <label class="block text-sm font-medium text-slate-700 mb-1">Compared to Last Year</label>
+                      <select class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                        <option>Better</option>
+                        <option>About the Same</option>
+                        <option>Worse</option>
+                      </select>
+                    </div>
+                    <div class="flex-1">
+                      <label class="block text-sm font-medium text-slate-700 mb-1">Why? (briefly)</label>
+                      <input type="text" class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="Why? (briefly)">
+                    </div>
+                  </div>
+                </div>
+                <!-- End example card -->
               </div>
             </div>
           </div>
@@ -257,7 +288,15 @@
             </div>
           </div>
           <div id="jd-alignment-container" class="space-y-6">
-            <!-- JD areas will be added by JS -->
+            <!-- Example static card for one JD area (JS will generate all) -->
+            <div class="p-6 bg-slate-50 border border-slate-200 rounded-xl shadow-sm mb-4">
+              <div class="mb-2 font-semibold text-slate-800">Strategic Leadership</div>
+              <div class="mb-3">
+                <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white mb-2" placeholder="What Went Well..."></textarea>
+                <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="What Did Not Go Well..."></textarea>
+              </div>
+            </div>
+            <!-- End example card -->
           </div>
         </section>
 
@@ -289,7 +328,21 @@
             </div>
           </div>
           <div id="strategic-priorities-container" class="space-y-6">
-            <!-- Strategic priorities will be added by JS -->
+            <!-- Example static card for one Strategic Priority (JS will generate all) -->
+            <div class="p-6 bg-slate-50 border border-slate-200 rounded-xl shadow-sm mb-4">
+              <div class="mb-2 font-semibold text-slate-800">Strengthen Iwi relationships</div>
+              <div class="mb-3">
+                <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white mb-2" placeholder="Progress & Achievements..."></textarea>
+                <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white mb-2" placeholder="Challenges..."></textarea>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Trend vs Last Year</label>
+                <select class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                  <option>Improving</option>
+                  <option>About the Same</option>
+                  <option>Declining</option>
+                </select>
+              </div>
+            </div>
+            <!-- End example card -->
           </div>
         </section>
 
