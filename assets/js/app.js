@@ -103,38 +103,7 @@ window.onFirebaseAuthStateChanged = function(user) {
     localStorage.removeItem(STORAGE_KEY);
     if (loginModal) loginModal.classList.add('hidden');
     if (appContainer) appContainer.style.display = '';
-    window.firebaseHelpers.loadReviewData(user.uid, 'drafts')
-      .then(doc => {
-        debugLog('Firestore draft loaded: ' + (doc ? 'yes' : 'no'));
-        const localDraft = localStorage.getItem(STORAGE_KEY);
-        if (!doc && localDraft) {
-          if (confirm('A local draft was found. Would you like to import it to your cloud account?')) {
-            try {
-              const parsed = JSON.parse(localDraft);
-              return window.firebaseHelpers.saveReviewData(user.uid, parsed.data, 'drafts')
-                .then(() => {
-                  alert('Draft imported to your cloud account.');
-                  loadProgress();
-                  debugLog('Draft imported to cloud and hydrated.');
-                });
-            } catch (e) {
-              showCriticalError('Local draft parse error: ' + e.message);
-            }
-          }
-        }
-        if (doc && doc.data) {
-          try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({ timestamp: doc.timestamp, data: doc.data }));
-            loadProgress();
-            debugLog('Hydrated from Firestore draft.');
-          } catch (e) {
-            showCriticalError('Error saving Firestore draft to localStorage: ' + e.message);
-          }
-        }
-      })
-      .catch(err => {
-        showCriticalError('Could not load your cloud draft. You can still use the form, but cloud sync is unavailable. (' + err.message + ')');
-      });
+    // Do not auto-load last saved draft. Only load on button click.
   } else {
     if (loginModal) loginModal.classList.remove('hidden');
     if (appContainer) appContainer.style.display = '';
@@ -146,6 +115,13 @@ window.onFirebaseAuthStateChanged = function(user) {
 
 // --- Initialise Form App ---
 document.addEventListener('DOMContentLoaded', () => {
+  // Load Last Saved Button
+  const loadBtn = document.getElementById('load-last-saved-btn');
+  if (loadBtn && typeof window.loadProgress === 'function') {
+    loadBtn.onclick = function() {
+      window.loadProgress();
+    };
+  }
   // Login form handler
   const loginForm = document.getElementById('login-form');
   if (loginForm) {
@@ -597,9 +573,127 @@ document.getElementById('reviewForm').onsubmit = async function(e) {
 };
 
 // --- Save Progress Button ---
+
+// Save Progress Button
 document.getElementById('save-progress-btn').onclick = saveProgress;
 
-window.loadProgress = typeof loadProgress === 'function' ? loadProgress : () => {};
+// Save as PDF Button
+const savePdfBtn = document.getElementById('save-pdf-btn');
+if (savePdfBtn) {
+  savePdfBtn.onclick = function() {
+    window.print();
+  };
+}
+
+async function loadProgress() {
+  const status = document.getElementById('save-status');
+  status.textContent = 'Loading...';
+  try {
+    let data = null;
+    const user = window.firebaseHelpers.auth.currentUser;
+    if (user) {
+      // Try Firestore first
+      const doc = await window.firebaseHelpers.loadReviewData(user.uid, 'drafts');
+      if (doc && doc.data) {
+        data = doc.data;
+      }
+    }
+    // Fallback to localStorage
+    if (!data) {
+      const local = localStorage.getItem(STORAGE_KEY);
+      if (local) {
+        try {
+          data = JSON.parse(local).data;
+        } catch {}
+      }
+    }
+    if (!data) throw new Error('No saved draft found.');
+    // Hydrate static fields
+    document.getElementById('successes').value = data.successes || '';
+    document.getElementById('not-well').value = data['not-well'] || '';
+    document.getElementById('comparative-reflection').value = data['comparative-reflection'] || '';
+    document.getElementById('strengths').value = data.strengths || '';
+    document.getElementById('limitations').value = data.limitations || '';
+    // Hydrate dynamic repeaters
+    function clearAndAdd(containerId, addFn, items, hydrateFn) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
+      (items || []).forEach((item, i) => {
+        addFn();
+        hydrateFn(container.children[i], item);
+      });
+    }
+    // Challenges
+    clearAndAdd('challenges-container', addChallenge, data.challenges, (el, item) => {
+      el.querySelector('textarea[placeholder="Describe the challenge..."]').value = item.challenge || '';
+      el.querySelector('textarea[placeholder="What action was taken?"]').value = item.action || '';
+      el.querySelector('textarea[placeholder="What was the outcome?"]').value = item.result || '';
+    });
+    // Last Year Goals
+    clearAndAdd('last-year-goals-container', addLastYearGoal, data.lastYearGoals, (el, item) => {
+      el.querySelector('input[placeholder="Enter the goal statement..."]').value = item.goal || '';
+      el.querySelector('select').value = item.status || '';
+      el.querySelector('textarea[placeholder="Provide supporting evidence..."]').value = item.evidence || '';
+    });
+    // KPIs
+    (data.kpis || []).forEach((item, i) => {
+      const card = document.getElementById('kpi-container').children[i];
+      if (!card) return;
+      if (item.rating) card.querySelector(`input[type="radio"][value="${item.rating}"]`).checked = true;
+      card.querySelector('textarea').value = item.evidence || '';
+      card.querySelector('select').value = item.compared || '';
+      card.querySelector('input[type="text"]').value = item.why || '';
+    });
+    // JD Alignment
+    (data.jdAlignment || []).forEach((item, i) => {
+      const card = document.getElementById('jd-alignment-container').children[i];
+      if (!card) return;
+      card.querySelectorAll('textarea')[0].value = item.wentWell || '';
+      card.querySelectorAll('textarea')[1].value = item.notWell || '';
+    });
+    // Strategic Priorities
+    (data.strategicPriorities || []).forEach((item, i) => {
+      const card = document.getElementById('strategic-priorities-container').children[i];
+      if (!card) return;
+      card.querySelectorAll('textarea')[0].value = item.progress || '';
+      card.querySelectorAll('textarea')[1].value = item.challenges || '';
+      card.querySelector('select').value = item.trend || '';
+    });
+    // PD Undertaken
+    clearAndAdd('pd-undertaken-container', addPDUndertaken, data.pdUndertaken, (el, item) => {
+      el.querySelector('input[placeholder="Programme/Course Title"]').value = item.title || '';
+      el.querySelector('textarea[placeholder="Key Learnings"]').value = item.learnings || '';
+      el.querySelector('textarea[placeholder="How Learnings Were Applied"]').value = item.applied || '';
+      el.querySelectorAll('select')[0].value = item.requested || '';
+      el.querySelectorAll('select')[1].value = item.usefulness || '';
+    });
+    // PD Needed
+    clearAndAdd('pd-needed-container', addPDNeeded, data.pdNeeded, (el, item) => {
+      el.querySelector('input[placeholder="Area of Need"]').value = item.area || '';
+      el.querySelector('textarea[placeholder*="expected impact"]').value = item.impact || '';
+    });
+    // Future Goals
+    clearAndAdd('future-goals-container', addFutureGoal, data.futureGoals, (el, item) => {
+      el.querySelector('input[placeholder="Enter the goal statement..."]').value = item.statement || '';
+      el.querySelector('textarea[placeholder="What will success look like?"]').value = item.outcome || '';
+      el.querySelector('textarea[placeholder*="align with strategic priorities"]').value = item.why || '';
+    });
+    // Board Requests
+    clearAndAdd('board-requests-container', addBoardRequest, data.boardRequests, (el, item) => {
+      el.querySelector('textarea[placeholder="Request"]').value = item.request || '';
+      el.querySelector('textarea[placeholder="Why is this needed?"]').value = item.why || '';
+      el.querySelector('select').value = item.requested || '';
+      el.querySelector('input[placeholder*="workload pressure"]').value = item.changed || '';
+    });
+    status.textContent = 'Loaded!';
+    setTimeout(() => { status.textContent = ''; }, 2000);
+  } catch (err) {
+    status.textContent = 'Load failed: ' + (err.message || err);
+    setTimeout(() => { status.textContent = ''; }, 4000);
+  }
+}
+window.loadProgress = loadProgress;
 window.saveProgress = saveProgress;
 window.clearForm = clearForm;
 
