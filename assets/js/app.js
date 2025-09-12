@@ -146,6 +146,23 @@ window.onFirebaseAuthStateChanged = function(user) {
 
 // --- Initialise Form App ---
 document.addEventListener('DOMContentLoaded', () => {
+  // Login form handler
+  const loginForm = document.getElementById('login-form');
+  if (loginForm) {
+    loginForm.onsubmit = async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const errorDiv = document.getElementById('login-error');
+      errorDiv.textContent = '';
+      try {
+        await window.firebaseHelpers.loginWithEmail(email, password);
+        // Success: modal will close via auth state listener
+      } catch (err) {
+        errorDiv.textContent = err.message || 'Login failed. Please try again.';
+      }
+    };
+  }
   attachLogoutHandler();
   // Render KPI cards
   const kpiContainer = document.getElementById('kpi-container');
@@ -473,8 +490,117 @@ function addBoardRequest() {
 }
 
 // --- Global Exports ---
+
+// --- Form Data Collection ---
+function collectFormData() {
+  const data = {};
+  // Part 1
+  data.successes = document.getElementById('successes')?.value || '';
+  data['not-well'] = document.getElementById('not-well')?.value || '';
+  data['comparative-reflection'] = document.getElementById('comparative-reflection')?.value || '';
+  // Challenges
+  data.challenges = Array.from(document.getElementById('challenges-container')?.children || []).map(card => ({
+    challenge: card.querySelector('textarea[placeholder="Describe the challenge..."]')?.value || '',
+    action: card.querySelector('textarea[placeholder="What action was taken?"]')?.value || '',
+    result: card.querySelector('textarea[placeholder="What was the outcome?"]')?.value || ''
+  }));
+  // Goals from Last Year
+  data.lastYearGoals = Array.from(document.getElementById('last-year-goals-container')?.children || []).map(card => ({
+    goal: card.querySelector('input[placeholder="Enter the goal statement..."]')?.value || '',
+    status: card.querySelector('select')?.value || '',
+    evidence: card.querySelector('textarea[placeholder="Provide supporting evidence..."]')?.value || ''
+  }));
+  // KPIs
+  data.kpis = Array.from(document.getElementById('kpi-container')?.children || []).map(card => ({
+    name: card.querySelector('.font-semibold')?.textContent || '',
+    rating: card.querySelector('input[type="radio"]:checked')?.value || '',
+    evidence: card.querySelector('textarea')?.value || '',
+    compared: card.querySelector('select')?.value || '',
+    why: card.querySelector('input[type="text"]')?.value || ''
+  }));
+  // JD Alignment
+  data.jdAlignment = Array.from(document.getElementById('jd-alignment-container')?.children || []).map(card => ({
+    area: card.querySelector('.font-semibold')?.textContent || '',
+    wentWell: card.querySelectorAll('textarea')[0]?.value || '',
+    notWell: card.querySelectorAll('textarea')[1]?.value || ''
+  }));
+  // Strategic Priorities
+  data.strategicPriorities = Array.from(document.getElementById('strategic-priorities-container')?.children || []).map(card => ({
+    name: card.querySelector('.font-semibold')?.textContent || '',
+    progress: card.querySelectorAll('textarea')[0]?.value || '',
+    challenges: card.querySelectorAll('textarea')[1]?.value || '',
+    trend: card.querySelector('select')?.value || ''
+  }));
+  // Part 5
+  data.strengths = document.getElementById('strengths')?.value || '';
+  data.limitations = document.getElementById('limitations')?.value || '';
+  // PD Undertaken
+  data.pdUndertaken = Array.from(document.getElementById('pd-undertaken-container')?.children || []).map(card => ({
+    title: card.querySelector('input[placeholder="Programme/Course Title"]')?.value || '',
+    learnings: card.querySelector('textarea[placeholder="Key Learnings"]')?.value || '',
+    applied: card.querySelector('textarea[placeholder="How Learnings Were Applied"]')?.value || '',
+    requested: card.querySelectorAll('select')[0]?.value || '',
+    usefulness: card.querySelectorAll('select')[1]?.value || ''
+  }));
+  // PD Needed
+  data.pdNeeded = Array.from(document.getElementById('pd-needed-container')?.children || []).map(card => ({
+    area: card.querySelector('input[placeholder="Area of Need"]')?.value || '',
+    impact: card.querySelector('textarea[placeholder*="expected impact"]')?.value || ''
+  }));
+  // Future Goals
+  data.futureGoals = Array.from(document.getElementById('future-goals-container')?.children || []).map(card => ({
+    statement: card.querySelector('input[placeholder="Enter the goal statement..."]')?.value || '',
+    outcome: card.querySelector('textarea[placeholder="What will success look like?"]')?.value || '',
+    why: card.querySelector('textarea[placeholder*="align with strategic priorities"]')?.value || ''
+  }));
+  // Board Requests
+  data.boardRequests = Array.from(document.getElementById('board-requests-container')?.children || []).map(card => ({
+    request: card.querySelector('textarea[placeholder="Request"]')?.value || '',
+    why: card.querySelector('textarea[placeholder="Why is this needed?"]')?.value || '',
+    requested: card.querySelector('select')?.value || '',
+    changed: card.querySelector('input[placeholder*="workload pressure"]')?.value || ''
+  }));
+  return data;
+}
+
+// --- Save Progress Handler ---
+async function saveProgress() {
+  const status = document.getElementById('save-status');
+  status.textContent = 'Saving...';
+  try {
+    const user = window.firebaseHelpers.auth.currentUser;
+    if (!user) throw new Error('Not logged in');
+    const data = collectFormData();
+    await window.firebaseHelpers.saveReviewData(user.uid, data, 'drafts');
+    status.textContent = 'Draft saved!';
+    setTimeout(() => { status.textContent = ''; }, 2000);
+  } catch (err) {
+    status.textContent = 'Save failed: ' + (err.message || err);
+  }
+}
+
+// --- Submit Handler ---
+document.getElementById('reviewForm').onsubmit = async function(e) {
+  e.preventDefault();
+  const status = document.getElementById('save-status');
+  status.textContent = 'Submitting...';
+  try {
+    const user = window.firebaseHelpers.auth.currentUser;
+    if (!user) throw new Error('Not logged in');
+    const data = collectFormData();
+    await window.firebaseHelpers.saveReviewData(user.uid, data, 'submissions');
+    status.textContent = 'Review submitted!';
+    setTimeout(() => { status.textContent = ''; }, 2000);
+  } catch (err) {
+    status.textContent = 'Submit failed: ' + (err.message || err);
+  }
+};
+
+// --- Save Progress Button ---
+document.getElementById('save-progress-btn').onclick = saveProgress;
+
 window.loadProgress = typeof loadProgress === 'function' ? loadProgress : () => {};
-window.saveProgress = typeof saveProgress === 'function' ? saveProgress : () => {};
+window.saveProgress = saveProgress;
 window.clearForm = clearForm;
 
 window.addChallenge = addChallenge;
