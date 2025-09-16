@@ -466,7 +466,6 @@ window.onFirebaseAuthStateChanged = function(user) {
     }
   };
 
-  debugLog('onFirebaseAuthStateChanged: user=' + (user ? user.uid : 'null'));
 
   if (user) {
     localStorage.removeItem(STORAGE_KEY);
@@ -1193,40 +1192,50 @@ function collectFormData() {
 // --- Save Progress Handler ---
 async function saveProgress() {
   const status = document.getElementById('save-status');
-  status.textContent = 'Saving...';
+  if (status) status.textContent = 'Saving...';
   try {
     const user = window.firebaseHelpers.auth.currentUser;
     if (!user) throw new Error('Not logged in');
     const data = collectFormData();
     await window.firebaseHelpers.saveReviewData(user.uid, data, 'drafts');
-    status.textContent = 'Draft saved!';
-    setTimeout(() => { status.textContent = ''; }, 2000);
+    if (status) {
+      status.textContent = 'Draft saved!';
+      setTimeout(() => { if (status) status.textContent = ''; }, 2000);
+    }
   } catch (err) {
-    status.textContent = 'Save failed: ' + (err.message || err);
+    if (status) status.textContent = 'Save failed: ' + (err.message || err);
   }
 }
 
 // --- Submit Handler ---
-document.getElementById('reviewForm').onsubmit = async function(e) {
-  e.preventDefault();
-  const status = document.getElementById('save-status');
-  status.textContent = 'Submitting...';
-  try {
-    const user = window.firebaseHelpers.auth.currentUser;
-    if (!user) throw new Error('Not logged in');
-    const data = collectFormData();
-    await window.firebaseHelpers.saveReviewData(user.uid, data, 'submissions');
-    status.textContent = 'Review submitted!';
-    setTimeout(() => { status.textContent = ''; }, 2000);
-  } catch (err) {
-    status.textContent = 'Submit failed: ' + (err.message || err);
-  }
-};
+const reviewFormEl = document.getElementById('reviewForm');
+if (reviewFormEl) {
+  reviewFormEl.onsubmit = async function(e) {
+    e.preventDefault();
+    const status = document.getElementById('save-status');
+    if (status) status.textContent = 'Submitting...';
+    try {
+      const user = window.firebaseHelpers.auth.currentUser;
+      if (!user) throw new Error('Not logged in');
+      const data = collectFormData();
+      await window.firebaseHelpers.saveReviewData(user.uid, data, 'submissions');
+      if (status) {
+        status.textContent = 'Review submitted!';
+        setTimeout(() => { if (status) status.textContent = ''; }, 2000);
+      }
+    } catch (err) {
+      if (status) status.textContent = 'Submit failed: ' + (err.message || err);
+    }
+  };
+}
 
 // --- Save Progress Button ---
 
 // Save Progress Button
-document.getElementById('save-progress-btn').onclick = saveProgress;
+const saveProgressBtn = document.getElementById('save-progress-btn');
+if (saveProgressBtn) {
+  saveProgressBtn.onclick = saveProgress;
+}
 
 // Save as PDF Button
 const savePdfBtn = document.getElementById('save-pdf-btn');
@@ -1356,3 +1365,17 @@ window.addPDNeeded = addPDNeeded;
 window.addFutureGoal = addFutureGoal;
 window.removeFutureGoal = removeFutureGoal;
 window.addBoardRequest = addBoardRequest;
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    debounce,
+    smoothScrollTo,
+    setSectionCollapsed,
+    updateSectionSummary,
+    updateAllSectionSummaries,
+    setupCollapsibles,
+    setupSectionNav,
+    enhanceTextarea,
+    enhanceAllTextareas,
+  };
+}
