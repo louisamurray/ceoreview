@@ -15,13 +15,33 @@
   </head>
   <body class="bg-slate-100 text-slate-800">
     <!-- Login Modal -->
-    <div id="login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 bg-opacity-60 hidden">
-      <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm">
-        <h2 class="text-xl font-bold mb-4 text-slate-900">Sign in to CEO Review</h2>
+    <div
+      id="login-modal"
+      data-modal="login"
+      class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="login-heading"
+      aria-hidden="true"
+    >
+      <div class="w-full max-w-sm rounded-lg bg-white p-6 shadow-2xl">
+        <div class="mb-5 flex items-start justify-between gap-3">
+          <h2 id="login-heading" class="text-xl font-bold text-slate-900">
+            Sign in to CEO Review
+          </h2>
+          <button
+            type="button"
+            class="modal-close"
+            aria-label="Close sign in dialog"
+            data-modal-close
+          >
+            ×
+          </button>
+        </div>
         <form id="login-form" class="space-y-4">
           <div>
             <label for="login-email" class="block text-sm font-medium text-slate-700 mb-1">Email</label>
-            <input id="login-email" type="email" required class="w-full p-2 border border-slate-300 rounded-md" autocomplete="username" />
+            <input id="login-email" type="email" required class="w-full p-2 border border-slate-300 rounded-md" autocomplete="username" data-auto-focus />
           </div>
           <div>
             <label for="login-password" class="block text-sm font-medium text-slate-700 mb-1">Password</label>
@@ -38,13 +58,33 @@
     </div>
 
     <!-- Sign Up Modal -->
-    <div id="signup-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 bg-opacity-60 hidden">
-      <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm">
-        <h2 class="text-xl font-bold mb-4 text-slate-900">Create an Account</h2>
+    <div
+      id="signup-modal"
+      data-modal="signup"
+      class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="signup-heading"
+      aria-hidden="true"
+    >
+      <div class="w-full max-w-sm rounded-lg bg-white p-6 shadow-2xl">
+        <div class="mb-5 flex items-start justify-between gap-3">
+          <h2 id="signup-heading" class="text-xl font-bold text-slate-900">
+            Create an Account
+          </h2>
+          <button
+            type="button"
+            class="modal-close"
+            aria-label="Close sign up dialog"
+            data-modal-close
+          >
+            ×
+          </button>
+        </div>
         <form id="signup-form" class="space-y-4">
           <div>
             <label for="signup-email" class="block text-sm font-medium text-slate-700 mb-1">Email</label>
-            <input id="signup-email" type="email" required class="w-full p-2 border border-slate-300 rounded-md" autocomplete="username" />
+            <input id="signup-email" type="email" required class="w-full p-2 border border-slate-300 rounded-md" autocomplete="username" data-auto-focus />
           </div>
           <div>
             <label for="signup-password" class="block text-sm font-medium text-slate-700 mb-1">Password</label>
@@ -74,78 +114,132 @@
           A comprehensive review of the past year's performance and a framework
           for future goals.
         </p>
-        <div
+        <details
           class="mt-6 bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg text-left text-sm"
         >
-          <h3 class="font-bold mb-2">Instructions:</h3>
-          <ul class="list-disc list-inside space-y-1">
-            <li>
-              Please complete this form at least one week before the review
-              meeting.
-            </li>
-            <li>
-              Provide clear, specific, and measurable responses. Use bullet
-              points wherever possible.
-            </li>
-          </ul>
-          <h3 class="font-bold mt-4 mb-2">Rating Scale for KPI Table:</h3>
-          <ul class="list-none space-y-1">
-            <li><strong>5</strong> = Consistently exceeds expectations</li>
-            <li><strong>4</strong> = Meets and often exceeds expectations</li>
-            <li><strong>3</strong> = Meets expectations</li>
-            <li><strong>2</strong> = Partially meets expectations</li>
-            <li><strong>1</strong> = Unacceptable</li>
-            <li><strong>0</strong> = Don’t know</li>
-          </ul>
-        </div>
-      </header>
-
-      <form id="reviewForm" class="space-y-10">
-        <!-- Load Last Saved & Clear All Button -->
-        <div class="flex justify-end mb-4 gap-2">
-          <button type="button" id="load-last-saved-btn" class="px-4 py-2 bg-yellow-100 text-yellow-900 font-semibold rounded-md border border-yellow-300 hover:bg-yellow-200 transition">
-            Load Last Saved
-          </button>
-          <button type="button" id="clear-form-btn" class="px-4 py-2 bg-red-100 text-red-900 font-semibold rounded-md border border-red-300 hover:bg-red-200 transition">
-            Clear Entire Form
-          </button>
-        </div>
-        <!-- Part 1: Performance Reflection -->
-        <section class="bg-white p-6 rounded-lg shadow-md">
-          <div class="flex justify-between items-center border-b pb-3 mb-6">
-            <div class="tooltip">
-              <h2 class="text-2xl font-bold text-slate-900">
-                Part 1: Performance Reflection
-              </h2>
-              <svg
-                class="w-5 h-5 tooltip-icon"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
-              </svg>
-              <span class="tooltip-text"
-                >Reflect on your successes, challenges, and overall performance
-                over the last 12 months. Be honest and specific. This helps identify strengths and areas for growth.</span
-              >
+          <summary class="font-semibold text-blue-900 cursor-pointer">
+            Need a refresher on how to complete this review?
+          </summary>
+          <div class="mt-3 space-y-3">
+            <div>
+              <h3 class="font-bold mb-1">Instructions</h3>
+              <ul class="list-disc list-inside space-y-1">
+                <li>
+                  Complete the form at least one week before the review
+                  meeting.
+                </li>
+                <li>
+                  Provide clear, specific, and measurable responses. Use bullet
+                  points wherever possible.
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 class="font-bold mb-1">Rating Scale for KPI Table</h3>
+              <ul class="list-none space-y-1">
+                <li><strong>5</strong> = Consistently exceeds expectations</li>
+                <li><strong>4</strong> = Meets and often exceeds expectations</li>
+                <li><strong>3</strong> = Meets expectations</li>
+                <li><strong>2</strong> = Partially meets expectations</li>
+                <li><strong>1</strong> = Unacceptable</li>
+                <li><strong>0</strong> = Don’t know</li>
+              </ul>
             </div>
           </div>
-          <!-- Clear Section button removed -->
-          <div class="mb-4 text-slate-600 text-sm">
-            <ul class="list-disc list-inside space-y-1">
-              <li>Use bullet points for clarity.</li>
-              <li>Include examples and evidence wherever possible.</li>
-              <li>Be concise but thorough in your reflections.</li>
-            </ul>
-          </div>
-          <div class="space-y-6">
+        </details>
+      </header>
+
+      <nav
+        id="section-nav"
+        class="sticky top-4 z-20 mb-8 flex flex-col gap-3 rounded-lg border border-slate-200 bg-white/95 p-4 shadow-sm backdrop-blur-sm"
+      >
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+            Jump to section
+          </h2>
+          <button
+            type="button"
+            id="collapse-all-btn"
+            class="hidden text-xs font-medium text-blue-600 hover:text-blue-700 md:inline-flex"
+          >
+            Collapse all
+          </button>
+        </div>
+        <div class="hidden gap-2 overflow-x-auto md:flex">
+          <button type="button" class="section-nav-pill" data-target="#part-1">Part 1</button>
+          <button type="button" class="section-nav-pill" data-target="#part-2">Part 2</button>
+          <button type="button" class="section-nav-pill" data-target="#part-3">Part 3</button>
+          <button type="button" class="section-nav-pill" data-target="#part-4">Part 4</button>
+          <button type="button" class="section-nav-pill" data-target="#part-5">Part 5</button>
+          <button type="button" class="section-nav-pill" data-target="#part-6">Part 6</button>
+          <button type="button" class="section-nav-pill" data-target="#part-7">Part 7</button>
+        </div>
+        <label class="md:hidden">
+          <span class="sr-only">Jump to section</span>
+          <select
+            id="section-nav-select"
+            class="w-full rounded-md border border-slate-300 bg-white p-2 text-sm"
+          >
+            <option value="">Choose part…</option>
+            <option value="#part-1">Part 1 – Performance Reflection</option>
+            <option value="#part-2">Part 2 – Goals & KPIs</option>
+            <option value="#part-3">Part 3 – Job Description Alignment</option>
+            <option value="#part-4">Part 4 – Strategic Priorities</option>
+            <option value="#part-5">Part 5 – Personal Assessment</option>
+            <option value="#part-6">Part 6 – Future Focus</option>
+            <option value="#part-7">Part 7 – Dialogue with the Board</option>
+          </select>
+        </label>
+      </nav>
+
+      <form id="reviewForm" class="space-y-10">
+        <!-- Part 1: Performance Reflection -->
+        <section
+          id="part-1"
+          class="collapsible-section rounded-lg bg-white shadow-md"
+        >
+          <header class="section-header">
+            <button
+              type="button"
+              class="section-toggle"
+              data-target="#part-1-body"
+              aria-expanded="true"
+            >
+              <span class="section-toggle-icon" aria-hidden="true">▾</span>
+              <span class="text-left">
+                <span class="block text-xl font-semibold text-slate-900 sm:text-2xl"
+                  >Part 1: Performance Reflection</span
+                >
+                <span class="mt-1 block text-sm text-slate-500"
+                  >Review achievements, challenges, and lessons from the past
+                  12 months.</span
+                >
+              </span>
+            </button>
+            <span
+              class="section-summary"
+              data-section-summary
+              aria-live="polite"
+            >
+              Not started
+            </span>
+          </header>
+          <div id="part-1-body" class="section-body space-y-6">
+            <details class="section-help">
+              <summary>Need help with this section?</summary>
+              <div class="space-y-3 text-sm text-slate-600">
+                <p>
+                  Use bullet points for clarity, include specific evidence,
+                  examples, or feedback, and be concise but thorough in your
+                  reflections.
+                </p>
+                <p>
+                  Aim to capture both the highlights and the learning moments so
+                  the board gains an honest view of performance and growth
+                  opportunities.
+                </p>
+              </div>
+            </details>
             <div>
               <label
                 for="successes"
@@ -191,31 +285,23 @@
               </button>
             </div>
             <div>
-              <label
-                for="comparative-reflection"
-                class="block text-sm font-medium text-slate-700 mb-1 tooltip"
-              >
-                1.4. Comparative Reflection
-                <span class="ml-2 text-xs text-slate-500">(How does this year compare to last year? Note improvements or declines.)</span>
-                <svg
-                  class="w-4 h-4 tooltip-icon inline"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
+              <div class="mb-1 flex items-start justify-between gap-2">
+                <label
+                  for="comparative-reflection"
+                  class="block text-sm font-medium text-slate-700"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  ></path>
-                </svg>
-                <span class="tooltip-text"
-                  >Compare this year's performance to the previous year.
-                  Highlight specific areas of growth or decline.</span
+                  1.4. Comparative Reflection
+                  <span class="ml-2 text-xs text-slate-500">(How does this year compare to last year? Note improvements or declines.)</span>
+                </label>
+                <button
+                  type="button"
+                  class="info-dot"
+                  data-info="Compare this year's performance to the previous year. Highlight specific areas of growth or decline."
+                  aria-label="Guidance for comparative reflection"
                 >
-              </label>
+                  i
+                </button>
+              </div>
               <textarea
                 id="comparative-reflection"
                 name="comparative-reflection"
@@ -228,37 +314,54 @@
         </section>
 
         <!-- Part 2: Review of Previous Goals & KPIs -->
-        <section class="bg-white p-6 rounded-lg shadow-md">
-          <div class="flex justify-between items-center border-b pb-3 mb-6">
-            <div class="tooltip">
-              <h2 class="text-2xl font-bold text-slate-900">
-                Part 2: Review of Previous Goals & KPIs
-              </h2>
-              <svg
-                class="w-5 h-5 tooltip-icon"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
-              </svg>
-              <span class="tooltip-text"
-                >Assess performance against the goals and Key Performance
-                Indicators (KPIs) set for the last year.</span
-              >
-            </div>
-          </div>
-          <!-- Clear Section button removed -->
-          <div class="space-y-8">
-            <div>
-              <h3 class="text-md font-semibold text-slate-800 mb-4">
-                2.1. Goals from Last Year
+        <section
+          id="part-2"
+          class="collapsible-section rounded-lg bg-white shadow-md"
+        >
+          <header class="section-header">
+            <button
+              type="button"
+              class="section-toggle"
+              data-target="#part-2-body"
+              aria-expanded="true"
+            >
+              <span class="section-toggle-icon" aria-hidden="true">▾</span>
+              <span class="text-left">
+                <span class="block text-xl font-semibold text-slate-900 sm:text-2xl"
+                  >Part 2: Review of Previous Goals & KPIs</span
+                >
+                <span class="mt-1 block text-sm text-slate-500"
+                  >Assess progress against last year's goals and key
+                  indicators.</span
+                >
+              </span>
+            </button>
+            <span
+              class="section-summary"
+              data-section-summary
+              aria-live="polite"
+            >
+              Not started
+            </span>
+          </header>
+          <div id="part-2-body" class="section-body space-y-6">
+            <details class="section-help">
+              <summary>Need help with this section?</summary>
+              <div class="space-y-2 text-sm text-slate-600">
+                <p>
+                  Summarise the goals you set last year, describe progress for
+                  each, and provide concrete evidence or data where possible.
+                </p>
+                <p>
+                  When rating KPIs, use the shared scale and note what influenced
+                  improvements or dips compared to last year.
+                </p>
+              </div>
+            </details>
+            <div class="space-y-8">
+              <div>
+                <h3 class="text-md font-semibold text-slate-800 mb-4">
+                  2.1. Goals from Last Year
               </h3>
               <div id="last-year-goals-container" class="space-y-6">
                 <!-- JS will add goals here -->
@@ -283,102 +386,146 @@
         </section>
 
         <!-- Part 3: Job Description Alignment -->
-        <section class="bg-white p-6 rounded-lg shadow-md">
-          <div class="flex justify-between items-center border-b pb-3 mb-6">
-            <div class="tooltip">
-              <h2 class="text-2xl font-bold text-slate-900">
-                Part 3: Job Description Alignment
-              </h2>
-              <svg
-                class="w-5 h-5 tooltip-icon"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
-              </svg>
-              <span class="tooltip-text"
-                >Reflect on how your performance aligns with the core
-                responsibilities outlined in your job description.</span
-              >
-            </div>
-          </div>
-          <!-- Clear Section button removed -->
-          <div id="jd-alignment-container" class="space-y-6">
-        
+        <section
+          id="part-3"
+          class="collapsible-section rounded-lg bg-white shadow-md"
+        >
+          <header class="section-header">
+            <button
+              type="button"
+              class="section-toggle"
+              data-target="#part-3-body"
+              aria-expanded="true"
+            >
+              <span class="section-toggle-icon" aria-hidden="true">▾</span>
+              <span class="text-left">
+                <span class="block text-xl font-semibold text-slate-900 sm:text-2xl"
+                  >Part 3: Job Description Alignment</span
+                >
+                <span class="mt-1 block text-sm text-slate-500"
+                  >Reflect on alignment with each core responsibility in the job
+                  description.</span
+                >
+              </span>
+            </button>
+            <span
+              class="section-summary"
+              data-section-summary
+              aria-live="polite"
+            >
+              Not started
+            </span>
+          </header>
+          <div id="part-3-body" class="section-body space-y-6">
+            <details class="section-help">
+              <summary>Need help with this section?</summary>
+              <div class="space-y-2 text-sm text-slate-600">
+                <p>
+                  Capture specific examples of work that aligns with the job
+                  description. Highlight gaps to frame future support or
+                  resourcing needs.
+                </p>
+              </div>
+            </details>
+            <div id="jd-alignment-container" class="space-y-6"></div>
           </div>
         </section>
 
         <!-- Part 4: Strategic Priorities -->
-        <section class="bg-white p-6 rounded-lg shadow-md">
-          <div class="flex justify-between items-center border-b pb-3 mb-6">
-            <div class="tooltip">
-              <h2 class="text-2xl font-bold text-slate-900">
-                Part 4: Strategic Priorities (2022–2024) Review
-              </h2>
-              <svg
-                class="w-5 h-5 tooltip-icon"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
-              </svg>
-              <span class="tooltip-text"
-                >Evaluate progress against the multi-year strategic goals of the
-                organization.</span
-              >
-            </div>
-          </div>
-          <!-- Clear Section button removed -->
-          <div id="strategic-priorities-container" class="space-y-6">
+        <section
+          id="part-4"
+          class="collapsible-section rounded-lg bg-white shadow-md"
+        >
+          <header class="section-header">
+            <button
+              type="button"
+              class="section-toggle"
+              data-target="#part-4-body"
+              aria-expanded="true"
+            >
+              <span class="section-toggle-icon" aria-hidden="true">▾</span>
+              <span class="text-left">
+                <span class="block text-xl font-semibold text-slate-900 sm:text-2xl"
+                  >Part 4: Strategic Priorities (2022–2024) Review</span
+                >
+                <span class="mt-1 block text-sm text-slate-500"
+                  >Document momentum, headwinds, and trends for each strategic
+                  focus area.</span
+                >
+              </span>
+            </button>
+            <span
+              class="section-summary"
+              data-section-summary
+              aria-live="polite"
+            >
+              Not started
+            </span>
+          </header>
+          <div id="part-4-body" class="section-body space-y-6">
+            <details class="section-help">
+              <summary>Need help with this section?</summary>
+              <div class="space-y-2 text-sm text-slate-600">
+                <p>
+                  Note significant progress or setbacks, identify supporting
+                  evidence, and summarise overall direction of travel for each
+                  strategic priority.
+                </p>
+              </div>
+            </details>
+            <div id="strategic-priorities-container" class="space-y-6"></div>
           </div>
         </section>
 
         <!-- Part 5: Personal Assessment & Development -->
-        <section class="bg-white p-6 rounded-lg shadow-md">
-          <div class="flex justify-between items-center border-b pb-3 mb-6">
-            <div class="tooltip">
-              <h2 class="text-2xl font-bold text-slate-900">
-                Part 5: Personal Assessment & Development
-              </h2>
-              <svg
-                class="w-5 h-5 tooltip-icon"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
-              </svg>
-              <span class="tooltip-text"
-                >A self-reflection on personal strengths, limitations, and
-                professional growth over the past year and for the future.</span
-              >
-            </div>
-          </div>
-          <!-- Clear Section button removed -->
-          <div class="space-y-6">
-            <div>
-              <label
-                for="strengths"
+        <section
+          id="part-5"
+          class="collapsible-section rounded-lg bg-white shadow-md"
+        >
+          <header class="section-header">
+            <button
+              type="button"
+              class="section-toggle"
+              data-target="#part-5-body"
+              aria-expanded="true"
+            >
+              <span class="section-toggle-icon" aria-hidden="true">▾</span>
+              <span class="text-left">
+                <span class="block text-xl font-semibold text-slate-900 sm:text-2xl"
+                  >Part 5: Personal Assessment & Development</span
+                >
+                <span class="mt-1 block text-sm text-slate-500"
+                  >Capture strengths, constraints, and the professional
+                  development that supports your impact.</span
+                >
+              </span>
+            </button>
+            <span
+              class="section-summary"
+              data-section-summary
+              aria-live="polite"
+            >
+              Not started
+            </span>
+          </header>
+          <div id="part-5-body" class="section-body space-y-6">
+            <details class="section-help">
+              <summary>Need help with this section?</summary>
+              <div class="space-y-2 text-sm text-slate-600">
+                <p>
+                  Highlight the capabilities that set you up for success, and be
+                  honest about constraints so tailored support can follow.
+                </p>
+                <p>
+                  For professional development, outline what you pursued, what
+                  you learned, and how it translated into impact.
+                </p>
+              </div>
+            </details>
+            <div class="space-y-6">
+              <div>
+                <label
+                  for="strengths"
                 class="block text-sm font-medium text-slate-700 mb-1"
                 >5.1. Key Strengths</label
               >
@@ -434,104 +581,176 @@
         </section>
 
         <!-- Part 6: Future Focus -->
-        <section class="bg-white p-6 rounded-lg shadow-md">
-          <div class="flex justify-between items-center border-b pb-3 mb-6">
-            <div class="tooltip">
-              <h2 class="text-2xl font-bold text-slate-900">
-                Part 6: Future Focus (Next 12 Months)
-              </h2>
-              <svg
-                class="w-5 h-5 tooltip-icon"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
-              </svg>
-              <span class="tooltip-text"
-                >Define clear, actionable goals for the upcoming 12-month
-                period.</span
-              >
-            </div>
-          </div>
-          <!-- Clear Section button removed -->
-          <div>
-            <h3 class="text-md font-semibold text-slate-800 mb-2">
-              Goals for the Next 12 Months
-            </h3>
-            <div id="future-goals-container" class="space-y-4"></div>
+        <section
+          id="part-6"
+          class="collapsible-section rounded-lg bg-white shadow-md"
+        >
+          <header class="section-header">
             <button
               type="button"
-              onclick="addFutureGoal()"
-              class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition"
+              class="section-toggle"
+              data-target="#part-6-body"
+              aria-expanded="true"
             >
-              + Add Goal
+              <span class="section-toggle-icon" aria-hidden="true">▾</span>
+              <span class="text-left">
+                <span class="block text-xl font-semibold text-slate-900 sm:text-2xl"
+                  >Part 6: Future Focus (Next 12 Months)</span
+                >
+                <span class="mt-1 block text-sm text-slate-500"
+                  >Translate insights into clear goals and success indicators for
+                  the coming year.</span
+                >
+              </span>
             </button>
+            <span
+              class="section-summary"
+              data-section-summary
+              aria-live="polite"
+            >
+              Not started
+            </span>
+          </header>
+          <div id="part-6-body" class="section-body space-y-6">
+            <details class="section-help">
+              <summary>Need help with this section?</summary>
+              <div class="space-y-2 text-sm text-slate-600">
+                <p>
+                  Outline high-impact goals and describe how success will be
+                  measured. Connect each goal back to strategic priorities.
+                </p>
+              </div>
+            </details>
+            <div>
+              <h3 class="text-md font-semibold text-slate-800 mb-2">
+                Goals for the Next 12 Months
+              </h3>
+              <div id="future-goals-container" class="space-y-4"></div>
+              <button
+                type="button"
+                onclick="addFutureGoal()"
+                class="mt-4 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-300 bg-slate-200 rounded-md"
+              >
+                + Add Goal
+              </button>
+            </div>
           </div>
         </section>
 
         <!-- Part 7: Dialogue with the Board -->
-        <section class="bg-white p-6 rounded-lg shadow-md">
-          <div class="flex justify-between items-center border-b pb-3 mb-6">
-            <div class="tooltip">
-              <h2 class="text-2xl font-bold text-slate-900">
-                Part 7: Dialogue with the Board
-              </h2>
-              <svg
-                class="w-5 h-5 tooltip-icon"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
-              </svg>
-              <span class="tooltip-text"
-                >Use this section to communicate specific needs or requests
-                directly to the board.</span
-              >
-            </div>
-          </div>
-          <!-- Clear Section button removed -->
-          <div>
-            <h3 class="text-md font-semibold text-slate-800 mb-2">
-              Requests for the Board
-            </h3>
-            <div id="board-requests-container" class="space-y-4"></div>
+        <section
+          id="part-7"
+          class="collapsible-section rounded-lg bg-white shadow-md"
+        >
+          <header class="section-header">
             <button
               type="button"
-              onclick="addBoardRequest()"
-              class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-300 transition"
+              class="section-toggle"
+              data-target="#part-7-body"
+              aria-expanded="true"
             >
-              + Add Request
+              <span class="section-toggle-icon" aria-hidden="true">▾</span>
+              <span class="text-left">
+                <span class="block text-xl font-semibold text-slate-900 sm:text-2xl"
+                  >Part 7: Dialogue with the Board</span
+                >
+                <span class="mt-1 block text-sm text-slate-500"
+                  >Document the decisions, resources, or inputs you need from
+                  the board.</span
+                >
+              </span>
             </button>
+            <span
+              class="section-summary"
+              data-section-summary
+              aria-live="polite"
+            >
+              Not started
+            </span>
+          </header>
+          <div id="part-7-body" class="section-body space-y-6">
+            <details class="section-help">
+              <summary>Need help with this section?</summary>
+              <div class="space-y-2 text-sm text-slate-600">
+                <p>
+                  Clarify the support or approvals required, why they matter now,
+                  and the impact on organisational goals if action is delayed.
+                </p>
+              </div>
+            </details>
+            <div>
+              <h3 class="text-md font-semibold text-slate-800 mb-2">
+                Requests for the Board
+              </h3>
+              <div id="board-requests-container" class="space-y-4"></div>
+              <button
+                type="button"
+                onclick="addBoardRequest()"
+                class="mt-4 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-300 bg-slate-200 rounded-md"
+              >
+                + Add Request
+              </button>
+            </div>
           </div>
         </section>
 
-        <!-- Submission, PDF Export, and Logout -->
-        <div class="flex flex-col sm:flex-row justify-end items-center pt-4 space-y-3 sm:space-y-0 sm:space-x-4">
-          <span id="save-status" class="text-sm text-slate-500"></span>
-          <button type="button" id="save-progress-btn" class="w-full sm:w-auto px-6 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all shadow-md">
-            Save Progress
-          </button>
-          <button type="button" id="save-pdf-btn" class="w-full sm:w-auto px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition-all shadow-md print:hidden">
-            Save as PDF
-          </button>
-          <button type="submit" class="w-full sm:w-auto px-8 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all shadow-lg print:hidden">
-            Submit Review
-          </button>
-          <button type="button" id="logout-btn" class="w-full sm:w-auto px-6 py-2 bg-slate-400 text-white font-semibold rounded-lg hover:bg-slate-500 focus:outline-none focus:ring-4 focus:ring-slate-300 transition-all shadow-md ml-2">Log Out</button>
+        <!-- Submission, Tools, and Logout -->
+        <div
+          id="form-utility-bar"
+          class="sticky bottom-0 z-30 mt-10 -mx-4 flex flex-col gap-4 rounded-t-xl border border-slate-200 bg-white/95 p-4 shadow-xl backdrop-blur sm:-mx-6 lg:-mx-8 print:hidden"
+        >
+          <div class="flex flex-col gap-1 text-xs text-slate-500 sm:flex-row sm:items-center sm:gap-4">
+            <div class="flex items-center gap-2 text-sm text-slate-600">
+              <span class="inline-flex h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true"></span>
+              <span class="font-medium text-slate-700" id="autosave-indicator">
+                Autosave ready
+              </span>
+            </div>
+            <span id="save-status" class="text-xs text-slate-500"></span>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              id="load-last-saved-btn"
+              class="action-chip"
+            >
+              Load Last Saved
+            </button>
+            <button
+              type="button"
+              id="clear-form-btn"
+              class="action-chip"
+            >
+              Clear Entire Form
+            </button>
+            <button
+              type="button"
+              id="save-progress-btn"
+              class="primary-chip bg-slate-700 text-white hover:bg-slate-800"
+            >
+              Save Draft
+            </button>
+            <button
+              type="button"
+              id="save-pdf-btn"
+              class="primary-chip bg-emerald-600 text-white hover:bg-emerald-700 print:hidden"
+            >
+              Save as PDF
+            </button>
+            <button
+              type="submit"
+              class="primary-chip bg-blue-600 text-white hover:bg-blue-700 print:hidden"
+            >
+              Submit Review
+            </button>
+            <button
+              type="button"
+              id="logout-btn"
+              class="action-chip text-slate-600"
+            >
+              Log Out
+            </button>
+          </div>
         </div>
       </form>
     </div>

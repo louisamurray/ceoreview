@@ -29,14 +29,401 @@ const ratingDescriptions = {
 };
 window.ceoReviewConfig = { kpis, strategicPriorities, jdAreas, ratingDescriptions };
 
+// --- UI Helpers ---
+function debounce(fn, wait = 300) {
+  let timeout;
+  return function debounced(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn.apply(this, args), wait);
+  };
+}
+
+function smoothScrollTo(target) {
+  const el = typeof target === 'string' ? document.querySelector(target) : target;
+  if (!el) return;
+  const offset = 80;
+  const top = el.getBoundingClientRect().top + window.scrollY - offset;
+  window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+}
+
+function setSectionCollapsed(section, collapsed) {
+  if (!section) return;
+  const toggle = section.querySelector('.section-toggle');
+  if (!toggle) return;
+  const targetSelector = toggle.dataset.target;
+  const body = targetSelector ? document.querySelector(targetSelector) : null;
+  const isCollapsed = Boolean(collapsed);
+  if (isCollapsed) {
+    section.dataset.collapsed = 'true';
+  } else {
+    delete section.dataset.collapsed;
+  }
+  toggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+  if (body) body.hidden = isCollapsed;
+}
+
+function updateSectionSummary(section) {
+  const summaryEl = section.querySelector('[data-section-summary]');
+  if (!summaryEl) return;
+  const fields = Array.from(section.querySelectorAll(
+    '.section-body textarea, .section-body select, .section-body input[type="text"], .section-body input[type="email"], .section-body input[type="number"]'
+  ));
+  const filledFields = fields.filter((el) => {
+    if (el.tagName === 'SELECT') return el.value && el.value.trim() !== '';
+    return el.value && el.value.trim() !== '';
+  }).length;
+  const radioGroups = new Set();
+  const radioValues = new Set();
+  section.querySelectorAll('.section-body input[type="radio"]').forEach((el) => {
+    radioGroups.add(el.name);
+    if (el.checked) radioValues.add(el.name);
+  });
+  const total = fields.length + radioGroups.size;
+  const filled = filledFields + radioValues.size;
+  if (!total) {
+    summaryEl.textContent = 'Ready';
+    return;
+  }
+  if (filled === 0) {
+    summaryEl.textContent = 'Not started';
+  } else if (filled >= total) {
+    summaryEl.textContent = 'Complete';
+  } else {
+    summaryEl.textContent = `In progress · ${filled}/${total}`;
+  }
+}
+
+function updateAllSectionSummaries() {
+  document.querySelectorAll('.collapsible-section').forEach(updateSectionSummary);
+}
+
+function setupCollapsibles() {
+  const sections = Array.from(document.querySelectorAll('.collapsible-section'));
+  const collapseAllBtn = document.getElementById('collapse-all-btn');
+  const syncCollapseLabel = () => {
+    if (!collapseAllBtn) return;
+    const anyOpen = sections.some((section) => section.dataset.collapsed !== 'true');
+    collapseAllBtn.textContent = anyOpen ? 'Collapse all' : 'Expand all';
+  };
+  sections.forEach((section) => {
+    const toggle = section.querySelector('.section-toggle');
+    if (!toggle) return;
+    const targetSelector = toggle.dataset.target;
+    const body = targetSelector ? document.querySelector(targetSelector) : null;
+    if (body && body.hasAttribute('hidden')) {
+      section.dataset.collapsed = 'true';
+      toggle.setAttribute('aria-expanded', 'false');
+    } else if (body) {
+      body.hidden = false;
+    }
+    toggle.addEventListener('click', () => {
+      const wasCollapsed = section.dataset.collapsed === 'true';
+      setSectionCollapsed(section, !wasCollapsed);
+      syncCollapseLabel();
+    });
+  });
+  if (collapseAllBtn) {
+    collapseAllBtn.addEventListener('click', () => {
+      const anyOpen = sections.some((section) => section.dataset.collapsed !== 'true');
+      sections.forEach((section) => setSectionCollapsed(section, anyOpen));
+      syncCollapseLabel();
+    });
+    syncCollapseLabel();
+  }
+}
+
+function setupSectionNav() {
+  const pills = Array.from(document.querySelectorAll('.section-nav-pill'));
+  const select = document.getElementById('section-nav-select');
+  const sections = Array.from(document.querySelectorAll('.collapsible-section'));
+
+  pills.forEach((pill) => {
+    pill.addEventListener('click', () => {
+      const target = pill.dataset.target;
+      if (target) {
+        const section = document.querySelector(target);
+        if (section) setSectionCollapsed(section, false);
+        smoothScrollTo(target);
+      }
+    });
+  });
+
+  if (select) {
+    select.addEventListener('change', (e) => {
+      if (e.target.value) {
+        const section = document.querySelector(e.target.value);
+        if (section) setSectionCollapsed(section, false);
+        smoothScrollTo(e.target.value);
+      }
+    });
+  }
+
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const id = `#${entry.target.id}`;
+          pills.forEach((pill) => {
+            pill.classList.toggle('is-active', pill.dataset.target === id);
+          });
+          if (select && select.value !== id) {
+            select.value = id;
+          }
+        });
+      },
+      { threshold: 0.4 }
+    );
+    sections.forEach((section) => {
+      if (section.id) observer.observe(section);
+    });
+  }
+}
+
+function enhanceTextarea(textarea) {
+  if (!textarea || textarea.dataset.enhanced === 'true') return;
+  textarea.dataset.enhanced = 'true';
+  const wrapper = document.createElement('div');
+  wrapper.className = 'rich-text';
+  const toolbar = document.createElement('div');
+  toolbar.className = 'rich-text-toolbar';
+
+  const bulletBtn = document.createElement('button');
+  bulletBtn.type = 'button';
+  bulletBtn.textContent = '• Bullet';
+
+  const exampleBtn = document.createElement('button');
+  exampleBtn.type = 'button';
+  exampleBtn.textContent = 'Insert example';
+
+  const counter = document.createElement('span');
+  counter.className = 'rich-text-count';
+  counter.textContent = '0 words';
+
+  toolbar.appendChild(bulletBtn);
+  toolbar.appendChild(exampleBtn);
+  toolbar.appendChild(counter);
+
+  const originalParent = textarea.parentElement;
+  const placeholderClasses = ['border', 'border-slate-300', 'rounded-md'];
+  placeholderClasses.forEach((cls) => textarea.classList.remove(cls));
+  textarea.classList.add('w-full', 'p-3');
+
+  wrapper.appendChild(toolbar);
+  wrapper.appendChild(textarea.cloneNode(false));
+
+  const clonedTextarea = wrapper.querySelector('textarea');
+  clonedTextarea.dataset.enhanced = 'true';
+  clonedTextarea.value = textarea.value;
+  Array.from(textarea.attributes).forEach((attr) => {
+    if (attr.name === 'class') {
+      clonedTextarea.className = textarea.className;
+    } else {
+      clonedTextarea.setAttribute(attr.name, attr.value);
+    }
+  });
+
+  originalParent.replaceChild(wrapper, textarea);
+
+  const updateCounter = () => {
+    const words = clonedTextarea.value.trim();
+    const count = words ? words.split(/\s+/).length : 0;
+    counter.textContent = `${count} ${count === 1 ? 'word' : 'words'}`;
+  };
+
+  clonedTextarea.addEventListener('input', updateCounter);
+  updateCounter();
+
+  bulletBtn.addEventListener('click', () => {
+    const currentValue = clonedTextarea.value;
+    const { selectionStart } = clonedTextarea;
+    const lineStart = currentValue.lastIndexOf('\n', selectionStart - 1) + 1;
+    if (currentValue.slice(lineStart, lineStart + 2) === '• ') {
+      clonedTextarea.focus();
+      return;
+    }
+    const newValue =
+      currentValue.slice(0, lineStart) + '• ' + currentValue.slice(lineStart);
+    const caret = selectionStart + 2;
+    clonedTextarea.value = newValue;
+    clonedTextarea.focus();
+    clonedTextarea.setSelectionRange(caret, caret);
+    clonedTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+
+  exampleBtn.addEventListener('click', () => {
+    const template = '• Context: \n• Action: \n• Impact: ';
+    clonedTextarea.value = clonedTextarea.value
+      ? `${clonedTextarea.value.trim()}\n${template}`
+      : template;
+    clonedTextarea.focus();
+    clonedTextarea.setSelectionRange(clonedTextarea.value.length, clonedTextarea.value.length);
+    clonedTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+}
+
+function enhanceAllTextareas(root = document) {
+  root.querySelectorAll('textarea').forEach((textarea) => {
+    if (textarea.dataset.noEnhance === 'true') return;
+    enhanceTextarea(textarea);
+  });
+}
+
+function setupAutosave(form) {
+  if (!form) return;
+  const indicator = document.getElementById('autosave-indicator');
+  if (!indicator) return;
+
+  const updateIndicator = (text) => {
+    indicator.textContent = text;
+  };
+
+  const runAutosave = debounce(() => {
+    try {
+      const payload = collectFormData();
+      const timestamp = new Date().toISOString();
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ savedAt: timestamp, data: payload })
+      );
+      const time = new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      updateIndicator(`Autosaved · ${time}`);
+    } catch (err) {
+      updateIndicator('Autosave failed');
+      console.error(err);
+    }
+  }, 1200);
+
+  form.addEventListener('input', () => {
+    updateIndicator('Autosaving…');
+    runAutosave();
+  });
+  form.addEventListener('change', () => {
+    updateIndicator('Autosaving…');
+    runAutosave();
+  });
+
+  const existing = localStorage.getItem(STORAGE_KEY);
+  if (existing) {
+    try {
+      const data = JSON.parse(existing);
+      if (data?.savedAt) {
+        const time = new Date(data.savedAt).toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        updateIndicator(`Draft from ${time}`);
+      }
+    } catch (err) {
+      console.warn('Failed to parse saved draft timestamp', err);
+    }
+  }
+}
+
+const modalFocusTraps = new WeakMap();
+
+function getFocusableElements(modal) {
+  return Array.from(
+    modal.querySelectorAll(
+      'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+    )
+  ).filter((el) => !el.hasAttribute('disabled') && el.getAttribute('aria-hidden') !== 'true');
+}
+
+function activateFocusTrap(modal, onClose) {
+  if (!modal) return;
+  releaseFocusTrap(modal);
+  const focusable = getFocusableElements(modal);
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  const handler = (event) => {
+    if (event.key === 'Tab') {
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+    if (event.key === 'Escape' && typeof onClose === 'function') {
+      event.preventDefault();
+      onClose();
+    }
+  };
+  modal.addEventListener('keydown', handler);
+  modalFocusTraps.set(modal, { handler });
+  const autoFocusTarget = modal.querySelector('[data-auto-focus]') || first;
+  window.requestAnimationFrame(() => autoFocusTarget.focus());
+}
+
+function releaseFocusTrap(modal) {
+  const trap = modalFocusTraps.get(modal);
+  if (!trap) return;
+  modal.removeEventListener('keydown', trap.handler);
+  modalFocusTraps.delete(modal);
+}
+
+function openModal(modal, onClose) {
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  modal.setAttribute('aria-hidden', 'false');
+  activateFocusTrap(modal, onClose);
+}
+
+function closeModal(modal) {
+  if (!modal) return;
+  modal.classList.add('hidden');
+  modal.setAttribute('aria-hidden', 'true');
+  releaseFocusTrap(modal);
+}
+
 // --- Debug Log ---
 
 // --- Login Modal Display ---
 function showLoginModal(show) {
   const loginModal = document.getElementById('login-modal');
   const appContainer = document.getElementById('app-container');
-  if (loginModal) loginModal.classList.toggle('hidden', !show);
-  if (appContainer) appContainer.style.display = show ? 'none' : '';
+  if (!loginModal) return;
+  if (show) {
+    showSignupModal(false);
+    openModal(loginModal, () => showLoginModal(false));
+    if (appContainer) {
+      appContainer.style.display = 'none';
+      appContainer.setAttribute('aria-hidden', 'true');
+    }
+  } else {
+    closeModal(loginModal);
+    if (appContainer) {
+      appContainer.style.display = '';
+      appContainer.setAttribute('aria-hidden', 'false');
+    }
+  }
+}
+
+function showSignupModal(show) {
+  const signupModal = document.getElementById('signup-modal');
+  const appContainer = document.getElementById('app-container');
+  if (!signupModal) return;
+  if (show) {
+    openModal(signupModal, () => showSignupModal(false));
+    if (appContainer) {
+      appContainer.style.display = 'none';
+      appContainer.setAttribute('aria-hidden', 'true');
+    }
+  } else {
+    closeModal(signupModal);
+    const loginModal = document.getElementById('login-modal');
+    if (
+      appContainer &&
+      loginModal &&
+      loginModal.classList.contains('hidden')
+    ) {
+      appContainer.style.display = '';
+      appContainer.setAttribute('aria-hidden', 'false');
+    }
+  }
 }
 
 // --- Logout Handler ---
@@ -51,6 +438,7 @@ function attachLogoutHandler() {
 function clearForm() {
   const form = document.getElementById('reviewForm');
   if (form) form.reset();
+  updateAllSectionSummaries();
 }
 
 // --- Auth Change Listener ---
@@ -82,14 +470,16 @@ window.onFirebaseAuthStateChanged = function(user) {
 
   if (user) {
     localStorage.removeItem(STORAGE_KEY);
-    if (loginModal) loginModal.classList.add('hidden');
-    if (signupModal) signupModal.classList.add('hidden');
-    if (appContainer) appContainer.style.display = '';
+    showLoginModal(false);
+    showSignupModal(false);
+    if (appContainer) {
+      appContainer.style.display = '';
+      appContainer.setAttribute('aria-hidden', 'false');
+    }
     // Do not auto-load last saved draft. Only load on button click.
   } else {
-    if (loginModal) loginModal.classList.remove('hidden');
-    if (signupModal) signupModal.classList.add('hidden');
-    if (appContainer) appContainer.style.display = '';
+    showSignupModal(false);
+    showLoginModal(true);
     localStorage.removeItem(STORAGE_KEY);
     clearForm();
   }
@@ -97,6 +487,17 @@ window.onFirebaseAuthStateChanged = function(user) {
 
 // --- Initialise Form App ---
 document.addEventListener('DOMContentLoaded', () => {
+  setupCollapsibles();
+  setupSectionNav();
+
+  const form = document.getElementById('reviewForm');
+  setupAutosave(form);
+  if (form) {
+    form.addEventListener('input', updateAllSectionSummaries);
+    form.addEventListener('change', updateAllSectionSummaries);
+  }
+  updateAllSectionSummaries();
+
   // Clear entire form
   const clearFormBtn = document.getElementById('clear-form-btn');
   if (clearFormBtn) {
@@ -116,6 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (challenges) {
         Array.from(challenges.querySelectorAll('textarea')).forEach(t => t.value = '');
       }
+      updateAllSectionSummaries();
     };
   }
 
@@ -137,6 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
         Array.from(kpiContainer.querySelectorAll('select')).forEach(el => el.selectedIndex = 0);
         Array.from(kpiContainer.querySelectorAll('input[type="text"]')).forEach(el => el.value = '');
       }
+      updateAllSectionSummaries();
     };
   }
 
@@ -148,6 +551,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (jdContainer) {
         Array.from(jdContainer.querySelectorAll('textarea')).forEach(el => el.value = '');
       }
+      updateAllSectionSummaries();
     };
   }
 
@@ -160,6 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
         Array.from(spContainer.querySelectorAll('textarea')).forEach(el => el.value = '');
         Array.from(spContainer.querySelectorAll('select')).forEach(el => el.selectedIndex = 0);
       }
+      updateAllSectionSummaries();
     };
   }
 
@@ -180,6 +585,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (pdNeeded) {
         Array.from(pdNeeded.querySelectorAll('input, textarea')).forEach(el => el.value = '');
       }
+      updateAllSectionSummaries();
     };
   }
 
@@ -191,6 +597,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (futureGoals) {
         Array.from(futureGoals.querySelectorAll('input, textarea')).forEach(el => el.value = '');
       }
+      updateAllSectionSummaries();
     };
   }
 
@@ -205,6 +612,7 @@ document.addEventListener('DOMContentLoaded', () => {
           else el.value = '';
         });
       }
+      updateAllSectionSummaries();
     };
   }
   // Load Last Saved Button
@@ -236,8 +644,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const showSignupBtn = document.getElementById('show-signup-btn');
   if (showSignupBtn) {
     showSignupBtn.onclick = function() {
-      document.getElementById('login-modal').classList.add('hidden');
-      document.getElementById('signup-modal').classList.remove('hidden');
+      showLoginModal(false);
+      showSignupModal(true);
     };
   }
 
@@ -245,10 +653,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const showLoginBtn = document.getElementById('show-login-btn');
   if (showLoginBtn) {
     showLoginBtn.onclick = function() {
-      document.getElementById('signup-modal').classList.add('hidden');
-      document.getElementById('login-modal').classList.remove('hidden');
+      showSignupModal(false);
+      showLoginModal(true);
     };
   }
+
+  document.querySelectorAll('[data-modal-close]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const modal = button.closest('[data-modal]');
+      if (!modal) return;
+      if (modal.id === 'login-modal') {
+        showLoginModal(false);
+      } else if (modal.id === 'signup-modal') {
+        showSignupModal(false);
+      } else {
+        closeModal(modal);
+      }
+    });
+  });
 
   // Sign-up form handler
   const signupForm = document.getElementById('signup-form');
@@ -288,7 +710,8 @@ document.addEventListener('DOMContentLoaded', () => {
       5: "Consistently exceeds expectations"
     };
     function tooltipHtml(text) {
-      return `<span class='tooltip-group relative'><svg class='inline w-4 h-4 text-blue-400 ml-1 cursor-pointer' fill='none' stroke='currentColor' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' stroke-width='2' /><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 16v-4m0-4h.01'/></svg><span class='tooltip-text absolute left-6 top-0 z-10 bg-slate-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200'>${text}</span></span>`;
+      const safeText = String(text).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      return `<button type="button" class="info-dot ml-1 shrink-0" data-info="${safeText}" aria-label="${safeText}">i</button>`;
     }
     window.ceoReviewConfig.kpis.forEach((kpi, i) => {
       const div = document.createElement('div');
@@ -370,21 +793,10 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
       spContainer.appendChild(div);
     });
-// Tooltip CSS for hover effect
-const style = document.createElement('style');
-style.textContent = `
-.tooltip-group:hover .tooltip-text {
-  opacity: 1;
-  pointer-events: auto;
-}
-.tooltip-text {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s;
-}
-`;
-document.head.appendChild(style);
   }
+
+  enhanceAllTextareas();
+  updateAllSectionSummaries();
 });
 
 // --- Dynamic Field Functions ---
@@ -425,6 +837,7 @@ function addChallenge() {
   // Clear button handler
   div.querySelector('.clear-challenge-btn').onclick = function() {
     Array.from(div.querySelectorAll('textarea')).forEach(t => t.value = '');
+    updateAllSectionSummaries();
   };
   // Remove button handler
   div.querySelector('.remove-challenge-btn').onclick = function() {
@@ -434,8 +847,11 @@ function addChallenge() {
       const h = el.querySelector('h4');
       if (h) h.textContent = `Challenge #${i+1}`;
     });
+    updateAllSectionSummaries();
   };
   container.appendChild(div);
+  enhanceAllTextareas(div);
+  updateAllSectionSummaries();
 }
 
 function addLastYearGoal() {
@@ -474,6 +890,7 @@ function addLastYearGoal() {
     div.querySelector('input[type="text"]').value = '';
     div.querySelector('select').selectedIndex = 0;
     div.querySelector('textarea').value = '';
+    updateAllSectionSummaries();
   };
   div.querySelector('.remove-goal-btn').onclick = function() {
     div.remove();
@@ -481,8 +898,11 @@ function addLastYearGoal() {
       const h = el.querySelector('h4');
       if (h) h.textContent = `Goal from Last Year #${i+1}`;
     });
+    updateAllSectionSummaries();
   };
   container.appendChild(div);
+  enhanceAllTextareas(div);
+  updateAllSectionSummaries();
 }
 
 function addPDUndertaken() {
@@ -534,6 +954,7 @@ function addPDUndertaken() {
     div.querySelector('input[type="text"]').value = '';
     Array.from(div.querySelectorAll('textarea')).forEach(t => t.value = '');
     Array.from(div.querySelectorAll('select')).forEach(s => s.selectedIndex = 0);
+    updateAllSectionSummaries();
   };
   div.querySelector('.remove-pd-btn').onclick = function() {
     div.remove();
@@ -541,8 +962,11 @@ function addPDUndertaken() {
       const h = el.querySelector('h4');
       if (h) h.textContent = `Programme/Course #${i+1}`;
     });
+    updateAllSectionSummaries();
   };
   container.appendChild(div);
+  enhanceAllTextareas(div);
+  updateAllSectionSummaries();
 }
 
 function addPDNeeded() {
@@ -572,6 +996,7 @@ function addPDNeeded() {
   div.querySelector('.clear-pdneed-btn').onclick = function() {
     div.querySelector('input[type="text"]').value = '';
     div.querySelector('textarea').value = '';
+    updateAllSectionSummaries();
   };
   div.querySelector('.remove-pdneed-btn').onclick = function() {
     div.remove();
@@ -579,8 +1004,11 @@ function addPDNeeded() {
       const h = el.querySelector('h4');
       if (h) h.textContent = `Development Need #${i+1}`;
     });
+    updateAllSectionSummaries();
   };
   container.appendChild(div);
+  enhanceAllTextareas(div);
+  updateAllSectionSummaries();
 }
 
 function addFutureGoal() {
@@ -614,6 +1042,7 @@ function addFutureGoal() {
   div.querySelector('.clear-futuregoal-btn').onclick = function() {
     div.querySelector('input[type="text"]').value = '';
     Array.from(div.querySelectorAll('textarea')).forEach(t => t.value = '');
+    updateAllSectionSummaries();
   };
   div.querySelector('.remove-futuregoal-btn').onclick = function() {
     div.remove();
@@ -621,8 +1050,11 @@ function addFutureGoal() {
       const h = el.querySelector('h4');
       if (h) h.textContent = `Future Goal #${i+1}`;
     });
+    updateAllSectionSummaries();
   };
   container.appendChild(div);
+  enhanceAllTextareas(div);
+  updateAllSectionSummaries();
 }
 
 function removeFutureGoal() {
@@ -669,6 +1101,7 @@ function addBoardRequest() {
     Array.from(div.querySelectorAll('textarea')).forEach(t => t.value = '');
     div.querySelector('select').selectedIndex = 0;
     div.querySelector('input[type="text"]').value = '';
+    updateAllSectionSummaries();
   };
   div.querySelector('.remove-boardrequest-btn').onclick = function() {
     div.remove();
@@ -676,8 +1109,11 @@ function addBoardRequest() {
       const h = el.querySelector('h4');
       if (h) h.textContent = `Board Request #${i+1}`;
     });
+    updateAllSectionSummaries();
   };
   container.appendChild(div);
+  enhanceAllTextareas(div);
+  updateAllSectionSummaries();
 }
 
 // --- Global Exports ---
@@ -901,6 +1337,7 @@ async function loadProgress() {
       el.querySelector('select').value = item.requested || '';
       el.querySelector('input[placeholder*="workload pressure"]').value = item.changed || '';
     });
+    updateAllSectionSummaries();
     status.textContent = 'Loaded!';
     setTimeout(() => { status.textContent = ''; }, 2000);
   } catch (err) {
