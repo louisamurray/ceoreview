@@ -19,8 +19,14 @@ function getReviewDocRef(uid, collection) {
 }
 
 // Login
+
 function loginWithEmail(email, password) {
   return auth.signInWithEmailAndPassword(email, password);
+}
+
+// Sign Up
+function signUpWithEmail(email, password) {
+  return auth.createUserWithEmailAndPassword(email, password);
 }
 
 // Logout
@@ -50,6 +56,7 @@ auth.onAuthStateChanged(user => {
 // Expose helpers globally
 window.firebaseHelpers = {
   loginWithEmail,
+  signUpWithEmail,
   logout,
   saveReviewData,
   loadReviewData,

@@ -76,6 +76,7 @@ function clearForm() {
 window.onFirebaseAuthStateChanged = function(user) {
   const appContainer = document.getElementById('app-container');
   const loginModal = document.getElementById('login-modal');
+  const signupModal = document.getElementById('signup-modal');
 
   const showCriticalError = (msg) => {
     if (appContainer) {
@@ -102,10 +103,12 @@ window.onFirebaseAuthStateChanged = function(user) {
   if (user) {
     localStorage.removeItem(STORAGE_KEY);
     if (loginModal) loginModal.classList.add('hidden');
+    if (signupModal) signupModal.classList.add('hidden');
     if (appContainer) appContainer.style.display = '';
     // Do not auto-load last saved draft. Only load on button click.
   } else {
     if (loginModal) loginModal.classList.remove('hidden');
+    if (signupModal) signupModal.classList.add('hidden');
     if (appContainer) appContainer.style.display = '';
     localStorage.removeItem(STORAGE_KEY);
     clearForm();
@@ -139,31 +142,87 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
   }
+
+  // Show sign-up modal from login
+  const showSignupBtn = document.getElementById('show-signup-btn');
+  if (showSignupBtn) {
+    showSignupBtn.onclick = function() {
+      document.getElementById('login-modal').classList.add('hidden');
+      document.getElementById('signup-modal').classList.remove('hidden');
+    };
+  }
+
+  // Show login modal from sign-up
+  const showLoginBtn = document.getElementById('show-login-btn');
+  if (showLoginBtn) {
+    showLoginBtn.onclick = function() {
+      document.getElementById('signup-modal').classList.add('hidden');
+      document.getElementById('login-modal').classList.remove('hidden');
+    };
+  }
+
+  // Sign-up form handler
+  const signupForm = document.getElementById('signup-form');
+  if (signupForm) {
+    signupForm.onsubmit = async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('signup-email').value.trim();
+      const password = document.getElementById('signup-password').value;
+      const confirm = document.getElementById('signup-confirm').value;
+      const errorDiv = document.getElementById('signup-error');
+      errorDiv.textContent = '';
+      if (password !== confirm) {
+        errorDiv.textContent = 'Passwords do not match.';
+        return;
+      }
+      if (password.length < 6) {
+        errorDiv.textContent = 'Password must be at least 6 characters.';
+        return;
+      }
+      try {
+        await window.firebaseHelpers.signUpWithEmail(email, password);
+        // Success: modal will close via auth state listener
+      } catch (err) {
+        errorDiv.textContent = err.message || 'Sign up failed. Please try again.';
+      }
+    };
+  }
   attachLogoutHandler();
   // Render KPI cards
   const kpiContainer = document.getElementById('kpi-container');
   if (kpiContainer && Array.isArray(window.ceoReviewConfig?.kpis)) {
+    const ratingDescriptions = {
+      1: "Unacceptable",
+      2: "Partially meets expectations",
+      3: "Meets expectations",
+      4: "Meets and often exceeds expectations",
+      5: "Consistently exceeds expectations"
+    };
+    function tooltipHtml(text) {
+      return `<span class='tooltip-group relative'><svg class='inline w-4 h-4 text-blue-400 ml-1 cursor-pointer' fill='none' stroke='currentColor' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' stroke-width='2' /><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 16v-4m0-4h.01'/></svg><span class='tooltip-text absolute left-6 top-0 z-10 bg-slate-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200'>${text}</span></span>`;
+    }
     window.ceoReviewConfig.kpis.forEach((kpi, i) => {
       const div = document.createElement('div');
       div.className = "p-6 bg-slate-50 border border-slate-200 rounded-xl shadow-sm mb-4";
       div.innerHTML = `
-        <div class="mb-2 font-semibold text-slate-800">${kpi}</div>
+        <div class="mb-2 font-semibold text-slate-800">${kpi} ${tooltipHtml("Rate your performance in this area.")}</div>
         <div class="flex items-center gap-2 mb-2">
           <span class="text-sm text-slate-700">Rating:</span>
           <div class="flex gap-2">
-            <label><input type="radio" name="kpi-${i}" value="1" class="accent-blue-600"> 1</label>
-            <label><input type="radio" name="kpi-${i}" value="2" class="accent-blue-600"> 2</label>
-            <label><input type="radio" name="kpi-${i}" value="3" class="accent-blue-600"> 3</label>
-            <label><input type="radio" name="kpi-${i}" value="4" class="accent-blue-600"> 4</label>
-            <label><input type="radio" name="kpi-${i}" value="5" class="accent-blue-600"> 5</label>
+            <label class="relative"> <input type="radio" name="kpi-${i}" value="1" class="accent-blue-600"> 1 ${tooltipHtml(ratingDescriptions[1])}</label>
+            <label class="relative"> <input type="radio" name="kpi-${i}" value="2" class="accent-blue-600"> 2 ${tooltipHtml(ratingDescriptions[2])}</label>
+            <label class="relative"> <input type="radio" name="kpi-${i}" value="3" class="accent-blue-600"> 3 ${tooltipHtml(ratingDescriptions[3])}</label>
+            <label class="relative"> <input type="radio" name="kpi-${i}" value="4" class="accent-blue-600"> 4 ${tooltipHtml(ratingDescriptions[4])}</label>
+            <label class="relative"> <input type="radio" name="kpi-${i}" value="5" class="accent-blue-600"> 5 ${tooltipHtml(ratingDescriptions[5])}</label>
           </div>
         </div>
         <div class="mb-2">
-          <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="Evidence / Examples for ${kpi}..."></textarea>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Evidence / Examples ${tooltipHtml("Include specific examples, data, or feedback that justify your rating.")}</label>
+          <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="Describe evidence, examples, or feedback for ${kpi}. What supports your rating?"></textarea>
         </div>
         <div class="flex flex-col sm:flex-row gap-3">
           <div class="flex-1">
-            <label class="block text-sm font-medium text-slate-700 mb-1">Compared to Last Year</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Compared to Last Year ${tooltipHtml("How does this area compare to last year?")}</label>
             <select class="w-full p-2 border border-slate-300 rounded-md bg-white">
               <option>Better</option>
               <option>About the Same</option>
@@ -171,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </select>
           </div>
           <div class="flex-1">
-            <label class="block text-sm font-medium text-slate-700 mb-1">Why? (briefly)</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Why? (briefly) ${tooltipHtml("Explain the reason for your rating and comparison.")}</label>
             <input type="text" class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="Why? (briefly)">
           </div>
         </div>
@@ -187,9 +246,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const div = document.createElement('div');
       div.className = "p-6 bg-slate-50 border border-slate-200 rounded-xl shadow-sm mb-4";
       div.innerHTML = `
-        <div class="mb-2 font-semibold text-slate-800">${area}</div>
+        <div class="mb-2 font-semibold text-slate-800">${area} ${tooltipHtml("Reflect on this job description area.")}</div>
         <div class="mb-3">
+          <label class="block text-sm font-medium text-slate-700 mb-1">What Went Well ${tooltipHtml("Describe successes, strengths, or positive outcomes in this area.")}</label>
           <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white mb-2" placeholder="What Went Well..."></textarea>
+          <label class="block text-sm font-medium text-slate-700 mb-1">What Did Not Go Well ${tooltipHtml("Describe challenges, missed targets, or areas for improvement.")}</label>
           <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="What Did Not Go Well..."></textarea>
         </div>
       `;
@@ -204,11 +265,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const div = document.createElement('div');
       div.className = "p-6 bg-slate-50 border border-slate-200 rounded-xl shadow-sm mb-4";
       div.innerHTML = `
-        <div class="mb-2 font-semibold text-slate-800">${priority}</div>
+        <div class="mb-2 font-semibold text-slate-800">${priority} ${tooltipHtml("Reflect on this strategic priority.")}</div>
         <div class="mb-3">
+          <label class="block text-sm font-medium text-slate-700 mb-1">Progress & Achievements ${tooltipHtml("Describe progress, milestones, or achievements for this priority.")}</label>
           <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white mb-2" placeholder="Progress & Achievements..."></textarea>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Challenges ${tooltipHtml("Describe any challenges or obstacles faced in this area.")}</label>
           <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white mb-2" placeholder="Challenges..."></textarea>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Trend vs Last Year</label>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Trend vs Last Year ${tooltipHtml("Is this area improving, staying the same, or declining compared to last year?")}</label>
           <select class="w-full p-2 border border-slate-300 rounded-md bg-white">
             <option>Improving</option>
             <option>About the Same</option>
@@ -218,6 +281,20 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
       spContainer.appendChild(div);
     });
+// Tooltip CSS for hover effect
+const style = document.createElement('style');
+style.textContent = `
+.tooltip-group:hover .tooltip-text {
+  opacity: 1;
+  pointer-events: auto;
+}
+.tooltip-text {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+`;
+document.head.appendChild(style);
   }
   debugLog('Main DOMContentLoaded initialisation fired.');
 });
