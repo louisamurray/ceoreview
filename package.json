@@ -1,0 +1,27 @@
+{
+  "name": "ceoreview",
+  "version": "1.0.0",
+  "description": "An interactive, client‑side (no backend) self‑review form for the REAP Marlborough CEO. It captures structured reflections, KPI ratings, strategic priority progress, professional development, and forward planning—designed to be completed prior to a formal review meeting.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:e2e": "npx playwright test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/louisamurray/ceoreview.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/louisamurray/ceoreview/issues"
+  },
+  "homepage": "https://github.com/louisamurray/ceoreview#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "jest": "^30.1.3",
+    "playwright": "^1.55.0"
+  }
+}
