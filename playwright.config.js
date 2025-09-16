@@ -1,6 +1,6 @@
 // Playwright config
 module.exports = {
-  testDir: './tests',
+  testDir: './e2e',
   timeout: 30000,
   retries: 0,
   use: {
