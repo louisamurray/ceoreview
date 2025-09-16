@@ -30,24 +30,6 @@ const ratingDescriptions = {
 window.ceoReviewConfig = { kpis, strategicPriorities, jdAreas, ratingDescriptions };
 
 // --- Debug Log ---
-function debugLog(msg) {
-  let dbg = document.getElementById('debug-log');
-  if (!dbg) {
-    dbg = document.createElement('div');
-    dbg.id = 'debug-log';
-    dbg.style.background = '#eef';
-    dbg.style.color = '#333';
-    dbg.style.fontSize = '12px';
-    dbg.style.padding = '0.5em';
-    dbg.style.margin = '0.5em 0';
-    dbg.style.border = '1px solid #99f';
-    dbg.style.fontFamily = 'monospace';
-    dbg.style.maxHeight = '120px';
-    dbg.style.overflowY = 'auto';
-    document.body.prepend(dbg);
-  }
-  dbg.textContent += '\n' + new Date().toLocaleTimeString() + ': ' + msg;
-}
 
 // --- Login Modal Display ---
 function showLoginModal(show) {
@@ -55,7 +37,6 @@ function showLoginModal(show) {
   const appContainer = document.getElementById('app-container');
   if (loginModal) loginModal.classList.toggle('hidden', !show);
   if (appContainer) appContainer.style.display = show ? 'none' : '';
-  debugLog('showLoginModal(' + show + ') called.');
 }
 
 // --- Logout Handler ---
@@ -95,7 +76,6 @@ window.onFirebaseAuthStateChanged = function(user) {
       }
       errDiv.textContent = msg;
     }
-    debugLog('CRITICAL ERROR: ' + msg);
   };
 
   debugLog('onFirebaseAuthStateChanged: user=' + (user ? user.uid : 'null'));
@@ -112,12 +92,121 @@ window.onFirebaseAuthStateChanged = function(user) {
     if (appContainer) appContainer.style.display = '';
     localStorage.removeItem(STORAGE_KEY);
     clearForm();
-    debugLog('Logged out, cleared localStorage and showed login modal.');
   }
 };
 
 // --- Initialise Form App ---
 document.addEventListener('DOMContentLoaded', () => {
+  // Clear entire form
+  const clearFormBtn = document.getElementById('clear-form-btn');
+  if (clearFormBtn) {
+    clearFormBtn.onclick = function() {
+      clearForm();
+    };
+  }
+
+  // Clear Performance Reflection section
+  const clearPerformanceBtn = document.getElementById('clear-performance-btn');
+  if (clearPerformanceBtn) {
+    clearPerformanceBtn.onclick = function() {
+      document.getElementById('successes').value = '';
+      document.getElementById('not-well').value = '';
+      document.getElementById('comparative-reflection').value = '';
+      const challenges = document.getElementById('challenges-container');
+      if (challenges) {
+        Array.from(challenges.querySelectorAll('textarea')).forEach(t => t.value = '');
+      }
+    };
+  }
+
+  // Clear Goals & KPIs section
+  const clearGoalsBtn = document.getElementById('clear-goals-btn');
+  if (clearGoalsBtn) {
+    clearGoalsBtn.onclick = function() {
+      const lastYearGoals = document.getElementById('last-year-goals-container');
+      if (lastYearGoals) {
+        Array.from(lastYearGoals.querySelectorAll('input, textarea, select')).forEach(el => {
+          if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
+          else el.value = '';
+        });
+      }
+      const kpiContainer = document.getElementById('kpi-container');
+      if (kpiContainer) {
+        Array.from(kpiContainer.querySelectorAll('input[type="radio"]')).forEach(el => el.checked = false);
+        Array.from(kpiContainer.querySelectorAll('textarea')).forEach(el => el.value = '');
+        Array.from(kpiContainer.querySelectorAll('select')).forEach(el => el.selectedIndex = 0);
+        Array.from(kpiContainer.querySelectorAll('input[type="text"]')).forEach(el => el.value = '');
+      }
+    };
+  }
+
+  // Clear JD Alignment section
+  const clearJdBtn = document.getElementById('clear-jd-btn');
+  if (clearJdBtn) {
+    clearJdBtn.onclick = function() {
+      const jdContainer = document.getElementById('jd-alignment-container');
+      if (jdContainer) {
+        Array.from(jdContainer.querySelectorAll('textarea')).forEach(el => el.value = '');
+      }
+    };
+  }
+
+  // Clear Strategic Priorities section
+  const clearStrategicBtn = document.getElementById('clear-strategic-btn');
+  if (clearStrategicBtn) {
+    clearStrategicBtn.onclick = function() {
+      const spContainer = document.getElementById('strategic-priorities-container');
+      if (spContainer) {
+        Array.from(spContainer.querySelectorAll('textarea')).forEach(el => el.value = '');
+        Array.from(spContainer.querySelectorAll('select')).forEach(el => el.selectedIndex = 0);
+      }
+    };
+  }
+
+  // Clear Personal Assessment section
+  const clearPersonalBtn = document.getElementById('clear-personal-btn');
+  if (clearPersonalBtn) {
+    clearPersonalBtn.onclick = function() {
+      document.getElementById('strengths').value = '';
+      document.getElementById('limitations').value = '';
+      const pdUndertaken = document.getElementById('pd-undertaken-container');
+      if (pdUndertaken) {
+        Array.from(pdUndertaken.querySelectorAll('input, textarea, select')).forEach(el => {
+          if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
+          else el.value = '';
+        });
+      }
+      const pdNeeded = document.getElementById('pd-needed-container');
+      if (pdNeeded) {
+        Array.from(pdNeeded.querySelectorAll('input, textarea')).forEach(el => el.value = '');
+      }
+    };
+  }
+
+  // Clear Future Focus section
+  const clearFutureBtn = document.getElementById('clear-future-btn');
+  if (clearFutureBtn) {
+    clearFutureBtn.onclick = function() {
+      const futureGoals = document.getElementById('future-goals-container');
+      if (futureGoals) {
+        Array.from(futureGoals.querySelectorAll('input, textarea')).forEach(el => el.value = '');
+      }
+    };
+  }
+
+  // Clear Board Dialogue section
+  const clearBoardBtn = document.getElementById('clear-board-btn');
+  if (clearBoardBtn) {
+    clearBoardBtn.onclick = function() {
+      const boardRequests = document.getElementById('board-requests-container');
+      if (boardRequests) {
+        Array.from(boardRequests.querySelectorAll('input, textarea, select')).forEach(el => {
+          if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
+          else el.value = '';
+        });
+      }
+    };
+  }
   // Load Last Saved Button
   const loadBtn = document.getElementById('load-last-saved-btn');
   if (loadBtn && typeof window.loadProgress === 'function') {
@@ -296,7 +385,6 @@ style.textContent = `
 `;
 document.head.appendChild(style);
   }
-  debugLog('Main DOMContentLoaded initialisation fired.');
 });
 
 // --- Dynamic Field Functions ---
@@ -316,7 +404,10 @@ function addChallenge() {
   div.innerHTML = `
     <div class="flex justify-between items-center mb-4">
       <h4 class="text-lg font-semibold text-slate-900">Challenge #${idx}</h4>
-      <button type="button" class="remove-challenge-btn px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium" style="margin-left:auto;">&times; Remove</button>
+      <div class="flex gap-2">
+        <button type="button" class="clear-challenge-btn px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 text-sm font-medium">Clear</button>
+        <button type="button" class="remove-challenge-btn px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium">&times; Remove</button>
+      </div>
     </div>
     <div class="mb-3">
       <label class="block text-sm font-medium text-slate-700 mb-1">Challenge</label>
@@ -331,6 +422,10 @@ function addChallenge() {
       <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="What was the outcome?"></textarea>
     </div>
   `;
+  // Clear button handler
+  div.querySelector('.clear-challenge-btn').onclick = function() {
+    Array.from(div.querySelectorAll('textarea')).forEach(t => t.value = '');
+  };
   // Remove button handler
   div.querySelector('.remove-challenge-btn').onclick = function() {
     div.remove();
@@ -352,7 +447,10 @@ function addLastYearGoal() {
   div.innerHTML = `
     <div class="flex justify-between items-center mb-4">
       <h4 class="text-lg font-semibold text-slate-900">Goal from Last Year #${idx}</h4>
-      <button type="button" class="remove-goal-btn px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium">&times; Remove</button>
+      <div class="flex gap-2">
+        <button type="button" class="clear-goal-btn px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 text-sm font-medium">Clear</button>
+        <button type="button" class="remove-goal-btn px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium">&times; Remove</button>
+      </div>
     </div>
     <div class="mb-3">
       <label class="block text-sm font-medium text-slate-700 mb-1">Goal</label>
@@ -371,6 +469,12 @@ function addLastYearGoal() {
       <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="Provide supporting evidence..."></textarea>
     </div>
   `;
+  // Clear button handler
+  div.querySelector('.clear-goal-btn').onclick = function() {
+    div.querySelector('input[type="text"]').value = '';
+    div.querySelector('select').selectedIndex = 0;
+    div.querySelector('textarea').value = '';
+  };
   div.querySelector('.remove-goal-btn').onclick = function() {
     div.remove();
     Array.from(container.children).forEach((el, i) => {
@@ -390,7 +494,10 @@ function addPDUndertaken() {
   div.innerHTML = `
     <div class="flex justify-between items-center mb-4">
       <h4 class="text-lg font-semibold text-slate-900">Programme/Course #${idx}</h4>
-      <button type="button" class="remove-pd-btn px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium">&times; Remove</button>
+      <div class="flex gap-2">
+        <button type="button" class="clear-pd-btn px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 text-sm font-medium">Clear</button>
+        <button type="button" class="remove-pd-btn px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium">&times; Remove</button>
+      </div>
     </div>
     <div class="mb-3">
       <label class="block text-sm font-medium text-slate-700 mb-1">Programme/Course Title</label>
@@ -422,6 +529,12 @@ function addPDUndertaken() {
       </div>
     </div>
   `;
+  // Clear button handler
+  div.querySelector('.clear-pd-btn').onclick = function() {
+    div.querySelector('input[type="text"]').value = '';
+    Array.from(div.querySelectorAll('textarea')).forEach(t => t.value = '');
+    Array.from(div.querySelectorAll('select')).forEach(s => s.selectedIndex = 0);
+  };
   div.querySelector('.remove-pd-btn').onclick = function() {
     div.remove();
     Array.from(container.children).forEach((el, i) => {
@@ -441,7 +554,10 @@ function addPDNeeded() {
   div.innerHTML = `
     <div class="flex justify-between items-center mb-4">
       <h4 class="text-lg font-semibold text-slate-900">Development Need #${idx}</h4>
-      <button type="button" class="remove-pdneed-btn px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium">&times; Remove</button>
+      <div class="flex gap-2">
+        <button type="button" class="clear-pdneed-btn px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 text-sm font-medium">Clear</button>
+        <button type="button" class="remove-pdneed-btn px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium">&times; Remove</button>
+      </div>
     </div>
     <div class="mb-3">
       <label class="block text-sm font-medium text-slate-700 mb-1">Area of Need</label>
@@ -452,6 +568,11 @@ function addPDNeeded() {
       <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="Describe the expected impact of this PD..."></textarea>
     </div>
   `;
+  // Clear button handler
+  div.querySelector('.clear-pdneed-btn').onclick = function() {
+    div.querySelector('input[type="text"]').value = '';
+    div.querySelector('textarea').value = '';
+  };
   div.querySelector('.remove-pdneed-btn').onclick = function() {
     div.remove();
     Array.from(container.children).forEach((el, i) => {
@@ -471,7 +592,10 @@ function addFutureGoal() {
   div.innerHTML = `
     <div class="flex justify-between items-center mb-4">
       <h4 class="text-lg font-semibold text-slate-900">Future Goal #${idx}</h4>
-      <button type="button" class="remove-futuregoal-btn px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium">&times; Remove</button>
+      <div class="flex gap-2">
+        <button type="button" class="clear-futuregoal-btn px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 text-sm font-medium">Clear</button>
+        <button type="button" class="remove-futuregoal-btn px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium">&times; Remove</button>
+      </div>
     </div>
     <div class="mb-3">
       <label class="block text-sm font-medium text-slate-700 mb-1">Goal Statement</label>
@@ -486,6 +610,11 @@ function addFutureGoal() {
       <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="How does this align with strategic priorities?"></textarea>
     </div>
   `;
+  // Clear button handler
+  div.querySelector('.clear-futuregoal-btn').onclick = function() {
+    div.querySelector('input[type="text"]').value = '';
+    Array.from(div.querySelectorAll('textarea')).forEach(t => t.value = '');
+  };
   div.querySelector('.remove-futuregoal-btn').onclick = function() {
     div.remove();
     Array.from(container.children).forEach((el, i) => {
@@ -510,7 +639,10 @@ function addBoardRequest() {
   div.innerHTML = `
     <div class="flex justify-between items-center mb-4">
       <h4 class="text-lg font-semibold text-slate-900">Board Request #${idx}</h4>
-      <button type="button" class="remove-boardrequest-btn px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium">&times; Remove</button>
+      <div class="flex gap-2">
+        <button type="button" class="clear-boardrequest-btn px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 text-sm font-medium">Clear</button>
+        <button type="button" class="remove-boardrequest-btn px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium">&times; Remove</button>
+      </div>
     </div>
     <div class="mb-3">
       <label class="block text-sm font-medium text-slate-700 mb-1">Request</label>
@@ -532,6 +664,12 @@ function addBoardRequest() {
       <input type="text" class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="e.g., Still not in place, workload pressure continues...">
     </div>
   `;
+  // Clear button handler
+  div.querySelector('.clear-boardrequest-btn').onclick = function() {
+    Array.from(div.querySelectorAll('textarea')).forEach(t => t.value = '');
+    div.querySelector('select').selectedIndex = 0;
+    div.querySelector('input[type="text"]').value = '';
+  };
   div.querySelector('.remove-boardrequest-btn').onclick = function() {
     div.remove();
     Array.from(container.children).forEach((el, i) => {
