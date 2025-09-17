@@ -735,9 +735,10 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="flex-1">
             <label class="block text-sm font-medium text-slate-700 mb-1">Compared to Last Year ${tooltipHtml("How does this area compare to last year?")}</label>
             <select class="w-full p-2 border border-slate-300 rounded-md bg-white">
-              <option>Better</option>
-              <option>About the Same</option>
-              <option>Worse</option>
+              <option value="">Select a comparison…</option>
+              <option value="Better">Better</option>
+              <option value="About the Same">About the Same</option>
+              <option value="Worse">Worse</option>
             </select>
           </div>
           <div class="flex-1">
@@ -784,9 +785,10 @@ document.addEventListener('DOMContentLoaded', () => {
           <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white mb-2" placeholder="Challenges..."></textarea>
           <label class="block text-sm font-medium text-slate-700 mb-1">Trend vs Last Year ${tooltipHtml("Is this area improving, staying the same, or declining compared to last year?")}</label>
           <select class="w-full p-2 border border-slate-300 rounded-md bg-white">
-            <option>Improving</option>
-            <option>About the Same</option>
-            <option>Declining</option>
+            <option value="">Select a trend…</option>
+            <option value="Improving">Improving</option>
+            <option value="About the Same">About the Same</option>
+            <option value="Declining">Declining</option>
           </select>
         </div>
       `;
@@ -874,9 +876,10 @@ function addLastYearGoal() {
     <div class="mb-3">
       <label class="block text-sm font-medium text-slate-700 mb-1">Status</label>
       <select class="w-full p-2 border border-slate-300 rounded-md bg-white">
-        <option>Achieved</option>
-        <option>Partially Achieved</option>
-        <option>Not Achieved</option>
+        <option value="">Select status…</option>
+        <option value="Achieved">Achieved</option>
+        <option value="Partially Achieved">Partially Achieved</option>
+        <option value="Not Achieved">Not Achieved</option>
       </select>
     </div>
     <div>
@@ -934,16 +937,18 @@ function addPDUndertaken() {
       <div class="flex-1">
         <label class="block text-sm font-medium text-slate-700 mb-1">Was This Requested Previously?</label>
         <select class="w-full p-2 border border-slate-300 rounded-md bg-white">
-          <option>No</option>
-          <option>Yes</option>
+          <option value="">Select an option…</option>
+          <option value="No">No</option>
+          <option value="Yes">Yes</option>
         </select>
       </div>
       <div class="flex-1">
         <label class="block text-sm font-medium text-slate-700 mb-1">Usefulness vs Last Year</label>
         <select class="w-full p-2 border border-slate-300 rounded-md bg-white">
-          <option>More Useful</option>
-          <option>About the Same</option>
-          <option>Less Useful</option>
+          <option value="">Select usefulness…</option>
+          <option value="More Useful">More Useful</option>
+          <option value="About the Same">About the Same</option>
+          <option value="Less Useful">Less Useful</option>
         </select>
       </div>
     </div>
@@ -1086,8 +1091,9 @@ function addBoardRequest() {
     <div class="mb-3">
       <label class="block text-sm font-medium text-slate-700 mb-1">Was this requested previously?</label>
       <select class="w-full p-2 border border-slate-300 rounded-md bg-white">
-        <option>No</option>
-        <option>Yes</option>
+        <option value="">Select an option…</option>
+        <option value="No">No</option>
+        <option value="Yes">Yes</option>
       </select>
     </div>
     <div>
