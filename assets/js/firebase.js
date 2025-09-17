@@ -1,3 +1,17 @@
+// User roles management
+function setUserRole(uid, role) {
+  // Set or update the user's role in the 'users' collection
+  return db.collection('users').doc(uid).set({
+    role,
+    updatedAt: new Date().toISOString()
+  }, { merge: true });
+}
+
+function getUserRole(uid) {
+  // Get the user's role from the 'users' collection
+  return db.collection('users').doc(uid).get().then(doc => doc.exists ? doc.data().role : null);
+}
+
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -91,5 +105,7 @@ window.firebaseHelpers = {
   loadReviewData,
   uploadReviewCsv,
   updateReviewMetadata,
+  setUserRole,
+  getUserRole,
   auth
 };
