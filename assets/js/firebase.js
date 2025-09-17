@@ -35,13 +35,22 @@ function logout() {
   return auth.signOut();
 }
 
+function sendPasswordReset(email) {
+  return auth.sendPasswordResetEmail(email);
+}
+
 // Save review data to a collection ("drafts" or "submissions")
-function saveReviewData(uid, data, collection) {
-  return getReviewDocRef(uid, collection).set({
+function saveReviewData(uid, data, collection, overrides = {}) {
+  const user = auth.currentUser;
+  const payload = {
     uid,
     timestamp: new Date().toISOString(),
-    data
-  });
+    userEmail: user?.email || null,
+    userDisplayName: user?.displayName || null,
+    data,
+    ...overrides
+  };
+  return getReviewDocRef(uid, collection).set(payload, { merge: true });
 }
 
 // Load review data from a collection
@@ -55,6 +64,18 @@ function uploadReviewCsv(uid, filename, csvString) {
   return ref.put(blob);
 }
 
+function updateReviewMetadata(uid, collection, updates = {}) {
+  const user = auth.currentUser;
+  const payload = {
+    uid,
+    userEmail: user?.email || null,
+    userDisplayName: user?.displayName || null,
+    lastUpdatedAt: new Date().toISOString(),
+    ...updates
+  };
+  return getReviewDocRef(uid, collection).set(payload, { merge: true });
+}
+
 // Auth state listener
 auth.onAuthStateChanged(user => {
   window.onFirebaseAuthStateChanged && window.onFirebaseAuthStateChanged(user);
@@ -65,8 +86,10 @@ window.firebaseHelpers = {
   loginWithEmail,
   signUpWithEmail,
   logout,
+  sendPasswordReset,
   saveReviewData,
   loadReviewData,
   uploadReviewCsv,
+  updateReviewMetadata,
   auth
 };

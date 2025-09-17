@@ -967,6 +967,7 @@ function showLoginModal(show) {
   if (!loginModal) return;
   if (show) {
     showSignupModal(false);
+    showResetModal(false, false);
     openModal(loginModal, () => showLoginModal(false));
     if (appContainer) {
       appContainer.style.display = 'none';
@@ -986,6 +987,7 @@ function showSignupModal(show) {
   const appContainer = document.getElementById('app-container');
   if (!signupModal) return;
   if (show) {
+    showResetModal(false, false);
     openModal(signupModal, () => showSignupModal(false));
     if (appContainer) {
       appContainer.style.display = 'none';
@@ -999,6 +1001,34 @@ function showSignupModal(show) {
       loginModal &&
       loginModal.classList.contains('hidden')
     ) {
+      appContainer.style.display = '';
+      appContainer.setAttribute('aria-hidden', 'false');
+    }
+  }
+}
+
+function showResetModal(show, focusLoginAfterClose = true) {
+  const resetModal = document.getElementById('reset-modal');
+  const appContainer = document.getElementById('app-container');
+  if (!resetModal) return;
+  if (show) {
+    showSignupModal(false);
+    closeModal(document.getElementById('login-modal'));
+    openModal(resetModal, () => showResetModal(false, focusLoginAfterClose));
+    if (appContainer) {
+      appContainer.style.display = 'none';
+      appContainer.setAttribute('aria-hidden', 'true');
+    }
+    const status = document.getElementById('reset-status');
+    if (status) {
+      status.textContent = '';
+      status.className = 'text-sm min-h-[1.5em] text-slate-600';
+    }
+  } else {
+    closeModal(resetModal);
+    if (focusLoginAfterClose) {
+      showLoginModal(true);
+    } else if (appContainer) {
       appContainer.style.display = '';
       appContainer.setAttribute('aria-hidden', 'false');
     }
@@ -1025,6 +1055,7 @@ window.onFirebaseAuthStateChanged = function(user) {
   const appContainer = document.getElementById('app-container');
   const loginModal = document.getElementById('login-modal');
   const signupModal = document.getElementById('signup-modal');
+  const resetModal = document.getElementById('reset-modal');
 
   const showCriticalError = (msg) => {
     if (appContainer) {
@@ -1050,6 +1081,7 @@ window.onFirebaseAuthStateChanged = function(user) {
     localStorage.removeItem(STORAGE_KEY);
     showLoginModal(false);
     showSignupModal(false);
+    showResetModal(false, false);
     if (appContainer) {
       appContainer.style.display = '';
       appContainer.setAttribute('aria-hidden', 'false');
@@ -1059,6 +1091,7 @@ window.onFirebaseAuthStateChanged = function(user) {
   } else {
     showSignupModal(false);
     showLoginModal(true);
+    showResetModal(false, false);
     localStorage.removeItem(STORAGE_KEY);
     clearForm();
     clearPreviousSummaries();
@@ -1249,6 +1282,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+  const showResetBtn = document.getElementById('show-reset-btn');
+  if (showResetBtn) {
+    showResetBtn.onclick = function() {
+      showResetModal(true);
+    };
+  }
+
   document.querySelectorAll('[data-modal-close]').forEach((button) => {
     button.addEventListener('click', () => {
       const modal = button.closest('[data-modal]');
@@ -1257,6 +1297,8 @@ document.addEventListener('DOMContentLoaded', () => {
         showLoginModal(false);
       } else if (modal.id === 'signup-modal') {
         showSignupModal(false);
+      } else if (modal.id === 'reset-modal') {
+        showResetModal(false);
       } else {
         closeModal(modal);
       }
@@ -1286,6 +1328,34 @@ document.addEventListener('DOMContentLoaded', () => {
         // Success: modal will close via auth state listener
       } catch (err) {
         errorDiv.textContent = err.message || 'Sign up failed. Please try again.';
+      }
+    };
+  }
+
+  const resetForm = document.getElementById('reset-form');
+  if (resetForm) {
+    resetForm.onsubmit = async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('reset-email').value.trim();
+      const status = document.getElementById('reset-status');
+      if (status) {
+        status.textContent = 'Sending reset email…';
+        status.className = 'text-sm min-h-[1.5em] text-slate-600';
+      }
+      try {
+        await window.firebaseHelpers.sendPasswordReset(email);
+        if (status) {
+          status.textContent = 'Email sent! Check your inbox for further instructions.';
+          status.className = 'text-sm min-h-[1.5em] text-emerald-600';
+        }
+        setTimeout(() => {
+          showResetModal(false);
+        }, 2000);
+      } catch (err) {
+        if (status) {
+          status.textContent = err.message || 'Unable to send reset email. Please try again.';
+          status.className = 'text-sm min-h-[1.5em] text-red-600';
+        }
       }
     };
   }
@@ -1813,7 +1883,9 @@ async function saveProgress() {
     const user = window.firebaseHelpers.auth.currentUser;
     if (!user) throw new Error('Not logged in');
     const data = collectFormData();
-    await window.firebaseHelpers.saveReviewData(user.uid, data, 'drafts');
+    await window.firebaseHelpers.saveReviewData(user.uid, data, 'drafts', {
+      lastSavedAt: new Date().toISOString()
+    });
     window.lastCloudSaveTime = new Date().toISOString();
     renderAutosaveIndicator();
     if (status) {
@@ -1839,14 +1911,25 @@ if (reviewFormEl) {
       const user = window.firebaseHelpers.auth.currentUser;
       if (!user) throw new Error('Not logged in');
       const data = collectFormData();
-      await window.firebaseHelpers.saveReviewData(user.uid, data, 'submissions');
+      const submittedAt = new Date().toISOString();
+      await window.firebaseHelpers.saveReviewData(user.uid, data, 'submissions', {
+        submittedAt,
+        lastCsvPath: null,
+        lastCsvUploadedAt: null
+      });
       window.lastCloudSaveTime = new Date().toISOString();
       renderAutosaveIndicator();
       try {
         const csv = buildCsvString(data);
         const stamp = new Date().toISOString().replace(/[:.]/g, '-');
         const filename = `ceo-review-${stamp}.csv`;
-        await window.firebaseHelpers.uploadReviewCsv(user.uid, filename, csv);
+        const uploadSnapshot = await window.firebaseHelpers.uploadReviewCsv(user.uid, filename, csv);
+        const fullPath = uploadSnapshot?.metadata?.fullPath || null;
+        await window.firebaseHelpers.updateReviewMetadata(user.uid, 'submissions', {
+          lastCsvPath: fullPath,
+          lastCsvUploadedAt: new Date().toISOString(),
+          lastCsvFileName: filename
+        });
       } catch (uploadErr) {
         console.error('CSV upload failed', uploadErr);
         if (status) {
