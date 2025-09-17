@@ -54,6 +54,15 @@
           <span class="text-sm">Don't have an account?</span>
           <button id="show-signup-btn" type="button" class="text-blue-600 hover:underline ml-1">Sign Up</button>
         </div>
+        <div class="mt-6 text-center">
+          <button
+            type="button"
+            class="text-sm font-medium text-slate-500 hover:text-slate-700"
+            data-modal-close
+          >
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
 
@@ -100,6 +109,15 @@
         <div class="mt-4 text-center">
           <span class="text-sm">Already have an account?</span>
           <button id="show-login-btn" type="button" class="text-blue-600 hover:underline ml-1">Sign In</button>
+        </div>
+        <div class="mt-6 text-center">
+          <button
+            type="button"
+            class="text-sm font-medium text-slate-500 hover:text-slate-700"
+            data-modal-close
+          >
+            Cancel
+          </button>
         </div>
       </div>
     </div>
@@ -148,6 +166,24 @@
           </div>
         </details>
       </header>
+
+      <div
+        id="overall-progress"
+        class="mb-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+        aria-live="polite"
+      >
+        <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <span>Overall Progress</span>
+          <span id="overall-progress-label">0% complete</span>
+        </div>
+        <div class="mt-2 h-2 w-full rounded-full bg-slate-200">
+          <div
+            id="overall-progress-bar"
+            class="h-full rounded-full bg-blue-600 transition-all duration-300"
+            style="width: 0%"
+          ></div>
+        </div>
+      </div>
 
       <nav
         id="section-nav"
@@ -708,7 +744,7 @@
             </div>
             <span id="save-status" class="text-xs text-slate-500"></span>
           </div>
-          <div class="flex flex-wrap items-center gap-2">
+          <div class="flex items-center gap-2 overflow-x-auto whitespace-nowrap sm:flex-wrap sm:whitespace-normal">
             <button
               type="button"
               id="load-last-saved-btn"

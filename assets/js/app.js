@@ -29,6 +29,40 @@ const ratingDescriptions = {
 };
 window.ceoReviewConfig = { kpis, strategicPriorities, jdAreas, ratingDescriptions };
 
+const emptyStateMessages = {
+  'challenges-container': 'No challenges added yet.',
+  'last-year-goals-container': 'No goals from last year added yet.',
+  'pd-undertaken-container': 'No professional development recorded yet.',
+  'pd-needed-container': 'No future professional development needs added.',
+  'future-goals-container': 'No future goals added yet.',
+  'board-requests-container': 'No requests for the board added yet.'
+};
+
+function ensureEmptyState(containerOrId) {
+  const container = typeof containerOrId === 'string' ? document.getElementById(containerOrId) : containerOrId;
+  if (!container) return;
+  const message = emptyStateMessages[container.id];
+  if (!message) return;
+  const hasContent = Array.from(container.children).some((child) => !child.classList.contains('empty-placeholder'));
+  let placeholder = container.querySelector('.empty-placeholder');
+  if (!hasContent) {
+    if (!placeholder) {
+      placeholder = document.createElement('div');
+      placeholder.className = 'empty-placeholder';
+      container.appendChild(placeholder);
+    }
+    placeholder.textContent = message;
+  } else if (placeholder) {
+    placeholder.remove();
+  }
+}
+
+function removeEmptyState(container) {
+  if (!container) return;
+  const placeholder = container.querySelector('.empty-placeholder');
+  if (placeholder) placeholder.remove();
+}
+
 // --- UI Helpers ---
 function debounce(fn, wait = 300) {
   let timeout;
@@ -82,19 +116,54 @@ function updateSectionSummary(section) {
   const filled = filledFields + radioValues.size;
   if (!total) {
     summaryEl.textContent = 'Ready';
+    section.dataset.progressState = 'ready';
     return;
   }
   if (filled === 0) {
     summaryEl.textContent = 'Not started';
+    section.dataset.progressState = 'not-started';
   } else if (filled >= total) {
     summaryEl.textContent = 'Complete';
+    section.dataset.progressState = 'complete';
   } else {
     summaryEl.textContent = `In progress · ${filled}/${total}`;
+    section.dataset.progressState = 'in-progress';
   }
 }
 
 function updateAllSectionSummaries() {
   document.querySelectorAll('.collapsible-section').forEach(updateSectionSummary);
+  updateOverallProgress();
+}
+
+function updateOverallProgress() {
+  const sections = Array.from(document.querySelectorAll('.collapsible-section'));
+  if (!sections.length) return;
+  const complete = sections.filter((section) => section.dataset.progressState === 'complete').length;
+  const inProgress = sections.filter((section) => section.dataset.progressState === 'in-progress').length;
+  const numerator = complete + inProgress * 0.5;
+  const percent = Math.round((numerator / sections.length) * 100);
+  const label = document.getElementById('overall-progress-label');
+  const bar = document.getElementById('overall-progress-bar');
+  if (label) {
+    label.textContent = `${percent}% complete`;
+  }
+  if (bar) {
+    bar.style.width = `${percent}%`;
+  }
+}
+
+function navigateToSection(id, updateUrl = true) {
+  if (!id) return;
+  const section = document.querySelector(id);
+  if (!section) return;
+  setSectionCollapsed(section, false);
+  smoothScrollTo(section);
+  if (updateUrl) {
+    const url = new URL(window.location);
+    url.searchParams.set('section', id.replace('#', ''));
+    history.replaceState({}, '', `${url.pathname}${url.search}#${id.replace('#', '')}`);
+  }
 }
 
 function setupCollapsibles() {
@@ -140,21 +209,13 @@ function setupSectionNav() {
   pills.forEach((pill) => {
     pill.addEventListener('click', () => {
       const target = pill.dataset.target;
-      if (target) {
-        const section = document.querySelector(target);
-        if (section) setSectionCollapsed(section, false);
-        smoothScrollTo(target);
-      }
+      if (target) navigateToSection(target);
     });
   });
 
   if (select) {
     select.addEventListener('change', (e) => {
-      if (e.target.value) {
-        const section = document.querySelector(e.target.value);
-        if (section) setSectionCollapsed(section, false);
-        smoothScrollTo(e.target.value);
-      }
+      if (e.target.value) navigateToSection(e.target.value);
     });
   }
 
@@ -170,6 +231,9 @@ function setupSectionNav() {
           if (select && select.value !== id) {
             select.value = id;
           }
+          const url = new URL(window.location);
+          url.searchParams.set('section', entry.target.id);
+          history.replaceState({}, '', `${url.pathname}${url.search}#${entry.target.id}`);
         });
       },
       { threshold: 0.4 }
@@ -178,6 +242,40 @@ function setupSectionNav() {
       if (section.id) observer.observe(section);
     });
   }
+}
+
+function setupInfoDots() {
+  const closeAll = () => {
+    document.querySelectorAll('.info-dot.is-open').forEach((btn) => {
+      btn.classList.remove('is-open');
+      btn.setAttribute('aria-expanded', 'false');
+    });
+  };
+
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('.info-dot');
+    if (!button) {
+      closeAll();
+      return;
+    }
+    event.preventDefault();
+    const isOpen = button.classList.contains('is-open');
+    closeAll();
+    if (!isOpen) {
+      button.classList.add('is-open');
+      button.setAttribute('aria-expanded', 'true');
+    }
+  }, { passive: false });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeAll();
+    }
+  });
+
+  document.querySelectorAll('.info-dot').forEach((btn) => {
+    btn.setAttribute('aria-expanded', 'false');
+  });
 }
 
 function enhanceTextarea(textarea) {
@@ -269,14 +367,38 @@ function enhanceAllTextareas(root = document) {
   });
 }
 
+let autosaveIndicatorEl = null;
+let lastLocalAutosaveISO = null;
+window.lastCloudSaveTime = window.lastCloudSaveTime || null;
+
+function formatShortTime(date) {
+  return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function renderAutosaveIndicator(prefix) {
+  if (!autosaveIndicatorEl) return;
+  const parts = [];
+  if (prefix) {
+    parts.push(prefix);
+  } else if (lastLocalAutosaveISO) {
+    parts.push(`Local autosave: ${formatShortTime(lastLocalAutosaveISO)}`);
+  } else {
+    parts.push('Local autosave: pending');
+  }
+  if (window.lastCloudSaveTime) {
+    parts.push(`Cloud: ${formatShortTime(window.lastCloudSaveTime)}`);
+  } else {
+    parts.push('Cloud: pending');
+  }
+  autosaveIndicatorEl.textContent = parts.join(' · ');
+}
+
 function setupAutosave(form) {
   if (!form) return;
   const indicator = document.getElementById('autosave-indicator');
   if (!indicator) return;
-
-  const updateIndicator = (text) => {
-    indicator.textContent = text;
-  };
+  autosaveIndicatorEl = indicator;
+  renderAutosaveIndicator();
 
   const runAutosave = debounce(() => {
     try {
@@ -286,20 +408,20 @@ function setupAutosave(form) {
         STORAGE_KEY,
         JSON.stringify({ savedAt: timestamp, data: payload })
       );
-      const time = new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      updateIndicator(`Autosaved · ${time}`);
+      lastLocalAutosaveISO = timestamp;
+      renderAutosaveIndicator();
     } catch (err) {
-      updateIndicator('Autosave failed');
+      renderAutosaveIndicator('Autosave failed');
       console.error(err);
     }
   }, 1200);
 
   form.addEventListener('input', () => {
-    updateIndicator('Autosaving…');
+    renderAutosaveIndicator('Autosaving…');
     runAutosave();
   });
   form.addEventListener('change', () => {
-    updateIndicator('Autosaving…');
+    renderAutosaveIndicator('Autosaving…');
     runAutosave();
   });
 
@@ -308,11 +430,8 @@ function setupAutosave(form) {
     try {
       const data = JSON.parse(existing);
       if (data?.savedAt) {
-        const time = new Date(data.savedAt).toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-        updateIndicator(`Draft from ${time}`);
+        lastLocalAutosaveISO = data.savedAt;
+        renderAutosaveIndicator();
       }
     } catch (err) {
       console.warn('Failed to parse saved draft timestamp', err);
@@ -366,7 +485,7 @@ function buildReviewRows(data) {
   });
 
   (data.jdAlignment || []).forEach((item, idx) => {
-    const label = item.name ? item.name.trim() : `JD Area ${idx + 1}`;
+    const label = item.area ? item.area.trim() : `JD Area ${idx + 1}`;
     pushRow('Part 3', label, 'What Went Well', item.wentWell);
     pushRow('Part 3', label, 'What Did Not Go Well', item.notWell);
   });
@@ -590,6 +709,7 @@ window.onFirebaseAuthStateChanged = function(user) {
 document.addEventListener('DOMContentLoaded', () => {
   setupCollapsibles();
   setupSectionNav();
+  setupInfoDots();
 
   const form = document.getElementById('reviewForm');
   setupAutosave(form);
@@ -598,6 +718,16 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('change', updateAllSectionSummaries);
   }
   updateAllSectionSummaries();
+
+  const url = new URL(window.location);
+  const sectionParam = url.searchParams.get('section');
+  const hashSection = window.location.hash ? window.location.hash.substring(1) : null;
+  const targetSection = sectionParam || hashSection;
+  if (targetSection) {
+    window.requestAnimationFrame(() => navigateToSection(`#${targetSection}`, false));
+  }
+
+  Object.keys(emptyStateMessages).forEach((id) => ensureEmptyState(id));
 
   // Clear entire form
   const clearFormBtn = document.getElementById('clear-form-btn');
@@ -812,7 +942,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     function tooltipHtml(text) {
       const safeText = String(text).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-      return `<button type="button" class="info-dot ml-1 shrink-0" data-info="${safeText}" aria-label="${safeText}">i</button>`;
+      return `<button type="button" class="info-dot ml-1 shrink-0" data-info="${safeText}" aria-label="${safeText}" aria-expanded="false">i</button>`;
     }
     window.ceoReviewConfig.kpis.forEach((kpi, i) => {
       const div = document.createElement('div');
@@ -913,6 +1043,7 @@ function createItem(html) {
 function addChallenge() {
   const container = document.getElementById("challenges-container");
   if (!container) return;
+  removeEmptyState(container);
   const idx = container.children.length + 1;
   const div = document.createElement('div');
   div.className = "p-6 bg-slate-50 border border-slate-200 rounded-xl shadow-sm mb-4 relative";
@@ -951,15 +1082,18 @@ function addChallenge() {
       if (h) h.textContent = `Challenge #${i+1}`;
     });
     updateAllSectionSummaries();
+    ensureEmptyState(container);
   };
   container.appendChild(div);
   enhanceAllTextareas(div);
   updateAllSectionSummaries();
+  ensureEmptyState(container);
 }
 
 function addLastYearGoal() {
   const container = document.getElementById("last-year-goals-container");
   if (!container) return;
+  removeEmptyState(container);
   const idx = container.children.length + 1;
   const div = document.createElement('div');
   div.className = "p-6 bg-slate-50 border border-slate-200 rounded-xl shadow-sm mb-4 relative";
@@ -1003,15 +1137,18 @@ function addLastYearGoal() {
       if (h) h.textContent = `Goal from Last Year #${i+1}`;
     });
     updateAllSectionSummaries();
+    ensureEmptyState(container);
   };
   container.appendChild(div);
   enhanceAllTextareas(div);
   updateAllSectionSummaries();
+  ensureEmptyState(container);
 }
 
 function addPDUndertaken() {
   const container = document.getElementById("pd-undertaken-container");
   if (!container) return;
+  removeEmptyState(container);
   const idx = container.children.length + 1;
   const div = document.createElement('div');
   div.className = "p-6 bg-slate-50 border border-slate-200 rounded-xl shadow-sm mb-4 relative";
@@ -1069,15 +1206,18 @@ function addPDUndertaken() {
       if (h) h.textContent = `Programme/Course #${i+1}`;
     });
     updateAllSectionSummaries();
+    ensureEmptyState(container);
   };
   container.appendChild(div);
   enhanceAllTextareas(div);
   updateAllSectionSummaries();
+  ensureEmptyState(container);
 }
 
 function addPDNeeded() {
   const container = document.getElementById("pd-needed-container");
   if (!container) return;
+  removeEmptyState(container);
   const idx = container.children.length + 1;
   const div = document.createElement('div');
   div.className = "p-6 bg-slate-50 border border-slate-200 rounded-xl shadow-sm mb-4 relative";
@@ -1111,15 +1251,18 @@ function addPDNeeded() {
       if (h) h.textContent = `Development Need #${i+1}`;
     });
     updateAllSectionSummaries();
+    ensureEmptyState(container);
   };
   container.appendChild(div);
   enhanceAllTextareas(div);
   updateAllSectionSummaries();
+  ensureEmptyState(container);
 }
 
 function addFutureGoal() {
   const container = document.getElementById("future-goals-container");
   if (!container) return;
+  removeEmptyState(container);
   const idx = container.children.length + 1;
   const div = document.createElement('div');
   div.className = "p-6 bg-slate-50 border border-slate-200 rounded-xl shadow-sm mb-4 relative";
@@ -1157,10 +1300,12 @@ function addFutureGoal() {
       if (h) h.textContent = `Future Goal #${i+1}`;
     });
     updateAllSectionSummaries();
+    ensureEmptyState(container);
   };
   container.appendChild(div);
   enhanceAllTextareas(div);
   updateAllSectionSummaries();
+  ensureEmptyState(container);
 }
 
 function removeFutureGoal() {
@@ -1171,6 +1316,7 @@ function removeFutureGoal() {
 function addBoardRequest() {
   const container = document.getElementById("board-requests-container");
   if (!container) return;
+  removeEmptyState(container);
   const idx = container.children.length + 1;
   const div = document.createElement('div');
   div.className = "p-6 bg-slate-50 border border-slate-200 rounded-xl shadow-sm mb-4 relative";
@@ -1217,10 +1363,12 @@ function addBoardRequest() {
       if (h) h.textContent = `Board Request #${i+1}`;
     });
     updateAllSectionSummaries();
+    ensureEmptyState(container);
   };
   container.appendChild(div);
   enhanceAllTextareas(div);
   updateAllSectionSummaries();
+  ensureEmptyState(container);
 }
 
 // --- Global Exports ---
@@ -1306,12 +1454,17 @@ async function saveProgress() {
     if (!user) throw new Error('Not logged in');
     const data = collectFormData();
     await window.firebaseHelpers.saveReviewData(user.uid, data, 'drafts');
+    window.lastCloudSaveTime = new Date().toISOString();
+    renderAutosaveIndicator();
     if (status) {
       status.textContent = 'Draft saved!';
       setTimeout(() => { if (status) status.textContent = ''; }, 2000);
     }
   } catch (err) {
     if (status) status.textContent = 'Save failed: ' + (err.message || err);
+    if (status) {
+      status.textContent += ' Local draft still saved in this browser.';
+    }
   }
 }
 
@@ -1327,6 +1480,8 @@ if (reviewFormEl) {
       if (!user) throw new Error('Not logged in');
       const data = collectFormData();
       await window.firebaseHelpers.saveReviewData(user.uid, data, 'submissions');
+      window.lastCloudSaveTime = new Date().toISOString();
+      renderAutosaveIndicator();
       try {
         const csv = buildCsvString(data);
         const stamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -1335,8 +1490,8 @@ if (reviewFormEl) {
       } catch (uploadErr) {
         console.error('CSV upload failed', uploadErr);
         if (status) {
-          status.textContent = 'Review submitted, but CSV upload failed.';
-          setTimeout(() => { if (status) status.textContent = ''; }, 4000);
+          status.textContent = 'Review submitted, but CSV upload failed. Use “Save Draft” to retry when your connection is stable.';
+          setTimeout(() => { if (status) status.textContent = ''; }, 6000);
         }
         return;
       }
@@ -1345,7 +1500,7 @@ if (reviewFormEl) {
         setTimeout(() => { if (status) status.textContent = ''; }, 2000);
       }
     } catch (err) {
-      if (status) status.textContent = 'Submit failed: ' + (err.message || err);
+      if (status) status.textContent = 'Submit failed: ' + (err.message || err) + ' Your responses remain locally saved.';
     }
   };
 }
@@ -1404,6 +1559,9 @@ async function loadProgress() {
         addFn();
         hydrateFn(container.children[i], item);
       });
+      if (!items || !items.length) {
+        ensureEmptyState(container);
+      }
     }
     // Challenges
     clearAndAdd('challenges-container', addChallenge, data.challenges, (el, item) => {
@@ -1494,6 +1652,7 @@ if (typeof module !== 'undefined' && module.exports) {
     setSectionCollapsed,
     updateSectionSummary,
     updateAllSectionSummaries,
+    updateOverallProgress,
     setupCollapsibles,
     setupSectionNav,
     enhanceTextarea,
