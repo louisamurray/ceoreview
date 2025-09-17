@@ -55,3 +55,20 @@ body { font-family: 'Inter', sans-serif; }
 .info-dot.is-open::after { opacity: 1; visibility: visible; transform: translate(-50%, -4px); }
 
 .empty-placeholder { border: 1px dashed #cbd5f5; background-color: #f8fafc; color: #64748b; font-size: 0.85rem; padding: 1rem; border-radius: 0.75rem; text-align: center; }
+
+#previous-review-banner { border-left: 4px solid #2563eb; }
+#previous-review-banner strong { display: block; font-size: 0.95rem; margin-bottom: 0.25rem; }
+#previous-review-banner span { display: block; font-size: 0.85rem; }
+
+.previous-summary { border: 1px solid #bfdbfe; background-color: #eff6ff; border-radius: 0.75rem; padding: 0.75rem 1rem; margin-bottom: 1.5rem; }
+.previous-summary.hidden { display: none; }
+.previous-summary-title { font-weight: 600; color: #1d4ed8; }
+.previous-summary-content { margin-top: 0.75rem; color: #475569; font-size: 0.9rem; }
+.previous-summary-content dl { margin: 0; }
+.previous-summary-content dt { font-weight: 600; color: #1e3a8a; margin-top: 0.75rem; }
+.previous-summary-content dt:first-of-type { margin-top: 0; }
+.previous-summary-content dd { margin: 0.35rem 0 0.75rem 0; }
+.previous-summary-meta { font-size: 0.75rem; color: #1d4ed8; margin-bottom: 0.75rem; }
+.previous-list { margin: 0.35rem 0 0.5rem 1.25rem; list-style: disc; }
+.previous-list li { margin-bottom: 0.35rem; }
+.previous-pre { background-color: #f1f5f9; border-radius: 0.5rem; font-size: 0.75rem; padding: 0.5rem 0.75rem; overflow-x: auto; }

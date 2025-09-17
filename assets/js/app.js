@@ -63,6 +63,188 @@ function removeEmptyState(container) {
   if (placeholder) placeholder.remove();
 }
 
+const previousContextSchema = {
+  'part-1': [
+    { key: 'successes', altKeys: ['successHighlights', 'wins'], label: 'Success highlights' },
+    { key: 'not-well', altKeys: ['setbacks', 'improvementsNeeded'], label: 'Areas that did not go well' },
+    { key: 'comparative-reflection', altKeys: ['yearComparison'], label: 'Comparative reflection' },
+    { key: 'challenges', label: 'Key challenges', formatter: formatChallengeList }
+  ],
+  'part-2': [
+    { key: 'lastYearGoals', altKeys: ['goalsLastYear', 'goals'], label: 'Goals from last year', formatter: formatGoalList },
+    { key: 'kpis', altKeys: ['kpiRatings'], label: 'KPI & competency ratings', formatter: formatKpiList }
+  ],
+  'part-3': [
+    { key: 'jdAlignment', altKeys: ['jobAlignment'], label: 'Job description alignment', formatter: formatJobAlignmentList }
+  ],
+  'part-4': [
+    { key: 'strategicPriorities', altKeys: ['priorities'], label: 'Strategic priorities', formatter: formatStrategicPriorityList }
+  ],
+  'part-5': [
+    { key: 'strengths', altKeys: ['keyStrengths'], label: 'Key strengths' },
+    { key: 'limitations', altKeys: ['constraints'], label: 'Limitations / restrictions' },
+    { key: 'pdUndertaken', altKeys: ['professionalDevelopmentUndertaken'], label: 'Professional development undertaken', formatter: formatPDUndertakenList },
+    { key: 'pdNeeded', altKeys: ['professionalDevelopmentNeeded', 'pdNeeds'], label: 'Future professional development needs', formatter: formatPDNeededList }
+  ],
+  'part-6': [
+    { key: 'futureGoals', altKeys: ['nextYearGoals'], label: 'Future goals', formatter: formatFutureGoalList }
+  ],
+  'part-7': [
+    { key: 'boardRequests', altKeys: ['requestsForBoard'], label: 'Requests for the board', formatter: formatBoardRequestList }
+  ]
+};
+
+function escapeHtml(value) {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function formatMultiline(text) {
+  return escapeHtml(text).replace(/\n/g, '<br>');
+}
+
+function formatChallengeList(list) {
+  if (!Array.isArray(list) || !list.length) return '';
+  return `<ul class="previous-list">${list
+    .map((item) => {
+      if (!item || typeof item !== 'object') return `<li>${escapeHtml(String(item))}</li>`;
+      const parts = [];
+      if (item.challenge) parts.push(`<strong>Challenge:</strong> ${formatMultiline(item.challenge)}`);
+      if (item.action) parts.push(`<strong>Action:</strong> ${formatMultiline(item.action)}`);
+      if (item.result) parts.push(`<strong>Outcome:</strong> ${formatMultiline(item.result)}`);
+      if (!parts.length) return '';
+      return `<li>${parts.join('<br>')}</li>`;
+    })
+    .filter(Boolean)
+    .join('')}</ul>`;
+}
+
+function formatGoalList(list) {
+  if (!Array.isArray(list) || !list.length) return '';
+  return `<ul class="previous-list">${list
+    .map((item) => {
+      if (!item || typeof item !== 'object') return `<li>${escapeHtml(String(item))}</li>`;
+      const parts = [];
+      if (item.goal) parts.push(`<strong>Goal:</strong> ${formatMultiline(item.goal)}`);
+      if (item.status) parts.push(`<strong>Status:</strong> ${escapeHtml(item.status)}`);
+      if (item.evidence) parts.push(`<strong>Evidence:</strong> ${formatMultiline(item.evidence)}`);
+      if (!parts.length) return '';
+      return `<li>${parts.join('<br>')}</li>`;
+    })
+    .filter(Boolean)
+    .join('')}</ul>`;
+}
+
+function formatKpiList(list) {
+  if (!Array.isArray(list) || !list.length) return '';
+  return `<ul class="previous-list">${list
+    .map((item) => {
+      if (!item || typeof item !== 'object') return `<li>${escapeHtml(String(item))}</li>`;
+      const parts = [];
+      const name = item.name ? `<strong>${escapeHtml(item.name)}:</strong>` : '<strong>KPI:</strong>';
+      const rating = item.rating ? ` Rating ${escapeHtml(item.rating)}` : '';
+      const compared = item.compared ? ` (${escapeHtml(item.compared)})` : '';
+      const header = `${name}${rating}${compared}`.trim();
+      parts.push(header);
+      if (item.why) parts.push(`<strong>Reason:</strong> ${formatMultiline(item.why)}`);
+      if (item.evidence) parts.push(`<strong>Evidence:</strong> ${formatMultiline(item.evidence)}`);
+      return `<li>${parts.join('<br>')}</li>`;
+    })
+    .join('')}</ul>`;
+}
+
+function formatJobAlignmentList(list) {
+  if (!Array.isArray(list) || !list.length) return '';
+  return `<ul class="previous-list">${list
+    .map((item) => {
+      if (!item || typeof item !== 'object') return `<li>${escapeHtml(String(item))}</li>`;
+      const parts = [];
+      if (item.area) parts.push(`<strong>${escapeHtml(item.area)}:</strong>`);
+      if (item.wentWell) parts.push(`<em>Went well:</em> ${formatMultiline(item.wentWell)}`);
+      if (item.notWell) parts.push(`<em>Needs work:</em> ${formatMultiline(item.notWell)}`);
+      return `<li>${parts.join('<br>')}</li>`;
+    })
+    .join('')}</ul>`;
+}
+
+function formatStrategicPriorityList(list) {
+  if (!Array.isArray(list) || !list.length) return '';
+  return `<ul class="previous-list">${list
+    .map((item) => {
+      if (!item || typeof item !== 'object') return `<li>${escapeHtml(String(item))}</li>`;
+      const parts = [];
+      if (item.name) parts.push(`<strong>${escapeHtml(item.name)}:</strong>`);
+      if (item.progress) parts.push(`<em>Progress:</em> ${formatMultiline(item.progress)}`);
+      if (item.challenges) parts.push(`<em>Challenges:</em> ${formatMultiline(item.challenges)}`);
+      if (item.trend) parts.push(`<em>Trend vs last year:</em> ${escapeHtml(item.trend)}`);
+      return `<li>${parts.join('<br>')}</li>`;
+    })
+    .join('')}</ul>`;
+}
+
+function formatPDUndertakenList(list) {
+  if (!Array.isArray(list) || !list.length) return '';
+  return `<ul class="previous-list">${list
+    .map((item) => {
+      if (!item || typeof item !== 'object') return `<li>${escapeHtml(String(item))}</li>`;
+      const parts = [];
+      if (item.title) parts.push(`<strong>${escapeHtml(item.title)}</strong>`);
+      if (item.learnings) parts.push(`<em>Key learnings:</em> ${formatMultiline(item.learnings)}`);
+      if (item.applied) parts.push(`<em>Applied:</em> ${formatMultiline(item.applied)}`);
+      if (item.requested) parts.push(`<em>Requested previously:</em> ${escapeHtml(item.requested)}`);
+      if (item.usefulness) parts.push(`<em>Usefulness vs last year:</em> ${escapeHtml(item.usefulness)}`);
+      return `<li>${parts.join('<br>')}</li>`;
+    })
+    .join('')}</ul>`;
+}
+
+function formatPDNeededList(list) {
+  if (!Array.isArray(list) || !list.length) return '';
+  return `<ul class="previous-list">${list
+    .map((item) => {
+      if (!item || typeof item !== 'object') return `<li>${escapeHtml(String(item))}</li>`;
+      const parts = [];
+      if (item.area) parts.push(`<strong>${escapeHtml(item.area)}</strong>`);
+      if (item.impact) parts.push(`<em>Expected impact:</em> ${formatMultiline(item.impact)}`);
+      return `<li>${parts.join('<br>')}</li>`;
+    })
+    .join('')}</ul>`;
+}
+
+function formatFutureGoalList(list) {
+  if (!Array.isArray(list) || !list.length) return '';
+  return `<ul class="previous-list">${list
+    .map((item) => {
+      if (!item || typeof item !== 'object') return `<li>${escapeHtml(String(item))}</li>`;
+      const parts = [];
+      if (item.statement) parts.push(`<strong>${escapeHtml(item.statement)}</strong>`);
+      if (item.outcome) parts.push(`<em>Desired outcome:</em> ${formatMultiline(item.outcome)}`);
+      if (item.why) parts.push(`<em>Why it matters:</em> ${formatMultiline(item.why)}`);
+      return `<li>${parts.join('<br>')}</li>`;
+    })
+    .join('')}</ul>`;
+}
+
+function formatBoardRequestList(list) {
+  if (!Array.isArray(list) || !list.length) return '';
+  return `<ul class="previous-list">${list
+    .map((item) => {
+      if (!item || typeof item !== 'object') return `<li>${escapeHtml(String(item))}</li>`;
+      const parts = [];
+      if (item.request) parts.push(`<strong>Request:</strong> ${formatMultiline(item.request)}`);
+      if (item.why) parts.push(`<strong>Why needed:</strong> ${formatMultiline(item.why)}`);
+      if (item.requested) parts.push(`<em>Requested previously:</em> ${escapeHtml(item.requested)}`);
+      if (item.changed) parts.push(`<em>What has changed:</em> ${formatMultiline(item.changed)}`);
+      return `<li>${parts.join('<br>')}</li>`;
+    })
+    .join('')}</ul>`;
+}
+
 // --- UI Helpers ---
 function debounce(fn, wait = 300) {
   let timeout;
@@ -276,6 +458,182 @@ function setupInfoDots() {
   document.querySelectorAll('.info-dot').forEach((btn) => {
     btn.setAttribute('aria-expanded', 'false');
   });
+}
+
+function getOrCreatePreviousSummary(sectionId) {
+  const section = document.getElementById(sectionId);
+  if (!section) return null;
+  const body = section.querySelector('.section-body');
+  if (!body) return null;
+  let details = body.querySelector('.previous-summary');
+  if (!details) {
+    details = document.createElement('details');
+    details.className = 'previous-summary hidden';
+    details.innerHTML = '<summary class="previous-summary-title">Last review snapshot</summary><div class="previous-summary-content"></div>';
+    body.prepend(details);
+  }
+  return details;
+}
+
+function renderFieldValue(value, config = {}) {
+  if (config.formatter) {
+    const formatted = config.formatter(value);
+    if (formatted) return formatted;
+  }
+  if (typeof value === 'string') {
+    const content = formatMultiline(value);
+    return `<p>${content}</p>`;
+  }
+  if (Array.isArray(value)) {
+    if (!value.length) return '';
+    if (value.every((item) => typeof item === 'string')) {
+      return `<ul class="previous-list">${value.map((item) => `<li>${formatMultiline(item)}</li>`).join('')}</ul>`;
+    }
+    return `<pre class="previous-pre">${escapeHtml(JSON.stringify(value, null, 2))}</pre>`;
+  }
+  if (value && typeof value === 'object') {
+    return `<pre class="previous-pre">${escapeHtml(JSON.stringify(value, null, 2))}</pre>`;
+  }
+  if (value === undefined || value === null) return '';
+  return `<p>${escapeHtml(String(value))}</p>`;
+}
+
+function setPreviousSummary(sectionId, entries, timestamp) {
+  const summary = getOrCreatePreviousSummary(sectionId);
+  if (!summary) return;
+  const content = summary.querySelector('.previous-summary-content');
+  if (!content) return;
+  if (!entries || !entries.length) {
+    summary.classList.add('hidden');
+    summary.open = false;
+    content.innerHTML = '';
+    return;
+  }
+  const dateLine = timestamp
+    ? `<p class="previous-summary-meta">Submitted ${new Date(timestamp).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</p>`
+    : '';
+  const html = entries
+    .map((entry) => `<dt>${escapeHtml(entry.label)}</dt><dd>${entry.html}</dd>`)
+    .join('');
+  content.innerHTML = `${dateLine}<dl>${html}</dl>`;
+  summary.classList.remove('hidden');
+}
+
+function pickFieldValue(data, config) {
+  if (!data) return { value: undefined, keyUsed: null };
+  const keys = [config.key].concat(config.altKeys || []);
+  for (const key of keys) {
+    if (Object.prototype.hasOwnProperty.call(data, key)) {
+      return { value: data[key], keyUsed: key };
+    }
+  }
+  return { value: undefined, keyUsed: null };
+}
+
+function renderAdditionalData(keys, data) {
+  const items = keys
+    .map((key) => {
+      const value = data[key];
+      if (value === undefined || value === null || (typeof value === 'string' && !value.trim())) return null;
+      const rendered = renderFieldValue(value);
+      if (!rendered) return null;
+      return `<li><strong>${escapeHtml(key)}:</strong> ${rendered}</li>`;
+    })
+    .filter(Boolean);
+  if (!items.length) return '';
+  return `<ul class="previous-list">${items.join('')}</ul>`;
+}
+
+function updatePreviousReviewBanner(timestamp) {
+  const banner = document.getElementById('previous-review-banner');
+  const title = document.getElementById('previous-review-title');
+  const description = document.getElementById('previous-review-description');
+  if (!banner || !title || !description) return;
+  if (!timestamp) {
+    banner.classList.add('hidden');
+    title.textContent = '';
+    description.textContent = '';
+    return;
+  }
+  const date = new Date(timestamp);
+  const formatted = Number.isNaN(date.getTime())
+    ? 'previously'
+    : date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+  title.textContent = `Last review submitted ${formatted}`;
+  description.textContent = 'Previous responses are shown in each section for easy comparison.';
+  banner.classList.remove('hidden');
+}
+
+function applyPreviousReviewContext(record) {
+  if (!record) {
+    clearPreviousSummaries();
+    return;
+  }
+  const payload = record.data || record;
+  const timestamp = record.timestamp || record.lastSubmittedAt || null;
+  if (!payload || typeof payload !== 'object') {
+    clearPreviousSummaries();
+    return;
+  }
+  const usedKeys = new Set();
+  const sectionEntries = {};
+  let hasEntries = false;
+  Object.entries(previousContextSchema).forEach(([sectionId, fields]) => {
+    fields.forEach((field) => {
+      const { value, keyUsed } = pickFieldValue(payload, field);
+      if (keyUsed) usedKeys.add(keyUsed);
+      if (value === undefined || value === null) return;
+      if (typeof value === 'string' && !value.trim()) return;
+      if (Array.isArray(value) && !value.length) return;
+      const rendered = renderFieldValue(value, field);
+      if (!rendered) return;
+      (sectionEntries[sectionId] = sectionEntries[sectionId] || []).push({ label: field.label, html: rendered });
+      hasEntries = true;
+    });
+  });
+  const ignoredKeys = new Set(['uid', 'timestamp']);
+  const additionalKeys = Object.keys(payload).filter((key) => !usedKeys.has(key) && !ignoredKeys.has(key));
+  if (additionalKeys.length) {
+    const additionalHtml = renderAdditionalData(additionalKeys, payload);
+    if (additionalHtml) {
+      (sectionEntries['part-1'] = sectionEntries['part-1'] || []).push({
+        label: 'Additional data from previous review',
+        html: additionalHtml
+      });
+      hasEntries = true;
+    }
+  }
+  updatePreviousReviewBanner(timestamp);
+  if (!hasEntries) {
+    const description = document.getElementById('previous-review-description');
+    if (description) {
+      description.textContent = 'Previous review stored in a different format. Inline comparisons are not available.';
+    }
+    return;
+  }
+  Object.keys(sectionEntries).forEach((sectionId) => {
+    setPreviousSummary(sectionId, sectionEntries[sectionId], timestamp);
+  });
+}
+
+function clearPreviousSummaries() {
+  document.querySelectorAll('.previous-summary').forEach((panel) => panel.remove());
+  updatePreviousReviewBanner(null);
+  window.previousReviewData = null;
+}
+
+async function renderPreviousReview(uid) {
+  clearPreviousSummaries();
+  try {
+    const record = await window.firebaseHelpers.loadReviewData(uid, 'submissions');
+    if (!record || !record.data) {
+      return;
+    }
+    window.previousReviewData = record.data;
+    applyPreviousReviewContext(record);
+  } catch (err) {
+    console.error('Failed to load previous review', err);
+  }
 }
 
 function enhanceTextarea(textarea) {
@@ -696,12 +1054,14 @@ window.onFirebaseAuthStateChanged = function(user) {
       appContainer.style.display = '';
       appContainer.setAttribute('aria-hidden', 'false');
     }
+    if (user.uid) renderPreviousReview(user.uid);
     // Do not auto-load last saved draft. Only load on button click.
   } else {
     showSignupModal(false);
     showLoginModal(true);
     localStorage.removeItem(STORAGE_KEY);
     clearForm();
+    clearPreviousSummaries();
   }
 };
 
@@ -1499,6 +1859,7 @@ if (reviewFormEl) {
         status.textContent = 'Review submitted!';
         setTimeout(() => { if (status) status.textContent = ''; }, 2000);
       }
+      if (user.uid) renderPreviousReview(user.uid);
     } catch (err) {
       if (status) status.textContent = 'Submit failed: ' + (err.message || err) + ' Your responses remain locally saved.';
     }
