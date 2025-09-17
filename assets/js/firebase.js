@@ -12,6 +12,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+const storage = firebase.storage();
 
 // Helper: get review doc ref for current user and collection
 function getReviewDocRef(uid, collection) {
@@ -48,6 +49,12 @@ function loadReviewData(uid, collection) {
   return getReviewDocRef(uid, collection).get().then(doc => doc.exists ? doc.data() : null);
 }
 
+function uploadReviewCsv(uid, filename, csvString) {
+  const ref = storage.ref().child(`reviews/${uid}/${filename}`);
+  const blob = new Blob([csvString], { type: 'text/csv' });
+  return ref.put(blob);
+}
+
 // Auth state listener
 auth.onAuthStateChanged(user => {
   window.onFirebaseAuthStateChanged && window.onFirebaseAuthStateChanged(user);
@@ -60,5 +67,6 @@ window.firebaseHelpers = {
   logout,
   saveReviewData,
   loadReviewData,
+  uploadReviewCsv,
   auth
 };
