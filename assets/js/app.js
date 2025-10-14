@@ -1130,6 +1130,16 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+  // Populate test data
+  const populateTestDataBtn = document.getElementById('populate-test-data-btn');
+  if (populateTestDataBtn) {
+    populateTestDataBtn.onclick = function() {
+      if (confirm('This will clear the current form and load comprehensive test data. Continue?')) {
+        populateTestData();
+      }
+    };
+  }
+
   // Clear Performance Reflection section
   const clearPerformanceBtn = document.getElementById('clear-performance-btn');
   if (clearPerformanceBtn) {
@@ -2088,6 +2098,397 @@ window.addPDNeeded = addPDNeeded;
 window.addFutureGoal = addFutureGoal;
 window.removeFutureGoal = removeFutureGoal;
 window.addBoardRequest = addBoardRequest;
+
+// --- Test Data Population Function ---
+function populateTestData() {
+  const testData = {
+    // Part 1: Performance Reflection
+    successes: `• Successfully launched the Community Hub initiative, serving 150+ whānau in its first 6 months
+• Secured $250,000 in additional funding through strategic partnership with local iwi
+• Implemented new conflict resolution framework resulting in 40% faster case resolution
+• Led organizational restructure that improved staff satisfaction scores from 72% to 89%
+• Established mentoring programme connecting 25 rangatahi with community leaders`,
+
+    'not-well': `• Recruitment timeline for Senior Social Worker position extended by 3 months due to limited candidate pool
+• Initial community consultation for new facility location faced unexpected resistance requiring redesign
+• IT system upgrade caused temporary service disruptions affecting client scheduling
+• Staff development budget overspent by 15% due to increased demand for specialized training`,
+
+    'comparative-reflection': `This year showed marked improvement in stakeholder relationships compared to 2023. The establishment of regular hui with iwi partners created trust that was previously lacking. Financial management became more robust with the implementation of quarterly forecasting, contrasting sharply with the reactive approach of previous years. However, staff retention challenges persist, though at lower levels than the 25% turnover experienced in 2023. The organization's community profile has strengthened significantly through increased media presence and successful events.`,
+
+    // Challenges
+    challenges: [
+      {
+        challenge: "Securing sustainable funding for core programmes beyond government contracts",
+        action: "Developed diversified funding strategy including corporate partnerships, community fundraising, and fee-for-service offerings. Engaged professional grant writer and established donor stewardship programme.",
+        result: "Secured $180,000 in non-government funding and established ongoing revenue stream generating $15,000 monthly. Reduced dependency on government funding from 90% to 72%."
+      },
+      {
+        challenge: "Managing increased demand for services with limited staffing capacity",
+        action: "Implemented waitlist management system, expanded volunteer programme, and negotiated flexible working arrangements. Prioritized service delivery through triage assessment process.",
+        result: "Reduced average wait times from 6 weeks to 3 weeks while maintaining service quality. Volunteer hours increased by 200% contributing equivalent of 1.5 FTE positions."
+      },
+      {
+        challenge: "Navigating complex regulatory changes affecting service delivery standards",
+        action: "Established compliance working group with legal consultation, provided staff training on new requirements, and updated all policies and procedures. Created monitoring dashboard for compliance tracking.",
+        result: "Achieved 100% compliance with new regulations ahead of deadline. Avoided potential $50,000 penalty and maintained all funding contracts. Process improvements identified efficiency gains."
+      }
+    ],
+
+    // Goals from Last Year
+    lastYearGoals: [
+      {
+        goal: "Establish Community Hub facility serving North Marlborough region",
+        status: "Fully Achieved",
+        evidence: "Hub opened March 2024, serving 150+ clients monthly. User satisfaction survey shows 94% approval rating. Partnership agreements signed with 8 local organizations for co-location."
+      },
+      {
+        goal: "Achieve financial sustainability with 30% non-government revenue",
+        status: "Partially Achieved",
+        evidence: "Reached 28% non-government revenue by year-end. Established corporate partnerships worth $85,000 annually and fee-for-service programmes generating $180,000. Target missed by 2% due to delayed grant outcome."
+      },
+      {
+        goal: "Implement comprehensive staff development programme",
+        status: "Fully Achieved",
+        evidence: "100% of staff completed core competency training. Leadership development programme launched with 6 participants. Staff satisfaction improved from 72% to 89%. Professional development budget fully utilized."
+      },
+      {
+        goal: "Expand iwi partnership framework to include all local iwi",
+        status: "Partially Achieved",
+        evidence: "Formal partnerships established with 3 of 5 local iwi through signed MOUs. Regular hui schedule implemented. Cultural competency training completed by all staff. Remaining 2 iwi partnerships in development."
+      }
+    ],
+
+    // KPIs (will be populated separately as they have specific structure)
+    kpis: [
+      {
+        name: "Conflict Resolution",
+        rating: "4",
+        evidence: "Implemented new restorative justice approach reducing average case duration from 8 to 5 weeks. Client satisfaction with resolution process increased to 87%. Successfully mediated 42 complex family disputes with 95% resolution rate.",
+        compared: "Better",
+        why: "New framework and staff training provided tools for more effective intervention strategies"
+      },
+      {
+        name: "Financial Resilience", 
+        rating: "3",
+        evidence: "Maintained 3-month operating reserves throughout the year. Diversified revenue streams reduced government dependency to 72%. All audit recommendations implemented with clean audit report received.",
+        compared: "Similar",
+        why: "Solid financial management maintained despite challenging funding environment"
+      },
+      {
+        name: "Board–CEO Communication",
+        rating: "4", 
+        evidence: "Introduced monthly CEO reports with KPI dashboard. Board meeting attendance averaged 92%. All board requests addressed within agreed timeframes. Regular 1:1 meetings with Chair established.",
+        compared: "Better",
+        why: "Structured communication protocols improved transparency and board engagement"
+      },
+      {
+        name: "Values Alignment",
+        rating: "5",
+        evidence: "Staff survey shows 94% feel organizational values are lived daily. Community feedback consistently highlights cultural responsiveness. Values-based decision making framework implemented for all major decisions.",
+        compared: "Much Better", 
+        why: "Dedicated focus on embedding values into operational practice and decision-making processes"
+      }
+    ],
+
+    // Job Description Alignment (will be populated separately)
+    jdAlignment: [
+      {
+        area: "Strategic Leadership",
+        wentWell: "Successfully developed and communicated 3-year strategic plan with board and staff input. Led organizational change management for new service delivery model. Established strong external relationships with key stakeholders including local government and iwi partners.",
+        notWell: "Strategic planning timeline extended due to extensive consultation requirements. Some strategic initiatives delayed by 3-6 months due to competing priorities. Need to improve strategic communication to wider community."
+      },
+      {
+        area: "People & Resources", 
+        wentWell: "Improved staff retention rates and satisfaction scores. Successfully recruited for key positions including Senior Social Worker and Community Liaison roles. Implemented performance management system with regular feedback loops.",
+        notWell: "Recruitment processes took longer than anticipated for specialized roles. Professional development budget management could be improved. Need better succession planning for key positions."
+      },
+      {
+        area: "Partnerships",
+        wentWell: "Established formal partnerships with 3 local iwi and 8 community organizations. Secured new funding partnerships worth $180,000. Developed collaborative service delivery models reducing duplication.",
+        notWell: "Partnership development with remaining 2 iwi progressing slower than expected. Some partnership agreements require renegotiation due to changing organizational needs. Communication protocols with partners need strengthening."
+      },
+      {
+        area: "Growth Opportunities",
+        wentWell: "Successfully expanded service delivery to North Marlborough region. Identified and pursued new funding opportunities resulting in 28% revenue diversification. Established innovation fund for pilot programmes.",
+        notWell: "Some growth initiatives required more resources than initially planned. Market analysis for new services took longer than expected. Need better systems for evaluating growth opportunity ROI."
+      },
+      {
+        area: "Accountability", 
+        wentWell: "Implemented comprehensive reporting framework for all stakeholders. All compliance requirements met ahead of deadlines. Board reporting improved with monthly KPI dashboards and quarterly reviews.",
+        notWell: "Some reporting systems require integration to reduce duplication. Stakeholder feedback mechanisms could be more systematic. Need to improve transparency in decision-making processes."
+      },
+      {
+        area: "Team & Culture",
+        wentWell: "Staff satisfaction increased significantly from 72% to 89%. Successful cultural competency training programme implemented. Team building initiatives improved collaboration across departments.",
+        notWell: "Still experiencing challenges with work-life balance in high-demand periods. Communication between departments needs improvement. Need to address workload distribution more equitably."
+      }
+    ],
+
+    // Strategic Priorities (will be populated separately) 
+    strategicPriorities: [
+      {
+        name: "Strengthen Iwi relationships",
+        progress: "Significant progress made with formal MOUs signed with 3 of 5 local iwi. Regular hui established monthly with attendance averaging 85%. Cultural competency training completed by 100% of staff. Joint initiatives launched including rangatahi mentoring programme.",
+        challenges: "Remaining 2 iwi partnerships progressing slowly due to internal iwi governance processes. Balancing different iwi perspectives and protocols requires careful navigation. Resource allocation for cultural activities needs increase.",
+        trend: "Improving"
+      },
+      {
+        name: "Increase trusted relationships & social cohesion", 
+        progress: "Community Hub establishment has created central meeting place fostering natural connections. Conflict resolution programme showing 95% success rate. Community events attendance increased by 150% year-on-year. Social media engagement up 300%.",
+        challenges: "Reaching isolated community members remains difficult. Some community tensions persist around resource allocation. Measuring social cohesion improvements requires better metrics development.",
+        trend: "Improving"
+      },
+      {
+        name: "Contribute to intergenerational wellbeing",
+        progress: "Rangatahi mentoring programme connecting 25 young people with community elders. Family support services expanded to include parenting programmes. Educational support provided to 40+ students. Housing advocacy secured stable accommodation for 15 families.",
+        challenges: "Long-term impact measurement systems need development. Intergenerational programmes require sustained funding beyond current grants. Balancing immediate needs with long-term wellbeing goals challenging.",
+        trend: "Steady"
+      },
+      {
+        name: "Operate a positive & professional organisation",
+        progress: "Staff satisfaction increased to 89% with improved professional development opportunities. All compliance requirements exceeded. Financial management systems strengthened with clean audit results. Workplace culture assessment shows significant improvement.",
+        challenges: "Workload management during peak periods affects staff wellbeing. Professional development budget constraints limit opportunities. Office space limitations impact productivity and staff satisfaction.",
+        trend: "Improving"
+      }
+    ],
+
+    // Part 5: Personal Assessment
+    strengths: `• Strategic thinking and planning - able to see big picture while managing operational details
+• Relationship building and stakeholder engagement - strong connections across diverse community groups
+• Crisis management and decision-making under pressure - calm leadership during challenging situations  
+• Cultural competency and responsiveness - deep understanding of Te Ao Māori principles and practices
+• Financial stewardship and resource management - proven track record of prudent financial oversight
+• Change management and organizational development - successful leadership through significant transitions`,
+
+    limitations: `• Technology systems knowledge - require support for complex IT implementations and digital transformation initiatives
+• Limited bandwidth for concurrent major projects - need to improve delegation and prioritization during high-demand periods
+• Grant writing expertise - while strategic, could benefit from technical writing skills development for complex funding applications
+• Regional networking beyond Marlborough - opportunities to expand connections with national sector leaders and organizations`,
+
+    // Professional Development Undertaken
+    pdUndertaken: [
+      {
+        title: "Advanced Conflict Resolution & Mediation Certificate",
+        learnings: "Gained expertise in restorative justice approaches, de-escalation techniques, and cultural mediation practices. Learned structured frameworks for complex multi-party disputes and trauma-informed conflict resolution.",
+        applied: "Implemented new mediation protocols reducing case resolution time by 37%. Training used in 42 family disputes with 95% success rate. Developed staff training programme based on learnings benefiting entire team.",
+        requested: "Board Requested",
+        usefulness: "Extremely Useful"
+      },
+      {
+        title: "Nonprofit Financial Management Intensive",
+        learnings: "Advanced understanding of nonprofit accounting standards, grant compliance requirements, and diversified revenue strategies. Learned forecasting models and risk management approaches specific to community sector.",
+        applied: "Implemented quarterly financial forecasting improving budget accuracy by 25%. Developed diversified funding strategy achieving 28% non-government revenue. Enhanced board financial reporting with KPI dashboards.",
+        requested: "Self-Initiated", 
+        usefulness: "Very Useful"
+      },
+      {
+        title: "Te Reo Māori Level 2 Certification",
+        learnings: "Improved conversational Te Reo capability and deeper understanding of tikanga Māori. Enhanced cultural competency for engaging with iwi partners and Māori whānau in appropriate cultural context.",
+        applied: "Used Te Reo in all hui and formal iwi engagements. Improved cultural responsiveness in service delivery. Led organizational karakia and supported staff cultural development. Enhanced community trust and relationships.",
+        requested: "Self-Initiated",
+        usefulness: "Extremely Useful"
+      }
+    ],
+
+    // Professional Development Needed
+    pdNeeded: [
+      {
+        area: "Digital Leadership & Technology Strategy",
+        impact: "Essential for leading organizational digital transformation. Will enable better service delivery through technology platforms, improve efficiency through automation, and enhance community engagement through digital channels. Critical for remaining competitive and meeting evolving client expectations."
+      },
+      {
+        area: "Advanced Grant Writing & Funding Strategy", 
+        impact: "Will significantly increase funding success rates and enable pursuit of larger collaborative grants. Essential for achieving financial sustainability goals and reducing government funding dependency. Will build organizational capacity for long-term resource security."
+      },
+      {
+        area: "National Sector Leadership Programme",
+        impact: "Will enhance national profile and sector influence, creating opportunities for policy input and collaborative initiatives. Essential for staying current with sector trends and building networks that benefit local community. Will position organization as regional leader."
+      }
+    ],
+
+    // Part 6: Future Goals
+    futureGoals: [
+      {
+        statement: "Establish Marlborough as regional hub for restorative justice practice",
+        outcome: "Recognition as leading practice region with 50% of family disputes using restorative approaches. Training centre established providing professional development regionally. Partnership agreements with justice sector agencies for referral pathways.",
+        why: "Aligns directly with strengthening iwi relationships and increasing social cohesion. Builds on successful conflict resolution improvements and community trust. Positions organization as innovative sector leader while meeting community needs."
+      },
+      {
+        statement: "Achieve 35% non-government revenue diversification",
+        outcome: "Sustainable funding mix reducing government dependency risk. Established social enterprise generating $200,000+ annually. Corporate partnership programme worth $150,000 per year. Community fundraising capability producing $100,000 annually.",
+        why: "Critical for operating positive professional organization with financial resilience. Enables pursuit of innovative programmes aligned with community priorities. Provides flexibility to respond quickly to emerging needs without funding constraints."
+      },
+      {
+        statement: "Launch intergenerational housing development project",
+        outcome: "20-unit housing complex designed with cultural principles enabling whānau of different generations to live interdependently. Project fully funded through partnership model. Waitlist of eligible whānau established with support wraparound services designed.",
+        why: "Directly contributes to intergenerational wellbeing strategic priority. Addresses critical housing shortage while maintaining cultural connections. Creates tangible legacy project demonstrating organizational capability and community commitment."
+      }
+    ],
+
+    // Part 7: Board Requests  
+    boardRequests: [
+      {
+        request: "Support for attending National Nonprofit Leadership Summit in Wellington (3 days)",
+        why: "Critical for staying current with sector developments and policy changes affecting community organizations. Opportunity to represent Marlborough region perspectives and build national networks. Learning will directly benefit strategic planning and organizational development.",
+        requested: "Professional Development",
+        changed: "Increased national focus and policy advocacy workload requiring dedicated time allocation"
+      },
+      {
+        request: "Approval for strategic partnership development with South Island community organizations", 
+        why: "Opportunity to leverage resources and expertise through collaborative service delivery models. Will strengthen funding applications and enable shared professional development. Critical for achieving growth and sustainability goals.",
+        requested: "Strategic Direction",
+        changed: "Expanded regional focus requiring travel and relationship management beyond current scope"
+      },
+      {
+        request: "Board champion for digital transformation project leadership and community engagement",
+        why: "Major organizational change requiring board-level advocacy and community leadership. Technology transformation affects all aspects of service delivery and requires strong governance oversight. Board member expertise in digital strategy would accelerate implementation.",
+        requested: "Governance Support", 
+        changed: "Complex change management requiring additional board meeting time and decision-making support"
+      }
+    ]
+  };
+
+  // Clear existing form
+  clearForm();
+  
+  // Wait a moment for form to clear
+  setTimeout(() => {
+    // Populate static fields
+    document.getElementById('successes').value = testData.successes;
+    document.getElementById('not-well').value = testData['not-well']; 
+    document.getElementById('comparative-reflection').value = testData['comparative-reflection'];
+    document.getElementById('strengths').value = testData.strengths;
+    document.getElementById('limitations').value = testData.limitations;
+
+    // Populate challenges
+    testData.challenges.forEach(() => addChallenge());
+    const challengeCards = document.getElementById('challenges-container').children;
+    testData.challenges.forEach((item, i) => {
+      if (challengeCards[i]) {
+        challengeCards[i].querySelector('textarea[placeholder="Describe the challenge..."]').value = item.challenge;
+        challengeCards[i].querySelector('textarea[placeholder="What action was taken?"]').value = item.action;
+        challengeCards[i].querySelector('textarea[placeholder="What was the outcome?"]').value = item.result;
+      }
+    });
+
+    // Populate last year goals
+    testData.lastYearGoals.forEach(() => addLastYearGoal());
+    const goalCards = document.getElementById('last-year-goals-container').children;
+    testData.lastYearGoals.forEach((item, i) => {
+      if (goalCards[i]) {
+        goalCards[i].querySelector('input[placeholder="Enter the goal statement..."]').value = item.goal;
+        goalCards[i].querySelector('select').value = item.status;
+        goalCards[i].querySelector('textarea[placeholder="Provide supporting evidence..."]').value = item.evidence;
+      }
+    });
+
+    // Populate KPIs
+    const kpiCards = document.getElementById('kpi-container').children;
+    testData.kpis.forEach((item, i) => {
+      if (kpiCards[i]) {
+        const ratingInput = kpiCards[i].querySelector(`input[type="radio"][value="${item.rating}"]`);
+        if (ratingInput) ratingInput.checked = true;
+        kpiCards[i].querySelector('textarea').value = item.evidence;
+        kpiCards[i].querySelector('select').value = item.compared;
+        kpiCards[i].querySelector('input[type="text"]').value = item.why;
+      }
+    });
+
+    // Populate JD alignment
+    const jdCards = document.getElementById('jd-alignment-container').children;
+    testData.jdAlignment.forEach((item, i) => {
+      if (jdCards[i]) {
+        const textareas = jdCards[i].querySelectorAll('textarea');
+        if (textareas[0]) textareas[0].value = item.wentWell;
+        if (textareas[1]) textareas[1].value = item.notWell;
+      }
+    });
+
+    // Populate strategic priorities  
+    const priorityCards = document.getElementById('strategic-priorities-container').children;
+    testData.strategicPriorities.forEach((item, i) => {
+      if (priorityCards[i]) {
+        const textareas = priorityCards[i].querySelectorAll('textarea');
+        if (textareas[0]) textareas[0].value = item.progress;
+        if (textareas[1]) textareas[1].value = item.challenges;
+        const select = priorityCards[i].querySelector('select');
+        if (select) select.value = item.trend;
+      }
+    });
+
+    // Populate PD undertaken
+    testData.pdUndertaken.forEach(() => addPDUndertaken());
+    const pdUndertakenCards = document.getElementById('pd-undertaken-container').children;
+    testData.pdUndertaken.forEach((item, i) => {
+      if (pdUndertakenCards[i]) {
+        pdUndertakenCards[i].querySelector('input[placeholder="Programme/Course Title"]').value = item.title;
+        pdUndertakenCards[i].querySelector('textarea[placeholder="Key Learnings"]').value = item.learnings;
+        pdUndertakenCards[i].querySelector('textarea[placeholder="How Learnings Were Applied"]').value = item.applied;
+        const selects = pdUndertakenCards[i].querySelectorAll('select');
+        if (selects[0]) selects[0].value = item.requested;
+        if (selects[1]) selects[1].value = item.usefulness;
+      }
+    });
+
+    // Populate PD needed
+    testData.pdNeeded.forEach(() => addPDNeeded());
+    const pdNeededCards = document.getElementById('pd-needed-container').children;
+    testData.pdNeeded.forEach((item, i) => {
+      if (pdNeededCards[i]) {
+        pdNeededCards[i].querySelector('input[placeholder="Area of Need"]').value = item.area;
+        pdNeededCards[i].querySelector('textarea[placeholder*="expected impact"]').value = item.impact;
+      }
+    });
+
+    // Populate future goals
+    testData.futureGoals.forEach(() => addFutureGoal());
+    const futureGoalCards = document.getElementById('future-goals-container').children;
+    testData.futureGoals.forEach((item, i) => {
+      if (futureGoalCards[i]) {
+        futureGoalCards[i].querySelector('input[placeholder="Enter the goal statement..."]').value = item.statement;
+        futureGoalCards[i].querySelector('textarea[placeholder="What will success look like?"]').value = item.outcome;
+        futureGoalCards[i].querySelector('textarea[placeholder*="align with strategic priorities"]').value = item.why;
+      }
+    });
+
+    // Populate board requests
+    testData.boardRequests.forEach(() => addBoardRequest());
+    const boardRequestCards = document.getElementById('board-requests-container').children;
+    testData.boardRequests.forEach((item, i) => {
+      if (boardRequestCards[i]) {
+        boardRequestCards[i].querySelector('textarea[placeholder="Request"]').value = item.request;
+        boardRequestCards[i].querySelector('textarea[placeholder="Why is this needed?"]').value = item.why;
+        boardRequestCards[i].querySelector('select').value = item.requested;
+        boardRequestCards[i].querySelector('input[placeholder*="workload pressure"]').value = item.changed;
+      }
+    });
+
+    // Update all section summaries and progress
+    updateAllSectionSummaries();
+    
+    // Save the test data to local storage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      timestamp: new Date().toISOString(),
+      data: testData
+    }));
+
+    // Show success message
+    const status = document.getElementById('save-status');
+    if (status) {
+      status.textContent = '✅ Test data loaded successfully!';
+      status.style.color = '#059669';
+      setTimeout(() => {
+        status.textContent = '';
+        status.style.color = '';
+      }, 3000);
+    }
+
+  }, 100);
+}
+
+// Expose test function globally
+window.populateTestData = populateTestData;
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
