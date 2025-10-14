@@ -14,6 +14,7 @@ function getUserRole(uid) {
 
 
 // Your web app's Firebase configuration
+/* 
 const firebaseConfig = {
   apiKey: "AIzaSyA64oOlYODhYwXawZ8BDjU9uoZK7pn_aKQ",
   authDomain: "studio-8276146072-e2bec.firebaseapp.com",
@@ -22,6 +23,7 @@ const firebaseConfig = {
   messagingSenderId: "462550604907",
   appId: "1:462550604907:web:e19504133d5cb4bc12252e"
 };
+*/
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();

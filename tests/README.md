@@ -1,7 +1,7 @@
 # Automated Testing Suite
 
-- `sample.unit.test.js`: Example Jest unit test
-- `sample.e2e.spec.js`: Example Playwright end-to-end test
+- `ui.helpers.test.js`: Jest unit coverage for the UI helper utilities in `assets/js/app.js`
+- `sample.e2e.spec.js`: Example Playwright end-to-end test skeleton
 
 Run Jest unit tests:
 ```
