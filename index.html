@@ -12,6 +12,9 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="assets/css/styles.css" />
+    <!-- PDF Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   </head>
   <body class="bg-slate-100 text-slate-800">
     <!-- Login Modal -->
@@ -837,17 +840,18 @@
             <button
               type="button"
               id="print-preview-btn"
-              class="action-chip bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200 print:hidden"
-              title="Preview how the form will look when printed"
+              class="action-chip bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200"
+              title="Preview how the PDF will look before downloading"
             >
-              👁️ Print Preview
+              👁️ PDF Preview
             </button>
             <button
               type="button"
               id="save-pdf-btn"
-              class="primary-chip bg-emerald-600 text-white hover:bg-emerald-700 print:hidden"
+              class="primary-chip bg-emerald-600 text-white hover:bg-emerald-700"
+              title="Generate and download a professional PDF of your review"
             >
-              Save as PDF
+              📄 Download PDF
             </button>
             <button
               type="submit"

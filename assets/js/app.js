@@ -1967,34 +1967,288 @@ if (saveProgressBtn) {
   saveProgressBtn.onclick = saveProgress;
 }
 
-// Print Preview Button
+// Print Preview Button - now shows PDF preview
 const printPreviewBtn = document.getElementById('print-preview-btn');
 if (printPreviewBtn) {
-  printPreviewBtn.onclick = function() {
-    printPreview();
+  printPreviewBtn.onclick = async function() {
+    await previewPDFContent();
   };
 }
 
-// Save as PDF Button
+// Save as PDF Button - Generate and Download PDF
 const savePdfBtn = document.getElementById('save-pdf-btn');
 if (savePdfBtn) {
-  savePdfBtn.onclick = function() {
-    preparePrintLayout();
-    
-    // Listen for after print to clean up
-    const afterPrint = () => {
-      cleanupPrintLayout();
-      window.removeEventListener('afterprint', afterPrint);
-    };
-    window.addEventListener('afterprint', afterPrint);
-    
-    setTimeout(() => {
-      window.print();
-    }, 200);
+  savePdfBtn.onclick = async function() {
+    await generateAndDownloadPDF();
   };
 }
 
-// Clean up print elements after printing
+// Generate and Download PDF
+async function generateAndDownloadPDF() {
+  const statusEl = document.getElementById('save-status');
+  if (statusEl) statusEl.textContent = 'Generating PDF...';
+  
+  try {
+    // Create a clean version of the form for PDF
+    const pdfContent = await createPDFContent();
+    
+    // Generate PDF using jsPDF
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+      compress: true
+    });
+    
+    // Add content to PDF
+    await addContentToPDF(pdf, pdfContent);
+    
+    // Generate filename with current date
+    const currentDate = new Date().toISOString().split('T')[0];
+    const filename = `REAP-CEO-Review-${currentDate}.pdf`;
+    
+    // Download the PDF
+    pdf.save(filename);
+    
+    // Clean up
+    cleanupPDFContent(pdfContent);
+    
+    if (statusEl) {
+      statusEl.textContent = 'PDF downloaded successfully!';
+      setTimeout(() => { statusEl.textContent = ''; }, 3000);
+    }
+    
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    if (statusEl) {
+      statusEl.textContent = 'PDF generation failed. Please try again.';
+      setTimeout(() => { statusEl.textContent = ''; }, 5000);
+    }
+  }
+}
+
+// Create clean PDF content structure
+async function createPDFContent() {
+  // Get form data
+  const formData = collectFormData();
+  
+  // Create a temporary container for PDF content
+  const pdfContainer = document.createElement('div');
+  pdfContainer.id = 'pdf-content';
+  pdfContainer.style.cssText = `
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+    width: 210mm;
+    background: white;
+    font-family: 'Times New Roman', serif;
+    font-size: 11pt;
+    line-height: 1.4;
+    color: #000;
+    padding: 20mm;
+    box-sizing: border-box;
+  `;
+  
+  // Build PDF HTML content
+  let html = `
+    <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 15px;">
+      <h1 style="font-size: 22pt; font-weight: bold; margin: 0; color: #000;">
+        REAP Marlborough – CEO Self-Review
+      </h1>
+      <div style="font-size: 12pt; color: #666; margin-top: 10px;">
+        Generated: ${new Date().toLocaleDateString('en-NZ', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        })}
+      </div>
+    </div>
+  `;
+  
+  // Add each section
+  html += buildPDFSection('Part 1: Performance Reflection', [
+    { label: 'Key Successes & What Went Well', content: formData.successes },
+    { label: 'What Did Not Go Well', content: formData['not-well'] },
+    { label: 'Comparative Reflection', content: formData['comparative-reflection'] },
+    { label: 'Key Challenges', content: formatChallengesForPDF(formData.challenges) }
+  ]);
+  
+  html += buildPDFSection('Part 2: Review of Previous Goals & KPIs', [
+    { label: 'Goals from Last Year', content: formatGoalsForPDF(formData.lastYearGoals) },
+    { label: 'KPI & Competency Ratings', content: formatKPIsForPDF(formData.kpis) }
+  ]);
+  
+  html += buildPDFSection('Part 3: Job Description Alignment', [
+    { label: 'Job Description Areas', content: formatJDAlignmentForPDF(formData.jdAlignment) }
+  ]);
+  
+  html += buildPDFSection('Part 4: Strategic Priorities (2022-2024)', [
+    { label: 'Strategic Priorities Progress', content: formatStrategicPrioritiesForPDF(formData.strategicPriorities) }
+  ]);
+  
+  html += buildPDFSection('Part 5: Personal Assessment & Professional Development', [
+    { label: 'Key Strengths', content: formData.strengths },
+    { label: 'Limitations / Restrictions', content: formData.limitations },
+    { label: 'Professional Development Undertaken', content: formatPDUndertakenForPDF(formData.pdUndertaken) },
+    { label: 'Future Professional Development Needs', content: formatPDNeededForPDF(formData.pdNeeded) }
+  ]);
+  
+  html += buildPDFSection('Part 6: Future Focus', [
+    { label: 'Goals for Next 12 Months', content: formatFutureGoalsForPDF(formData.futureGoals) }
+  ]);
+  
+  html += buildPDFSection('Part 7: Dialogue with Board', [
+    { label: 'Requests for the Board', content: formatBoardRequestsForPDF(formData.boardRequests) }
+  ]);
+  
+  pdfContainer.innerHTML = html;
+  document.body.appendChild(pdfContainer);
+  
+  return pdfContainer;
+}
+
+// Build PDF section HTML
+function buildPDFSection(title, fields) {
+  let html = `
+    <div style="margin-bottom: 25px; page-break-inside: avoid;">
+      <h2 style="font-size: 16pt; font-weight: bold; margin: 20px 0 15px 0; color: #000; border-bottom: 1px solid #666; padding-bottom: 5px;">
+        ${title}
+      </h2>
+  `;
+  
+  fields.forEach(field => {
+    if (field.content && field.content.trim() !== '—') {
+      // Escape HTML and preserve line breaks
+      const escapedContent = field.content
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+        .replace(/\n/g, '<br>');
+      
+      html += `
+        <div style="margin-bottom: 15px; page-break-inside: avoid;">
+          <div style="font-weight: bold; font-size: 10pt; margin-bottom: 5px; color: #000;">
+            ${field.label}:
+          </div>
+          <div style="margin-left: 10px; line-height: 1.5;">
+            ${escapedContent}
+          </div>
+        </div>
+      `;
+    }
+  });
+  
+  html += '</div>';
+  return html;
+}
+
+// Format different data types for PDF
+function formatChallengesForPDF(challenges) {
+  if (!challenges || !challenges.length) return '';
+  return challenges.filter(ch => ch.challenge || ch.action || ch.result).map((ch, i) => 
+    `${i + 1}. Challenge: ${ch.challenge || 'Not specified'}\n   Action: ${ch.action || 'Not specified'}\n   Result: ${ch.result || 'Not specified'}`
+  ).join('\n\n');
+}
+
+function formatGoalsForPDF(goals) {
+  if (!goals || !goals.length) return '';
+  return goals.filter(g => g.goal || g.status || g.evidence).map((goal, i) => 
+    `${i + 1}. Goal: ${goal.goal || 'Not specified'}\n   Status: ${goal.status || 'Not specified'}\n   Evidence: ${goal.evidence || 'Not provided'}`
+  ).join('\n\n');
+}
+
+function formatKPIsForPDF(kpis) {
+  if (!kpis || !kpis.length) return '';
+  return kpis.filter(k => k.rating || k.evidence).map((kpi, i) => 
+    `${i + 1}. ${kpi.name || 'Unnamed KPI'}\n   Rating: ${kpi.rating || 'Not rated'}/5\n   Evidence: ${kpi.evidence || 'Not provided'}\n   Compared to last year: ${kpi.compared || 'Not specified'}\n   Why: ${kpi.why || 'Not specified'}`
+  ).join('\n\n');
+}
+
+function formatJDAlignmentForPDF(alignment) {
+  if (!alignment || !alignment.length) return '—';
+  return alignment.map((area, i) => 
+    `${i + 1}. ${area.area}\n   What went well: ${area.wentWell}\n   What did not go well: ${area.notWell}`
+  ).join('\n\n');
+}
+
+function formatStrategicPrioritiesForPDF(priorities) {
+  if (!priorities || !priorities.length) return '—';
+  return priorities.map((priority, i) => 
+    `${i + 1}. ${priority.name}\n   Progress: ${priority.progress}\n   Challenges: ${priority.challenges}\n   Trend: ${priority.trend}`
+  ).join('\n\n');
+}
+
+function formatPDUndertakenForPDF(pd) {
+  if (!pd || !pd.length) return '—';
+  return pd.map((item, i) => 
+    `${i + 1}. ${item.title}\n   Key Learnings: ${item.learnings}\n   How Applied: ${item.applied}\n   Requested by: ${item.requested}\n   Usefulness: ${item.usefulness}`
+  ).join('\n\n');
+}
+
+function formatPDNeededForPDF(pd) {
+  if (!pd || !pd.length) return '—';
+  return pd.map((item, i) => 
+    `${i + 1}. ${item.area}\n   Expected Impact: ${item.impact}`
+  ).join('\n\n');
+}
+
+function formatFutureGoalsForPDF(goals) {
+  if (!goals || !goals.length) return '—';
+  return goals.map((goal, i) => 
+    `${i + 1}. Goal: ${goal.statement}\n   Success Indicators: ${goal.outcome}\n   Strategic Alignment: ${goal.why}`
+  ).join('\n\n');
+}
+
+function formatBoardRequestsForPDF(requests) {
+  if (!requests || !requests.length) return '—';
+  return requests.map((req, i) => 
+    `${i + 1}. Request: ${req.request}\n   Justification: ${req.why}\n   Type: ${req.requested}\n   Impact: ${req.changed}`
+  ).join('\n\n');
+}
+
+// Add content to PDF using jsPDF
+async function addContentToPDF(pdf, contentElement) {
+  // Use html2canvas to render the content
+  const canvas = await html2canvas(contentElement, {
+    scale: 2,
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: '#ffffff',
+    width: contentElement.offsetWidth,
+    height: contentElement.offsetHeight
+  });
+  
+  const imgData = canvas.toDataURL('image/png');
+  const imgWidth = 210; // A4 width in mm
+  const pageHeight = 297; // A4 height in mm
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+  let heightLeft = imgHeight;
+  let position = 0;
+  
+  // Add first page
+  pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+  heightLeft -= pageHeight;
+  
+  // Add additional pages if needed
+  while (heightLeft >= 0) {
+    position = heightLeft - imgHeight;
+    pdf.addPage();
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+  }
+}
+
+// Clean up PDF content
+function cleanupPDFContent(contentElement) {
+  if (contentElement && contentElement.parentNode) {
+    contentElement.parentNode.removeChild(contentElement);
+  }
+}
+
+// Clean up print elements after printing (keep for backward compatibility)
 function cleanupPrintLayout() {
   const printElements = document.querySelectorAll('.print-content');
   printElements.forEach(el => el.remove());
@@ -2697,29 +2951,80 @@ function populateTestData() {
   }, 100);
 }
 
-// Print preview function for debugging
-function printPreview() {
-  const originalTitle = document.title;
-  document.title = 'CEO Review - Print Preview';
+// PDF preview function
+async function previewPDFContent() {
+  const statusEl = document.getElementById('save-status');
+  if (statusEl) statusEl.textContent = 'Generating preview...';
   
-  // Add print preview class to body
-  document.body.classList.add('print-preview');
-  
-  // Prepare layout
-  preparePrintLayout();
-  
-  // Add some visual indicators for page breaks
-  const pageBreakElements = document.querySelectorAll('[style*="page-break-before: always"]');
-  pageBreakElements.forEach(el => {
-    el.style.borderTop = '2px dashed #e11d48';
-    el.style.marginTop = '20px';
-    el.style.paddingTop = '20px';
-  });
-  
-  alert('Print preview mode activated. Check the layout and use browser print to generate PDF. Refresh page to exit preview mode.');
-  
-  // Restore title
-  document.title = originalTitle;
+  try {
+    // Create PDF content
+    const pdfContent = await createPDFContent();
+    
+    // Style it for preview
+    pdfContent.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #f0f0f0;
+      z-index: 9999;
+      overflow: auto;
+      padding: 20px;
+      box-sizing: border-box;
+    `;
+    
+    // Add preview styles to the content
+    const contentInner = pdfContent.children[0];
+    if (contentInner) {
+      contentInner.style.cssText = `
+        max-width: 210mm;
+        margin: 0 auto;
+        background: white;
+        padding: 20mm;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        font-family: 'Times New Roman', serif;
+        font-size: 11pt;
+        line-height: 1.4;
+        color: #000;
+      `;
+    }
+    
+    // Add close button
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '✕ Close Preview';
+    closeBtn.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      z-index: 10000;
+      font-weight: bold;
+    `;
+    closeBtn.onclick = () => {
+      document.body.removeChild(pdfContent);
+      if (statusEl) statusEl.textContent = '';
+    };
+    
+    pdfContent.appendChild(closeBtn);
+    
+    if (statusEl) {
+      statusEl.textContent = 'Preview ready!';
+      setTimeout(() => { statusEl.textContent = ''; }, 2000);
+    }
+    
+  } catch (error) {
+    console.error('Preview generation error:', error);
+    if (statusEl) {
+      statusEl.textContent = 'Preview generation failed.';
+      setTimeout(() => { statusEl.textContent = ''; }, 3000);
+    }
+  }
 }
 
 // Add print debug styles
