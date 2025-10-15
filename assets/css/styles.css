@@ -72,3 +72,21 @@ body { font-family: 'Inter', sans-serif; }
 .previous-list { margin: 0.35rem 0 0.5rem 1.25rem; list-style: disc; }
 .previous-list li { margin-bottom: 0.35rem; }
 .previous-pre { background-color: #f1f5f9; border-radius: 0.5rem; font-size: 0.75rem; padding: 0.5rem 0.75rem; overflow-x: auto; }
+
+/* Print preparation helpers */
+.print-break-before { break-before: page; }
+.print-break-after { break-after: page; }
+.print-avoid-break { break-inside: avoid; }
+
+/* Ensure textareas can expand for print */
+textarea {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Better text handling for long content */
+.repeater-item {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}

@@ -4,28 +4,89 @@
   }
 /* Print stylesheet for PDF export */
 @media print {
+  /* Page setup */
+  @page {
+    size: A4;
+    margin: 1in 0.75in;
+  }
+  
+  /* Root styling */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
   body {
     background: #fff !important;
     color: #222 !important;
+    font-size: 12pt !important;
+    line-height: 1.4 !important;
+    font-family: 'Times New Roman', serif !important;
   }
+  
+  /* Hide interactive elements */
   .print\:hidden, .print\:hidden * {
     display: none !important;
   }
-  button, .tooltip, #save-status {
+  
+  button, .tooltip, #save-status, .section-toggle, 
+  .rich-text-toolbar, .rich-text-count, .empty-placeholder,
+  .modal, #login-modal, .action-chip, .primary-chip {
     display: none !important;
   }
+  
+  /* Container and layout */
   .container {
     box-shadow: none !important;
     border: none !important;
     background: #fff !important;
     padding: 0 !important;
     max-width: 100% !important;
+    margin: 0 !important;
   }
+  
+  /* Headers and sections */
+  h1 {
+    font-size: 18pt !important;
+    font-weight: bold !important;
+    margin-bottom: 12pt !important;
+    page-break-after: avoid !important;
+  }
+  
+  h2 {
+    font-size: 14pt !important;
+    font-weight: bold !important;
+    margin-top: 18pt !important;
+    margin-bottom: 8pt !important;
+    page-break-after: avoid !important;
+  }
+  
+  h3 {
+    font-size: 12pt !important;
+    font-weight: bold !important;
+    margin-top: 12pt !important;
+    margin-bottom: 6pt !important;
+    page-break-after: avoid !important;
+  }
+  
   section, header, form {
     background: #fff !important;
     box-shadow: none !important;
     border: none !important;
   }
+  
+  /* Section spacing */
+  section {
+    margin-bottom: 24pt !important;
+    page-break-inside: avoid !important;
+  }
+  
+  /* Large sections that need to break */
+  section[id*="part-"] {
+    page-break-inside: auto !important;
+  }
+  
+  /* Form elements - allow natural text flow */
   textarea, input, select {
     border: none !important;
     background: transparent !important;
@@ -33,32 +94,142 @@
     color: #222 !important;
     resize: none !important;
     outline: none !important;
-    padding: 0 !important;
+    padding: 2pt 0 !important;
     margin: 0 !important;
-    height: auto !important;
-    min-height: 0 !important;
-    line-height: 1.2 !important;
-    font-size: 1em !important;
-    vertical-align: middle !important;
+    width: 100% !important;
+    font-size: 11pt !important;
+    line-height: 1.3 !important;
+    font-family: inherit !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: pre-wrap !important;
   }
+  
+  /* Textareas - allow content to expand naturally */
   textarea {
-    min-height: 1.2em !important;
-    height: 1.2em !important;
-    max-height: 2.4em !important;
-    overflow: hidden !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: block !important;
+    border-bottom: 1px solid #ddd !important;
+    margin-bottom: 8pt !important;
   }
-  input[type="text"], select {
-    height: 1.2em !important;
-    min-height: 0 !important;
-    max-height: 1.2em !important;
-    overflow: hidden !important;
+  
+  /* Single-line inputs */
+  input[type="text"], input[type="email"], select {
+    height: auto !important;
+    min-height: 14pt !important;
+    max-height: none !important;
+    border-bottom: 1px solid #ddd !important;
+    margin-bottom: 4pt !important;
+    display: inline-block !important;
+    vertical-align: baseline !important;
   }
-  /* Remove page breaks inside sections */
-  section, .repeater-item {
+  
+  /* Radio buttons and checkboxes */
+  input[type="radio"], input[type="checkbox"] {
+    width: auto !important;
+    height: auto !important;
+    margin-right: 4pt !important;
+  }
+  
+  /* Labels */
+  label {
+    font-weight: bold !important;
+    margin-bottom: 2pt !important;
+    display: block !important;
+    font-size: 10pt !important;
+  }
+  
+  /* Repeater items */
+  .repeater-item {
+    margin-bottom: 16pt !important;
+    padding: 8pt !important;
+    border: 1px solid #ddd !important;
     page-break-inside: avoid !important;
   }
-  /* Add some margin for readability */
-  section {
-    margin-bottom: 2em !important;
+  
+  /* Tables and structured content */
+  .grid {
+    display: block !important;
+  }
+  
+  .grid > div {
+    display: block !important;
+    margin-bottom: 8pt !important;
+  }
+  
+  /* Progress indicators */
+  [data-section-summary] {
+    font-style: italic !important;
+    font-size: 10pt !important;
+    color: #666 !important;
+    margin-bottom: 8pt !important;
+  }
+  
+  /* Page breaks */
+  .page-break-before {
+    page-break-before: always !important;
+  }
+  
+  .page-break-after {
+    page-break-after: always !important;
+  }
+  
+  .avoid-break {
+    page-break-inside: avoid !important;
+  }
+  
+  /* Force page breaks between major sections */
+  section[id="part-3"],
+  section[id="part-5"],
+  section[id="part-7"] {
+    page-break-before: always !important;
+  }
+  
+  /* Lists */
+  ul, ol {
+    margin: 6pt 0 !important;
+    padding-left: 18pt !important;
+  }
+  
+  li {
+    margin-bottom: 3pt !important;
+    line-height: 1.3 !important;
+  }
+  
+  /* Ensure content is visible */
+  .section-body {
+    display: block !important;
+    visibility: visible !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  
+  /* Remove collapsible functionality in print */
+  .collapsible-section[data-collapsed="true"] .section-body {
+    display: block !important;
+    height: auto !important;
+  }
+  
+  /* Table styling for structured data */
+  .table-like {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-bottom: 12pt !important;
+  }
+  
+  .table-like td, .table-like th {
+    border: 1px solid #ddd !important;
+    padding: 4pt !important;
+    text-align: left !important;
+    vertical-align: top !important;
+  }
+  
+  /* Prevent orphans and widows */
+  p, div, li {
+    orphans: 2 !important;
+    widows: 2 !important;
   }
 }

@@ -1967,12 +1967,71 @@ if (saveProgressBtn) {
   saveProgressBtn.onclick = saveProgress;
 }
 
+// Print Preview Button
+const printPreviewBtn = document.getElementById('print-preview-btn');
+if (printPreviewBtn) {
+  printPreviewBtn.onclick = function() {
+    printPreview();
+  };
+}
+
 // Save as PDF Button
 const savePdfBtn = document.getElementById('save-pdf-btn');
 if (savePdfBtn) {
   savePdfBtn.onclick = function() {
-    window.print();
+    preparePrintLayout();
+    setTimeout(() => {
+      window.print();
+    }, 100);
   };
+}
+
+// Prepare layout for printing
+function preparePrintLayout() {
+  // Expand all textareas to show their full content
+  const textareas = document.querySelectorAll('textarea');
+  textareas.forEach(textarea => {
+    if (textarea.value.trim()) {
+      // Calculate the height needed for the content
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+      
+      // Ensure text is visible and properly formatted
+      textarea.style.whiteSpace = 'pre-wrap';
+      textarea.style.wordWrap = 'break-word';
+      textarea.style.overflow = 'visible';
+    }
+  });
+  
+  // Ensure all collapsible sections are expanded
+  const collapsibleSections = document.querySelectorAll('.collapsible-section[data-collapsed="true"]');
+  collapsibleSections.forEach(section => {
+    const body = section.querySelector('.section-body');
+    if (body) {
+      body.style.display = 'block';
+      body.style.height = 'auto';
+      body.style.visibility = 'visible';
+    }
+  });
+  
+  // Add page break hints for better pagination
+  const sections = document.querySelectorAll('section[id*="part-"]');
+  sections.forEach((section, index) => {
+    // Add page breaks before major sections (parts 3, 5, 7)
+    if (section.id === 'part-3' || section.id === 'part-5' || section.id === 'part-7') {
+      section.style.pageBreakBefore = 'always';
+    }
+    
+    // Ensure sections don't break awkwardly
+    section.style.pageBreakInside = 'avoid';
+  });
+  
+  // Handle repeater items to avoid awkward breaks
+  const repeaterItems = document.querySelectorAll('.repeater-item');
+  repeaterItems.forEach(item => {
+    item.style.pageBreakInside = 'avoid';
+    item.style.marginBottom = '12pt';
+  });
 }
 
 async function loadProgress() {
@@ -2487,8 +2546,77 @@ function populateTestData() {
   }, 100);
 }
 
+// Print preview function for debugging
+function printPreview() {
+  const originalTitle = document.title;
+  document.title = 'CEO Review - Print Preview';
+  
+  // Add print preview class to body
+  document.body.classList.add('print-preview');
+  
+  // Prepare layout
+  preparePrintLayout();
+  
+  // Add some visual indicators for page breaks
+  const pageBreakElements = document.querySelectorAll('[style*="page-break-before: always"]');
+  pageBreakElements.forEach(el => {
+    el.style.borderTop = '2px dashed #e11d48';
+    el.style.marginTop = '20px';
+    el.style.paddingTop = '20px';
+  });
+  
+  alert('Print preview mode activated. Check the layout and use browser print to generate PDF. Refresh page to exit preview mode.');
+  
+  // Restore title
+  document.title = originalTitle;
+}
+
+// Add print debug styles
+function addPrintDebugStyles() {
+  if (document.getElementById('print-debug-styles')) return;
+  
+  const style = document.createElement('style');
+  style.id = 'print-debug-styles';
+  style.textContent = `
+    body.print-preview {
+      background: #f3f4f6 !important;
+      padding: 20px;
+    }
+    
+    body.print-preview .container {
+      background: white !important;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+      max-width: 8.5in !important;
+      margin: 0 auto !important;
+      padding: 1in 0.75in !important;
+    }
+    
+    body.print-preview [style*="page-break-before: always"] {
+      position: relative;
+    }
+    
+    body.print-preview [style*="page-break-before: always"]::before {
+      content: "📄 New Page";
+      position: absolute;
+      top: -15px;
+      left: 0;
+      background: #dc2626;
+      color: white;
+      padding: 2px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+  `;
+  
+  document.head.appendChild(style);
+}
+
+// Initialize debug styles
+addPrintDebugStyles();
+
 // Expose test function globally
 window.populateTestData = populateTestData;
+window.printPreview = printPreview;
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
