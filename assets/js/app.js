@@ -2040,28 +2040,30 @@ async function createPDFContent() {
     position: absolute;
     top: -9999px;
     left: -9999px;
-    width: 210mm;
+    width: 180mm;
     background: white;
     font-family: 'Times New Roman', serif;
     font-size: 11pt;
     line-height: 1.4;
     color: #000;
-    padding: 20mm;
+    padding: 15mm;
     box-sizing: border-box;
   `;
   
-  // Build PDF HTML content
+  // Build PDF HTML content with proper spacing for margins
   let html = `
-    <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 15px;">
-      <h1 style="font-size: 22pt; font-weight: bold; margin: 0; color: #000;">
-        REAP Marlborough – CEO Self-Review
-      </h1>
-      <div style="font-size: 12pt; color: #666; margin-top: 10px;">
-        Generated: ${new Date().toLocaleDateString('en-NZ', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
-        })}
+    <div style="margin-bottom: 40px;">
+      <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 15px;">
+        <h1 style="font-size: 22pt; font-weight: bold; margin: 0; color: #000;">
+          REAP Marlborough – CEO Self-Review
+        </h1>
+        <div style="font-size: 12pt; color: #666; margin-top: 10px;">
+          Generated: ${new Date().toLocaleDateString('en-NZ', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}
+        </div>
       </div>
     </div>
   `;
@@ -2111,8 +2113,8 @@ async function createPDFContent() {
 // Build PDF section HTML
 function buildPDFSection(title, fields) {
   let html = `
-    <div style="margin-bottom: 25px; page-break-inside: avoid;">
-      <h2 style="font-size: 16pt; font-weight: bold; margin: 20px 0 15px 0; color: #000; border-bottom: 1px solid #666; padding-bottom: 5px;">
+    <div style="margin-bottom: 35px; page-break-inside: avoid;">
+      <h2 style="font-size: 16pt; font-weight: bold; margin: 25px 0 20px 0; color: #000; border-bottom: 1px solid #666; padding-bottom: 8px;">
         ${title}
       </h2>
   `;
@@ -2129,11 +2131,11 @@ function buildPDFSection(title, fields) {
         .replace(/\n/g, '<br>');
       
       html += `
-        <div style="margin-bottom: 15px; page-break-inside: avoid;">
-          <div style="font-weight: bold; font-size: 10pt; margin-bottom: 5px; color: #000;">
+        <div style="margin-bottom: 20px; page-break-inside: avoid;">
+          <div style="font-weight: bold; font-size: 11pt; margin-bottom: 8px; color: #000;">
             ${field.label}:
           </div>
-          <div style="margin-left: 10px; line-height: 1.5;">
+          <div style="margin-left: 15px; line-height: 1.6; margin-bottom: 10px;">
             ${escapedContent}
           </div>
         </div>
@@ -2209,7 +2211,7 @@ function formatBoardRequestsForPDF(requests) {
   ).join('\n\n');
 }
 
-// Add content to PDF using jsPDF
+// Add content to PDF using jsPDF with proper margins
 async function addContentToPDF(pdf, contentElement) {
   // Use html2canvas to render the content
   const canvas = await html2canvas(contentElement, {
@@ -2222,23 +2224,50 @@ async function addContentToPDF(pdf, contentElement) {
   });
   
   const imgData = canvas.toDataURL('image/png');
-  const imgWidth = 210; // A4 width in mm
-  const pageHeight = 297; // A4 height in mm
+  
+  // A4 dimensions and margins in mm
+  const pageWidth = 210;
+  const pageHeight = 297;
+  const marginTop = 20;
+  const marginBottom = 20;
+  const marginLeft = 15;
+  const marginRight = 15;
+  
+  const contentWidth = pageWidth - marginLeft - marginRight;
+  const contentHeight = pageHeight - marginTop - marginBottom;
+  
+  const imgWidth = contentWidth;
   const imgHeight = (canvas.height * imgWidth) / canvas.width;
+  
   let heightLeft = imgHeight;
   let position = 0;
+  let pageNumber = 1;
   
-  // Add first page
-  pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-  heightLeft -= pageHeight;
+  // Add first page with margins
+  pdf.addImage(imgData, 'PNG', marginLeft, marginTop + position, imgWidth, imgHeight);
+  heightLeft -= contentHeight;
   
   // Add additional pages if needed
   while (heightLeft >= 0) {
     position = heightLeft - imgHeight;
     pdf.addPage();
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
+    pageNumber++;
+    
+    // Add content with top margin on new page
+    pdf.addImage(imgData, 'PNG', marginLeft, marginTop + position, imgWidth, imgHeight);
+    heightLeft -= contentHeight;
+    
+    // Add page number at bottom
+    pdf.setFontSize(10);
+    pdf.setTextColor(100);
+    pdf.text(`Page ${pageNumber}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
   }
+  
+  // Add page number to first page
+  pdf.setPage(1);
+  pdf.setFontSize(10);
+  pdf.setTextColor(100);
+  pdf.text('Page 1', pageWidth / 2, pageHeight - 10, { align: 'center' });
 }
 
 // Clean up PDF content
@@ -2981,12 +3010,13 @@ async function previewPDFContent() {
         max-width: 210mm;
         margin: 0 auto;
         background: white;
-        padding: 20mm;
+        padding: 20mm 15mm;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         font-family: 'Times New Roman', serif;
         font-size: 11pt;
         line-height: 1.4;
         color: #000;
+        min-height: 257mm;
       `;
     }
     
