@@ -2019,20 +2019,16 @@ function preparePrintLayout() {
     }
   });
   
-  // Add page break hints for better pagination
+  // Minimal page break hints to prevent empty pages
   const sections = document.querySelectorAll('section[id*="part-"]');
   sections.forEach((section, index) => {
-    // Add page breaks before major sections (parts 3, 5, 7)
-    if (section.id === 'part-3' || section.id === 'part-5' || section.id === 'part-7') {
+    // Only add page break before part 4 (middle of document)
+    if (section.id === 'part-4') {
       section.style.pageBreakBefore = 'always';
     }
     
-    // Ensure sections don't break awkwardly - but allow for large sections
-    if (section.id === 'part-1' || section.id === 'part-2' || section.id === 'part-6') {
-      section.style.pageBreakInside = 'avoid';
-    } else {
-      section.style.pageBreakInside = 'auto';
-    }
+    // Allow all sections to break naturally
+    section.style.pageBreakInside = 'auto';
   });
   
   // Handle repeater items to avoid awkward breaks
