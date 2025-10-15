@@ -1,0 +1,215 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ==========================================
+    // HELPER FUNCTIONS
+    // ==========================================
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Legacy admin check (for backward compatibility)
+    function isLegacyAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email != null &&
+        request.auth.token.email in [
+          "louisa@whiringa.com"
+          // add more admin emails here if needed
+        ]
+      );
+    }
+
+    // Get user data from users collection
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Check if user exists in users collection
+    function userExists() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    // Get user role from users collection
+    function getUserRole() {
+      return isSignedIn() && userExists() ? getUserData().role : null;
+    }
+
+    // Check if user has specific role
+    function hasRole(role) {
+      return getUserRole() == role;
+    }
+
+    // Check if user has any of the specified roles
+    function hasAnyRole(roles) {
+      return getUserRole() in roles;
+    }
+
+    // Check if user is admin (legacy or role-based)
+    function isAdmin() {
+      return isLegacyAdmin() || hasRole('admin');
+    }
+
+    // Check if user is board reviewer
+    function isBoardReviewer() {
+      return hasRole('board_reviewer');
+    }
+
+    // Check if user can view all reviews (admin or board reviewer)
+    function canViewAllReviews() {
+      return isAdmin() || isBoardReviewer();
+    }
+
+    // Check if user is active
+    function isActiveUser() {
+      return isSignedIn() && (!userExists() || getUserData().isActive == true);
+    }
+
+    // Check if user has specific permission
+    function hasPermission(permission) {
+      return isSignedIn() && userExists() && 
+        getUserData().permissions != null &&
+        getUserData().permissions[permission] == true;
+    }
+
+    // ==========================================
+    // CORE REVIEW COLLECTIONS
+    // ==========================================
+
+    // Drafts - users can read/write their own, admins can read all
+    match /drafts/{userId} {
+      allow read, write: if isOwner(userId) && isActiveUser();
+      allow read: if canViewAllReviews() && isActiveUser();
+      allow delete: if isAdmin() && hasPermission('canDeleteData');
+    }
+
+    // Submissions - users can read/write their own, admins and board reviewers can read all
+    match /submissions/{userId} {
+      allow read, write: if isOwner(userId) && isActiveUser();
+      allow read: if canViewAllReviews() && isActiveUser();
+      allow delete: if isAdmin() && hasPermission('canDeleteData');
+    }
+
+    // CSV Backups - users can create their own, admins can read all
+    match /csv_backups/{backupId} {
+      allow create: if isSignedIn() && isActiveUser() && 
+        resource.data.uid == request.auth.uid;
+      allow read: if isSignedIn() && isActiveUser() && 
+        (resource.data.uid == request.auth.uid || canViewAllReviews());
+      allow delete: if isAdmin() && hasPermission('canDeleteData');
+    }
+
+    // ==========================================
+    // USER MANAGEMENT
+    // ==========================================
+
+    // Users collection - users can read their own record, admins can manage all
+    match /users/{userId} {
+      allow read: if isOwner(userId) && isActiveUser();
+      allow write: if isOwner(userId) && isActiveUser() && 
+        // Users can update their own display name and metadata but not role/permissions
+        (!('role' in request.resource.data) || request.resource.data.role == resource.data.role) &&
+        (!('permissions' in request.resource.data) || request.resource.data.permissions == resource.data.permissions) &&
+        (!('isActive' in request.resource.data) || request.resource.data.isActive == resource.data.isActive);
+      
+      // Admins can read and manage all users
+      allow read, write: if isAdmin() && hasPermission('canManageUsers') && isActiveUser();
+      allow create: if isAdmin() && hasPermission('canManageUsers') && isActiveUser();
+    }
+
+    // ==========================================
+    // ADMIN SYSTEM COLLECTIONS
+    // ==========================================
+
+    // System settings - read access for admins and board reviewers, write for admins only
+    match /system_settings/{settingId} {
+      allow read: if canViewAllReviews() && isActiveUser();
+      allow write: if isAdmin() && hasPermission('canEditSettings') && isActiveUser();
+    }
+
+    // Analytics cache - read access for admins and board reviewers
+    match /analytics_cache/{cacheId} {
+      allow read: if canViewAllReviews() && isActiveUser();
+      allow write: if isAdmin() && isActiveUser();
+    }
+
+    // Audit logs - admin only access
+    match /audit_logs/{logId} {
+      allow read: if isAdmin() && hasPermission('canViewAuditLogs') && isActiveUser();
+      allow create: if isSignedIn() && isActiveUser(); // Any authenticated user can create logs
+      allow write: if isAdmin() && isActiveUser(); // Only admins can modify logs
+    }
+
+    // Notifications - users can read their own notifications, admins can manage all
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && isActiveUser() && 
+        (request.auth.token.email in resource.data.recipients);
+      allow write: if isAdmin() && isActiveUser();
+      allow create: if isSignedIn() && isActiveUser();
+    }
+
+    // Export tracking - users can read their own exports, admins can see all
+    match /exports/{exportId} {
+      allow read: if isSignedIn() && isActiveUser() && 
+        (isOwner(resource.data.requestedBy.uid) || canViewAllReviews());
+      allow create: if isSignedIn() && hasPermission('canExportData') && isActiveUser();
+      allow write: if isAdmin() && isActiveUser();
+    }
+
+    // ==========================================
+    // LEGACY SUPPORT & FALLBACKS
+    // ==========================================
+
+    // Allow legacy admin access to any document if role-based system isn't set up
+    match /{document=**} {
+      allow read, write: if isLegacyAdmin() && !userExists();
+    }
+
+    // ==========================================
+    // MAINTENANCE & DEVELOPMENT
+    // ==========================================
+
+    // Special collection for development/testing (remove in production)
+    match /dev_test/{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
+
+// ==========================================
+// FIREBASE STORAGE RULES (for CSV exports)
+// ==========================================
+/*
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // CSV exports - users can access their own files, admins can access all
+    match /reviews/{userId}/{fileName} {
+      allow read: if request.auth != null && 
+        (request.auth.uid == userId || 
+         // Check if user is admin (requires custom token claims or function)
+         request.auth.token.email in ["louisa@whiringa.com"]);
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Backup files - admin only
+    match /backups/{fileName} {
+      allow read, write: if request.auth != null && 
+        request.auth.token.email in ["louisa@whiringa.com"];
+    }
+    
+    // Export files - based on requester
+    match /exports/{userId}/{fileName} {
+      allow read: if request.auth != null && 
+        (request.auth.uid == userId || 
+         request.auth.token.email in ["louisa@whiringa.com"]);
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+*/

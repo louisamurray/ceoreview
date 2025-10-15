@@ -230,29 +230,29 @@
         <span id="previous-review-description" class="text-blue-700"></span>
       </div>
 
-      <div
-        id="overall-progress"
-        class="mb-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
-        aria-live="polite"
-      >
-        <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500">
-          <span>Overall Progress</span>
-          <span id="overall-progress-label">0% complete</span>
-        </div>
-        <div class="mt-2 h-2 w-full rounded-full bg-slate-200">
-          <div
-            id="overall-progress-bar"
-            class="h-full rounded-full bg-blue-600 transition-all duration-300"
-            style="width: 0%"
-          ></div>
-        </div>
-      </div>
-
+      <!-- Moved overall progress bar into sticky section nav -->
       <nav
         id="section-nav"
-        class="sticky top-4 z-20 mb-8 flex flex-col gap-3 rounded-lg border border-slate-200 bg-white/95 p-4 shadow-sm backdrop-blur-sm"
+        class="sticky top-4 z-20 mb-4 flex flex-col gap-2 rounded-lg border border-slate-200 bg-white/95 p-2 shadow-sm backdrop-blur-sm"
       >
-        <div class="flex items-center justify-between gap-3">
+        <div
+          id="overall-progress"
+          class="mb-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm"
+          aria-live="polite"
+        >
+          <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <span>Overall Progress</span>
+            <span id="overall-progress-label">0% complete</span>
+          </div>
+          <div class="mt-1 h-2 w-full rounded-full bg-slate-200">
+            <div
+              id="overall-progress-bar"
+              class="h-full rounded-full bg-blue-600 transition-all duration-300"
+              style="width: 0%"
+            ></div>
+          </div>
+        </div>
+        <div class="flex items-center justify-between gap-2">
           <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wide">
             Jump to section
           </h2>
@@ -264,7 +264,7 @@
             Collapse all
           </button>
         </div>
-        <div class="hidden gap-2 overflow-x-auto md:flex">
+        <div class="hidden gap-1 overflow-x-auto md:flex">
           <button type="button" class="section-nav-pill" data-target="#part-1">Part 1</button>
           <button type="button" class="section-nav-pill" data-target="#part-2">Part 2</button>
           <button type="button" class="section-nav-pill" data-target="#part-3">Part 3</button>
@@ -807,13 +807,13 @@
             </div>
             <span id="save-status" class="text-xs text-slate-500"></span>
           </div>
-          <div class="flex items-center gap-2 overflow-x-auto whitespace-nowrap sm:flex-wrap sm:whitespace-normal">
+          <div class="flex items-center justify-center gap-2 overflow-x-auto whitespace-nowrap sm:flex-wrap sm:whitespace-normal">
             <button
               type="button"
               id="load-last-saved-btn"
               class="action-chip"
             >
-              Load Last Saved
+              Load Saved
             </button>
             <button
               type="button"
@@ -821,7 +821,7 @@
               class="action-chip bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200"
               title="Load comprehensive test data for form testing"
             >
-              🧪 Load Test Data
+              Load Test Data
             </button>
             <button
               type="button"
@@ -837,21 +837,14 @@
             >
               Save Draft
             </button>
-            <button
-              type="button"
-              id="print-preview-btn"
-              class="action-chip bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200"
-              title="Preview how the PDF will look before downloading"
-            >
-              👁️ PDF Preview
-            </button>
+
             <button
               type="button"
               id="save-pdf-btn"
               class="primary-chip bg-emerald-600 text-white hover:bg-emerald-700"
               title="Generate and download a professional PDF of your review"
             >
-              📄 Download PDF
+              Download PDF
             </button>
             <button
               type="submit"
@@ -865,6 +858,14 @@
               class="action-chip text-slate-600"
             >
               Log Out
+            </button>
+            <button
+              type="button"
+              id="login-btn"
+              class="action-chip bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200"
+              style="display: none;"
+            >
+              Log In
             </button>
           </div>
         </div>

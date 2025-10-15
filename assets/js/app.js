@@ -1,5 +1,4 @@
 // --- Config ---
-const STORAGE_KEY = "ceoReviewFormData";
 const kpis = [
   "Conflict Resolution",
   "Financial Resilience",
@@ -625,11 +624,11 @@ function clearPreviousSummaries() {
 async function renderPreviousReview(uid) {
   clearPreviousSummaries();
   try {
-    const record = await window.firebaseHelpers.loadReviewData(uid, 'submissions');
-    if (!record || !record.data) {
+    const record = await window.firebaseHelpers.loadReview(uid, 'submitted');
+    if (!record || !record.sections) {
       return;
     }
-    window.previousReviewData = record.data;
+    window.previousReviewData = window.firebaseHelpers.flattenSections(record.sections);
     applyPreviousReviewContext(record);
   } catch (err) {
     console.error('Failed to load previous review', err);
@@ -726,7 +725,6 @@ function enhanceAllTextareas(root = document) {
 }
 
 let autosaveIndicatorEl = null;
-let lastLocalAutosaveISO = null;
 window.lastCloudSaveTime = window.lastCloudSaveTime || null;
 
 function formatShortTime(date) {
@@ -738,15 +736,10 @@ function renderAutosaveIndicator(prefix) {
   const parts = [];
   if (prefix) {
     parts.push(prefix);
-  } else if (lastLocalAutosaveISO) {
-    parts.push(`Local autosave: ${formatShortTime(lastLocalAutosaveISO)}`);
+  } else if (window.lastCloudSaveTime) {
+    parts.push(`Autosaved: ${formatShortTime(window.lastCloudSaveTime)}`);
   } else {
-    parts.push('Local autosave: pending');
-  }
-  if (window.lastCloudSaveTime) {
-    parts.push(`Cloud: ${formatShortTime(window.lastCloudSaveTime)}`);
-  } else {
-    parts.push('Cloud: pending');
+    parts.push('Autosave: pending');
   }
   autosaveIndicatorEl.textContent = parts.join(' · ');
 }
@@ -758,42 +751,56 @@ function setupAutosave(form) {
   autosaveIndicatorEl = indicator;
   renderAutosaveIndicator();
 
-  const runAutosave = debounce(() => {
+  const runAutosave = debounce(async () => {
     try {
+      const user = window.firebaseHelpers.auth.currentUser;
+      if (!user) {
+        renderAutosaveIndicator('Not logged in');
+        return;
+      }
+      
       const payload = collectFormData();
       const timestamp = new Date().toISOString();
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ savedAt: timestamp, data: payload })
-      );
-      lastLocalAutosaveISO = timestamp;
+      
+      // Save to Firestore using new system
+      await window.firebaseHelpers.saveReview(user.uid, payload, 'draft');
+      
+      window.lastCloudSaveTime = timestamp;
       renderAutosaveIndicator();
     } catch (err) {
       renderAutosaveIndicator('Autosave failed');
-      console.error(err);
+      console.error('Autosave error:', err);
     }
   }, 1200);
 
   form.addEventListener('input', () => {
     renderAutosaveIndicator('Autosaving…');
     runAutosave();
+    // Debounce change checking to avoid excessive calls
+    clearTimeout(window.changeCheckTimeout);
+    window.changeCheckTimeout = setTimeout(checkForUnsavedChanges, 500);
   });
   form.addEventListener('change', () => {
     renderAutosaveIndicator('Autosaving…');
     runAutosave();
+    // Debounce change checking to avoid excessive calls
+    clearTimeout(window.changeCheckTimeout);
+    window.changeCheckTimeout = setTimeout(checkForUnsavedChanges, 500);
   });
 
-  const existing = localStorage.getItem(STORAGE_KEY);
-  if (existing) {
-    try {
-      const data = JSON.parse(existing);
-      if (data?.savedAt) {
-        lastLocalAutosaveISO = data.savedAt;
-        renderAutosaveIndicator();
-      }
-    } catch (err) {
-      console.warn('Failed to parse saved draft timestamp', err);
-    }
+  // Load initial save time from Firestore if available
+  const user = window.firebaseHelpers.auth.currentUser;
+  if (user) {
+    window.firebaseHelpers.loadReview(user.uid, 'draft')
+      .then(data => {
+        if (data?.metadata?.timestamp) {
+          window.lastCloudSaveTime = data.metadata.timestamp;
+          renderAutosaveIndicator();
+        }
+      })
+      .catch(err => {
+        console.warn('Failed to load draft timestamp', err);
+      });
   }
 }
 
@@ -1035,18 +1042,39 @@ function showResetModal(show, focusLoginAfterClose = true) {
   }
 }
 
-// --- Logout Handler ---
-function attachLogoutHandler() {
+// --- Login/Logout Handlers ---
+function attachLoginLogoutHandlers() {
   const logoutBtn = document.getElementById('logout-btn');
+  const loginBtn = document.getElementById('login-btn');
+  
   if (logoutBtn && window.firebaseHelpers?.logout) {
     logoutBtn.onclick = () => window.firebaseHelpers.logout();
+  }
+  
+  if (loginBtn) {
+    loginBtn.onclick = () => {
+      // Show the login modal
+      showLoginModal(true);
+    };
   }
 }
 
 // --- Clear Form Stub ---
-function clearForm() {
+async function clearForm() {
   const form = document.getElementById('reviewForm');
   if (form) form.reset();
+  
+  // Clear the Firestore saved data
+  try {
+    const user = window.firebaseAuth?.currentUser;
+    if (user && window.firebaseHelpers?.clearReviewData) {
+      await window.firebaseHelpers.clearReviewData(user.uid);
+      console.log('Form data cleared from Firestore');
+    }
+  } catch (error) {
+    console.error('Error clearing Firestore data:', error);
+  }
+  
   updateAllSectionSummaries();
 }
 
@@ -1078,7 +1106,6 @@ window.onFirebaseAuthStateChanged = function(user) {
 
 
   if (user) {
-    localStorage.removeItem(STORAGE_KEY);
     showLoginModal(false);
     showSignupModal(false);
     showResetModal(false, false);
@@ -1087,14 +1114,26 @@ window.onFirebaseAuthStateChanged = function(user) {
       appContainer.setAttribute('aria-hidden', 'false');
     }
     if (user.uid) renderPreviousReview(user.uid);
+    
+    // Check admin status and show/hide test data button
+    checkAdminStatusAndUpdateUI(user);
+    
+    // Show logout button when user is logged in
+    updateLogoutButtonVisibility(true);
+    
+    // Initialize form state tracking
+    markFormAsSaved();
+    
     // Do not auto-load last saved draft. Only load on button click.
   } else {
     showSignupModal(false);
     showLoginModal(true);
     showResetModal(false, false);
-    localStorage.removeItem(STORAGE_KEY);
     clearForm();
     clearPreviousSummaries();
+    
+    // Hide logout button when user is not logged in
+    updateLogoutButtonVisibility(false);
   }
 };
 
@@ -1122,20 +1161,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   Object.keys(emptyStateMessages).forEach((id) => ensureEmptyState(id));
 
+  // Initially hide logout button until user is authenticated
+  updateLogoutButtonVisibility(false);
+
   // Clear entire form
   const clearFormBtn = document.getElementById('clear-form-btn');
   if (clearFormBtn) {
-    clearFormBtn.onclick = function() {
-      clearForm();
+    clearFormBtn.onclick = async function() {
+      await clearForm();
     };
   }
 
-  // Populate test data
+  // Populate test data - Admin only
   const populateTestDataBtn = document.getElementById('populate-test-data-btn');
   if (populateTestDataBtn) {
-    populateTestDataBtn.onclick = function() {
+    // Initially hide the button until we check admin status
+    populateTestDataBtn.style.display = 'none';
+    
+    populateTestDataBtn.onclick = async function() {
+      if (populateTestDataBtn.style.display === 'none') return; // Prevent action if hidden
+      
       if (confirm('This will clear the current form and load comprehensive test data. Continue?')) {
-        populateTestData();
+        await populateTestData();
+        markFormAsSaved(); // Mark as saved after loading test data
       }
     };
   }
@@ -1249,13 +1297,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updateAllSectionSummaries();
     };
   }
-  // Load Last Saved Button
-  const loadBtn = document.getElementById('load-last-saved-btn');
-  if (loadBtn && typeof window.loadProgress === 'function') {
-    loadBtn.onclick = function() {
-      window.loadProgress();
-    };
-  }
+
   // Login form handler
   const loginForm = document.getElementById('login-form');
   if (loginForm) {
@@ -1893,9 +1935,7 @@ async function saveProgress() {
     const user = window.firebaseHelpers.auth.currentUser;
     if (!user) throw new Error('Not logged in');
     const data = collectFormData();
-    await window.firebaseHelpers.saveReviewData(user.uid, data, 'drafts', {
-      lastSavedAt: new Date().toISOString()
-    });
+    await window.firebaseHelpers.saveReview(user.uid, data, 'draft');
     window.lastCloudSaveTime = new Date().toISOString();
     renderAutosaveIndicator();
     if (status) {
@@ -1922,34 +1962,28 @@ if (reviewFormEl) {
       if (!user) throw new Error('Not logged in');
       const data = collectFormData();
       const submittedAt = new Date().toISOString();
-      await window.firebaseHelpers.saveReviewData(user.uid, data, 'submissions', {
-        submittedAt,
-        lastCsvPath: null,
-        lastCsvUploadedAt: null
-      });
+      console.log('About to save data:', data);
+      await window.firebaseHelpers.saveReview(user.uid, data, 'submitted');
+      console.log('Data saved successfully');
       window.lastCloudSaveTime = new Date().toISOString();
       renderAutosaveIndicator();
-      try {
-        const csv = buildCsvString(data);
-        const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const filename = `ceo-review-${stamp}.csv`;
-        const uploadSnapshot = await window.firebaseHelpers.uploadReviewCsv(user.uid, filename, csv);
-        const fullPath = uploadSnapshot?.metadata?.fullPath || null;
-        await window.firebaseHelpers.updateReviewMetadata(user.uid, 'submissions', {
-          lastCsvPath: fullPath,
-          lastCsvUploadedAt: new Date().toISOString(),
-          lastCsvFileName: filename
-        });
-      } catch (uploadErr) {
-        console.error('CSV upload failed', uploadErr);
-        if (status) {
-          status.textContent = 'Review submitted, but CSV upload failed. Use “Save Draft” to retry when your connection is stable.';
-          setTimeout(() => { if (status) status.textContent = ''; }, 6000);
-        }
-        return;
-      }
+      // CSV backup temporarily disabled to focus on core functionality
+      // try {
+      //   const csv = buildCsvString(data);
+      //   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      //   const filename = `ceo-review-${stamp}.csv`;
+      //   // Save CSV data directly to Firestore instead of Storage
+      //   await window.firebaseHelpers.saveCsvToFirestore(user.uid, filename, csv);
+      //   await window.firebaseHelpers.updateReviewMetadata(user.uid, 'submissions', {
+      //     lastCsvFileName: filename,
+      //     lastCsvCreatedAt: new Date().toISOString()
+      //   });
+      // } catch (csvErr) {
+      //   console.error('CSV backup creation failed (non-critical):', csvErr);
+      //   // CSV backup is optional - main review data is already saved
+      // }
       if (status) {
-        status.textContent = 'Review submitted!';
+        status.textContent = 'Review submitted successfully!';
         setTimeout(() => { if (status) status.textContent = ''; }, 2000);
       }
       if (user.uid) renderPreviousReview(user.uid);
@@ -1959,19 +1993,132 @@ if (reviewFormEl) {
   };
 }
 
-// --- Save Progress Button ---
+// --- Change Tracking and Dynamic Button Handling ---
+
+// Track form changes and update buttons accordingly
+let hasUnsavedChanges = false;
+let lastSavedFormData = null;
+
+function checkForUnsavedChanges() {
+  const currentFormData = JSON.stringify(collectFormData());
+  const hasChanges = lastSavedFormData && currentFormData !== lastSavedFormData;
+  
+  if (hasChanges !== hasUnsavedChanges) {
+    hasUnsavedChanges = hasChanges;
+    updateSaveLoadButton();
+  }
+}
+
+function updateSaveLoadButton() {
+  const saveProgressBtn = document.getElementById('save-progress-btn');
+  const loadSavedBtn = document.getElementById('load-last-saved-btn');
+  
+  if (hasUnsavedChanges) {
+    // Update Save Draft button
+    if (saveProgressBtn) {
+      saveProgressBtn.textContent = 'Save Draft';
+      saveProgressBtn.disabled = false;
+      saveProgressBtn.style.opacity = '1';
+    }
+    if (loadSavedBtn) {
+      loadSavedBtn.textContent = 'Load Saved';
+      loadSavedBtn.disabled = true;
+      loadSavedBtn.style.opacity = '0.5';
+    }
+  } else {
+    // Update Load Saved button state
+    if (saveProgressBtn) {
+      saveProgressBtn.textContent = 'Save Draft';
+      saveProgressBtn.disabled = true;
+      saveProgressBtn.style.opacity = '0.5';
+    }
+    if (loadSavedBtn) {
+      loadSavedBtn.textContent = 'Load Saved';
+      loadSavedBtn.disabled = false;
+      loadSavedBtn.style.opacity = '1';
+    }
+  }
+}
+
+function markFormAsSaved() {
+  lastSavedFormData = JSON.stringify(collectFormData());
+  hasUnsavedChanges = false;
+  updateSaveLoadButton();
+}
+
+// Check admin status and update UI accordingly
+async function checkAdminStatusAndUpdateUI(user) {
+  const populateTestDataBtn = document.getElementById('populate-test-data-btn');
+  
+  if (!populateTestDataBtn) return;
+  
+  try {
+    // Get user data to check admin status
+    const userData = await window.firebaseHelpers.getUserData(user.uid);
+    const isAdmin = window.firebaseHelpers.isAdmin(userData);
+    
+    if (isAdmin) {
+      populateTestDataBtn.style.display = 'inline-flex';
+      populateTestDataBtn.disabled = false;
+      populateTestDataBtn.style.opacity = '1';
+      populateTestDataBtn.title = 'Load comprehensive test data for form testing';
+    } else {
+      populateTestDataBtn.style.display = 'none';
+    }
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    // Hide button on error for security
+    populateTestDataBtn.style.display = 'none';
+  }
+}
+
+// Update login/logout button visibility based on login status
+function updateLogoutButtonVisibility(isLoggedIn) {
+  const logoutBtn = document.getElementById('logout-btn');
+  const loginBtn = document.getElementById('login-btn');
+  
+  if (isLoggedIn) {
+    // Show logout button, hide login button
+    if (logoutBtn) {
+      logoutBtn.style.display = 'inline-flex';
+      logoutBtn.disabled = false;
+      logoutBtn.style.opacity = '1';
+    }
+    if (loginBtn) {
+      loginBtn.style.display = 'none';
+    }
+  } else {
+    // Show login button, hide logout button
+    if (logoutBtn) {
+      logoutBtn.style.display = 'none';
+    }
+    if (loginBtn) {
+      loginBtn.style.display = 'inline-flex';
+      loginBtn.disabled = false;
+      loginBtn.style.opacity = '1';
+    }
+  }
+}
 
 // Save Progress Button
 const saveProgressBtn = document.getElementById('save-progress-btn');
 if (saveProgressBtn) {
-  saveProgressBtn.onclick = saveProgress;
+  saveProgressBtn.onclick = async function() {
+    if (saveProgressBtn.disabled) return; // Prevent action if disabled
+    
+    await saveProgress();
+    markFormAsSaved(); // Mark as saved after successful save
+  };
 }
 
-// Print Preview Button - now shows PDF preview
-const printPreviewBtn = document.getElementById('print-preview-btn');
-if (printPreviewBtn) {
-  printPreviewBtn.onclick = async function() {
-    await previewPDFContent();
+// Load Last Saved Button
+const loadBtn = document.getElementById('load-last-saved-btn');
+if (loadBtn) {
+  loadBtn.onclick = async function() {
+    if (loadBtn.disabled) return; // Prevent action if disabled
+    
+    await window.loadProgress();
+    markFormAsSaved(); // Mark as saved after loading
   };
 }
 
@@ -2549,18 +2696,9 @@ async function loadProgress() {
     const user = window.firebaseHelpers.auth.currentUser;
     if (user) {
       // Try Firestore first
-      const doc = await window.firebaseHelpers.loadReviewData(user.uid, 'drafts');
-      if (doc && doc.data) {
-        data = doc.data;
-      }
-    }
-    // Fallback to localStorage
-    if (!data) {
-      const local = localStorage.getItem(STORAGE_KEY);
-      if (local) {
-        try {
-          data = JSON.parse(local).data;
-        } catch {}
+      const doc = await window.firebaseHelpers.loadReview(user.uid, 'draft');
+      if (doc && doc.sections) {
+        data = window.firebaseHelpers.flattenSections(doc.sections);
       }
     }
     if (!data) throw new Error('No saved draft found.');
@@ -2646,6 +2784,7 @@ async function loadProgress() {
       el.querySelector('input[placeholder*="workload pressure"]').value = item.changed || '';
     });
     updateAllSectionSummaries();
+    markFormAsSaved(); // Mark form as saved after loading
     status.textContent = 'Loaded!';
     setTimeout(() => { status.textContent = ''; }, 2000);
   } catch (err) {
@@ -2666,7 +2805,7 @@ window.removeFutureGoal = removeFutureGoal;
 window.addBoardRequest = addBoardRequest;
 
 // --- Test Data Population Function ---
-function populateTestData() {
+async function populateTestData() {
   const testData = {
     // Part 1: Performance Reflection
     successes: `• Successfully launched the Community Hub initiative, serving 150+ whānau in its first 6 months
@@ -2916,10 +3055,10 @@ function populateTestData() {
   };
 
   // Clear existing form
-  clearForm();
+  await clearForm();
   
   // Wait a moment for form to clear
-  setTimeout(() => {
+  setTimeout(async () => {
     // Populate static fields
     document.getElementById('successes').value = testData.successes;
     document.getElementById('not-well').value = testData['not-well']; 
@@ -3033,11 +3172,16 @@ function populateTestData() {
     // Update all section summaries and progress
     updateAllSectionSummaries();
     
-    // Save the test data to local storage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      timestamp: new Date().toISOString(),
-      data: testData
-    }));
+    // Save the test data to Firestore
+    const user = window.firebaseHelpers.auth.currentUser;
+    if (user) {
+      try {
+        await window.firebaseHelpers.saveReview(user.uid, testData, 'draft');
+        window.lastCloudSaveTime = new Date().toISOString();
+      } catch (error) {
+        console.error('Failed to save test data to Firestore:', error);
+      }
+    }
 
     // Show success message
     const status = document.getElementById('save-status');
@@ -3049,6 +3193,9 @@ function populateTestData() {
         status.style.color = '';
       }, 3000);
     }
+    
+    // Mark form as saved after loading test data
+    markFormAsSaved();
 
   }, 100);
 }
@@ -3098,7 +3245,7 @@ async function previewPDFContent() {
         margin: 0 auto;
         background: white;
         padding: 20mm 15mm 25mm 15mm;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         font-family: 'Times New Roman', serif;
         font-size: 11pt;
         line-height: 1.6;
@@ -3189,7 +3336,7 @@ addPrintDebugStyles();
 
 // Expose test function globally
 window.populateTestData = populateTestData;
-window.printPreview = printPreview;
+window.previewPDFContent = previewPDFContent;
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CEO Review – Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -14,17 +15,144 @@
     <link rel="stylesheet" href="assets/css/styles.css" />
     <style>
       body { font-family: 'Inter', sans-serif; }
+      
+      /* Tab navigation */
+      .tab-content { display: none; }
+      .tab-content.active { display: block; }
+      .tab-button.active { 
+        background-color: rgb(239 246 255);
+        color: rgb(29 78 216);
+        border-color: rgb(191 219 254);
+      }
+      
+      /* Chart containers */
+      .chart-container {
+        position: relative;
+        height: 300px !important;
+        max-height: 300px !important;
+        width: 100%;
+        overflow: hidden;
+      }
+      
+      .chart-container canvas {
+        max-height: 300px !important;
+        height: 100% !important;
+        max-width: 100% !important;
+      }
+      
+      /* Ensure all canvas elements in chart sections are height-limited */
+      #dashboard-content canvas,
+      #reports-content canvas {
+        max-height: 300px !important;
+      }
+      
+      /* Additional height constraints for chart grid containers */
+      .grid .chart-container,
+      [class*="grid"] .chart-container {
+        height: 300px !important;
+        max-height: 300px !important;
+      }
+      
+      /* Prevent charts from overflowing their parent containers */
+      .rounded-lg .chart-container {
+        height: 280px !important;
+        max-height: 280px !important;
+      }
+      
+      /* Force canvas elements to respect container size */
+      canvas {
+        max-height: 300px !important;
+        width: 100% !important;
+        height: auto !important;
+      }
+      
+      /* Specific targeting for chart canvases */
+      #submissions-chart,
+      #completion-chart,
+      #kpi-bar-chart,
+      #competency-radar-chart {
+        max-height: 280px !important;
+        height: 280px !important;
+        max-width: 100% !important;
+      }
+      
+      /* Prevent any chart from causing page overflow */
+      .chart-container,
+      .chart-container * {
+        contain: layout style size;
+        will-change: auto;
+      }
+      
+      /* Hard limit on all chart containers */
+      [id$="-chart"] {
+        max-height: 280px !important;
+        height: 280px !important;
+        display: block !important;
+      }
+      
+      /* Loading spinner */
+      .loading-spinner {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid currentColor;
+        border-radius: 50%;
+        border-right-color: transparent;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      
+      /* Progress bar */
+      .progress-bar {
+        transition: width 0.3s ease;
+      }
+      
+      /* Modal styles */
+      .modal-overlay {
+        backdrop-filter: blur(4px);
+      }
+      
+      /* Responsive table */
+      @media (max-width: 768px) {
+        .admin-table {
+          font-size: 0.75rem;
+        }
+        
+        .admin-table th,
+        .admin-table td {
+          padding: 0.5rem;
+        }
+        
+        .chart-container {
+          height: 250px !important;
+          max-height: 250px !important;
+        }
+        
+        .rounded-lg .chart-container {
+          height: 220px !important;
+          max-height: 220px !important;
+        }
+      }
     </style>
   </head>
   <body class="bg-slate-100 text-slate-800">
     <div class="min-h-screen">
+      <!-- Header -->
       <header class="border-b border-slate-200 bg-white/90 backdrop-blur">
-        <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <div>
             <h1 class="text-2xl font-bold text-slate-900">Admin Dashboard</h1>
-            <p class="text-sm text-slate-500">Review submissions across the organisation.</p>
+            <p class="text-sm text-slate-500">REAP Marlborough CEO Review Administration</p>
           </div>
           <div class="flex items-center gap-3">
+            <div id="notifications-indicator" class="relative hidden">
+              <button class="rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-700 hover:bg-amber-200">
+                <span id="notification-count">0</span> alerts
+              </button>
+            </div>
             <span id="admin-user" class="hidden rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700"></span>
             <button
               id="admin-logout"
@@ -37,41 +165,444 @@
         </div>
       </header>
 
-      <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <section class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 class="text-lg font-semibold text-slate-900">Submissions</h2>
-            <p class="text-sm text-slate-500">
-              Latest entries from the CEO review form. Use the controls to inspect details or download CSV snapshots.
-            </p>
-          </div>
-          <div class="flex items-center gap-3">
-            <label class="text-sm text-slate-600">
-              Collection
-              <select id="collection-selector" class="ml-2 rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm">
-                <option value="submissions" selected>Submissions</option>
-                <option value="drafts">Drafts</option>
-              </select>
-            </label>
-            <button
-              id="refresh-btn"
-              type="button"
-              class="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-400 hover:text-slate-700"
-            >
-              Refresh
+      <!-- Navigation Tabs -->
+      <nav class="border-b border-slate-200 bg-white">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div class="flex space-x-8 overflow-x-auto py-4">
+            <button class="tab-button active flex-shrink-0 whitespace-nowrap rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-400" data-tab="dashboard">
+              📊 Dashboard
+            </button>
+            <button class="tab-button flex-shrink-0 whitespace-nowrap rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-400" data-tab="reviews">
+              📝 Reviews
+            </button>
+            <button class="tab-button flex-shrink-0 whitespace-nowrap rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-400" data-tab="users">
+              👥 Users & Access
+            </button>
+            <button class="tab-button flex-shrink-0 whitespace-nowrap rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-400" data-tab="reports">
+              📈 Reports & Insights
+            </button>
+            <button class="tab-button flex-shrink-0 whitespace-nowrap rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-400" data-tab="settings">
+              ⚙️ Settings
+            </button>
+            <button class="tab-button flex-shrink-0 whitespace-nowrap rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-400" data-tab="logs">
+              📋 System Logs
             </button>
           </div>
-        </section>
+        </div>
+      </nav>
 
+      <!-- Main Content -->
+      <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <!-- Global Status/Alert Banner -->
         <section
           id="admin-status"
-          class="mb-6 rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600"
+          class="mb-6 hidden rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600"
         >
           Loading dashboard…
         </section>
 
-        <section id="submission-list" class="space-y-4"></section>
+        <!-- Dashboard Tab -->
+        <div id="dashboard-tab" class="tab-content active">
+          <div class="mb-6">
+            <h2 class="text-xl font-semibold text-slate-900">Dashboard Overview</h2>
+            <p class="text-sm text-slate-500">Key metrics and recent activity</p>
+          </div>
+
+          <!-- Summary Cards -->
+          <div class="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="rounded-lg bg-white p-6 shadow-sm border border-slate-200">
+              <h3 class="text-sm font-medium text-slate-500">Total Submissions</h3>
+              <p id="stat-total-submissions" class="text-3xl font-bold text-slate-900">-</p>
+              <p class="text-sm text-green-600">
+                <span id="stat-submissions-change">-</span> from last year
+              </p>
+            </div>
+            <div class="rounded-lg bg-white p-6 shadow-sm border border-slate-200">
+              <h3 class="text-sm font-medium text-slate-500">Drafts in Progress</h3>
+              <p id="stat-drafts-count" class="text-3xl font-bold text-slate-900">-</p>
+              <p class="text-sm text-slate-500">
+                <span id="stat-latest-submission">Latest: -</span>
+              </p>
+            </div>
+            <div class="rounded-lg bg-white p-6 shadow-sm border border-slate-200">
+              <h3 class="text-sm font-medium text-slate-500">Average KPI Score</h3>
+              <p id="stat-avg-kpi" class="text-3xl font-bold text-slate-900">-</p>
+              <p class="text-sm text-blue-600">
+                <span id="stat-kpi-change">-</span> vs previous year
+              </p>
+            </div>
+            <div class="rounded-lg bg-white p-6 shadow-sm border border-slate-200">
+              <h3 class="text-sm font-medium text-slate-500">Completion Rate</h3>
+              <p id="stat-completion-rate" class="text-3xl font-bold text-slate-900">-</p>
+              <p class="text-sm text-slate-500">Overall section completion</p>
+            </div>
+          </div>
+
+          <!-- Charts Row -->
+          <div class="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div class="rounded-lg bg-white p-6 shadow-sm border border-slate-200">
+              <h3 class="mb-4 text-lg font-semibold text-slate-900">Submissions Over Time</h3>
+              <div class="chart-container">
+                <canvas id="submissions-chart"></canvas>
+              </div>
+            </div>
+            <div class="rounded-lg bg-white p-6 shadow-sm border border-slate-200">
+              <h3 class="mb-4 text-lg font-semibold text-slate-900">Section Completion Rates</h3>
+              <div class="chart-container">
+                <canvas id="completion-chart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="rounded-lg bg-white p-6 shadow-sm border border-slate-200">
+            <h3 class="mb-4 text-lg font-semibold text-slate-900">Quick Actions</h3>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <button id="export-all-csv" class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-100">
+                📄 Export All Reviews (CSV)
+              </button>
+              <button id="view-latest-review" class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700 transition hover:bg-green-100">
+                👁️ View Latest Review
+              </button>
+              <button id="manage-users-quick" class="rounded-lg border border-purple-200 bg-purple-50 px-4 py-3 text-sm font-semibold text-purple-700 transition hover:bg-purple-100">
+                👤 Manage Users
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reviews Tab -->
+        <div id="reviews-tab" class="tab-content">
+          <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 class="text-xl font-semibold text-slate-900">Review Management</h2>
+              <p class="text-sm text-slate-500">View, filter, and export CEO self-reviews</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <select id="review-year-filter" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
+                <option value="">All Years</option>
+              </select>
+              <select id="review-status-filter" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
+                <option value="">All Status</option>
+                <option value="submissions">Submitted</option>
+                <option value="drafts">Drafts</option>
+              </select>
+              <button id="refresh-reviews" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-400">
+                🔄 Refresh
+              </button>
+            </div>
+          </div>
+
+          <!-- Search -->
+          <div class="mb-6">
+            <input 
+              id="review-search" 
+              type="text" 
+              placeholder="Search reviews by content, email, or KPI comments..."
+              class="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          <!-- Review List -->
+          <div id="review-list" class="space-y-4">
+            <!-- Reviews will be loaded here -->
+          </div>
+        </div>
+
+        <!-- Users & Access Tab -->
+        <div id="users-tab" class="tab-content">
+          <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 class="text-xl font-semibold text-slate-900">User & Access Control</h2>
+              <p class="text-sm text-slate-500">Manage user roles, permissions, and authentication oversight</p>
+            </div>
+            <button id="add-user-btn" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">
+              ➕ Add User
+            </button>
+          </div>
+
+          <!-- Users Table -->
+          <div class="overflow-hidden rounded-lg bg-white shadow-sm border border-slate-200">
+            <table class="min-w-full divide-y divide-slate-200">
+              <thead class="bg-slate-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">User</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Role</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Last Login</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+                  <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body" class="bg-white divide-y divide-slate-200">
+                <!-- Users will be loaded here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Reports & Insights Tab -->
+        <div id="reports-tab" class="tab-content">
+          <div class="mb-6">
+            <h2 class="text-xl font-semibold text-slate-900">Reports & Insights</h2>
+            <p class="text-sm text-slate-500">Analytics dashboard and board reporting tools</p>
+          </div>
+
+          <!-- KPI Analytics -->
+          <div class="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div class="rounded-lg bg-white p-6 shadow-sm border border-slate-200">
+              <h3 class="mb-4 text-lg font-semibold text-slate-900">KPI Performance by Category</h3>
+              <div class="chart-container">
+                <canvas id="kpi-bar-chart"></canvas>
+              </div>
+            </div>
+            <div class="rounded-lg bg-white p-6 shadow-sm border border-slate-200">
+              <h3 class="mb-4 text-lg font-semibold text-slate-900">Competency Radar</h3>
+              <div class="chart-container">
+                <canvas id="competency-radar-chart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Export Options -->
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div class="rounded-lg bg-white p-6 shadow-sm border border-slate-200">
+              <h3 class="mb-4 text-lg font-semibold text-slate-900">Board Reports</h3>
+              <div class="space-y-3">
+                <button id="generate-board-summary" class="w-full rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-100">
+                  📋 Generate Board Summary PDF
+                </button>
+                <button id="export-insights-csv" class="w-full rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700 transition hover:bg-green-100">
+                  📊 Export Insights as CSV
+                </button>
+              </div>
+            </div>
+            <div class="rounded-lg bg-white p-6 shadow-sm border border-slate-200">
+              <h3 class="mb-4 text-lg font-semibold text-slate-900">Analytics Summary</h3>
+              <div id="analytics-summary" class="space-y-2 text-sm text-slate-600">
+                <!-- Analytics summary will be loaded here -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings-tab" class="tab-content">
+          <div class="mb-6">
+            <h2 class="text-xl font-semibold text-slate-900">System Configuration</h2>
+            <p class="text-sm text-slate-500">Manage templates, settings, and system maintenance</p>
+          </div>
+
+          <!-- Settings Sections -->
+          <div class="space-y-6">
+            <!-- Review Settings -->
+            <div class="rounded-lg bg-white p-6 shadow-sm border border-slate-200">
+              <h3 class="mb-4 text-lg font-semibold text-slate-900">Review Configuration</h3>
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-1">Active Review Year</label>
+                  <input id="active-year" type="number" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-1">Review Version</label>
+                  <input id="review-version" type="text" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Data Management -->
+            <div class="rounded-lg bg-white p-6 shadow-sm border border-slate-200">
+              <h3 class="mb-4 text-lg font-semibold text-slate-900">Data Management</h3>
+              <div class="space-y-4">
+                <div>
+                  <p class="font-medium text-slate-900 mb-2">Review Data Structure</p>
+                  <p class="text-sm text-slate-500 mb-4">Validate and normalize all review data structures to ensure consistency</p>
+                  <button id="validate-structures" class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100">
+                    🔍 Validate & Fix Review Structures
+                  </button>
+                </div>
+                <div id="validation-status" class="hidden">
+                  <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <div id="validation-progress" class="text-sm text-slate-600"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Maintenance Mode -->
+            <div class="rounded-lg bg-white p-6 shadow-sm border border-slate-200">
+              <h3 class="mb-4 text-lg font-semibold text-slate-900">System Maintenance</h3>
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="font-medium text-slate-900">Maintenance Mode</p>
+                  <p class="text-sm text-slate-500">Temporarily disable the review system for updates</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input id="maintenance-mode" type="checkbox" class="sr-only peer" />
+                  <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Data Management -->
+            <div class="rounded-lg bg-white p-6 shadow-sm border border-slate-200">
+              <h3 class="mb-4 text-lg font-semibold text-slate-900">Data Management</h3>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <button id="backup-data" class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700 transition hover:bg-green-100">
+                  💾 Backup All Data
+                </button>
+                <button id="clear-test-data" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-100">
+                  🗑️ Clear Test Data
+                </button>
+              </div>
+              <p id="last-backup" class="mt-2 text-sm text-slate-500">Last backup: -</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Logs Tab -->
+        <div id="logs-tab" class="tab-content">
+          <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 class="text-xl font-semibold text-slate-900">System Logs</h2>
+              <p class="text-sm text-slate-500">Audit trail of admin actions and system events</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <select id="log-action-filter" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
+                <option value="">All Actions</option>
+                <option value="LOGIN_SUCCESS">Login Success</option>
+                <option value="LOGIN_FAILED">Login Failed</option>
+                <option value="REVIEW_VIEWED">Review Viewed</option>
+                <option value="DATA_EXPORTED">Data Exported</option>
+                <option value="USER_ROLE_CHANGED">Role Changed</option>
+                <option value="SETTINGS_UPDATED">Settings Updated</option>
+              </select>
+              <button id="export-logs" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-400">
+                📥 Export Logs
+              </button>
+            </div>
+          </div>
+
+          <!-- Logs Table -->
+          <div class="overflow-hidden rounded-lg bg-white shadow-sm border border-slate-200">
+            <table class="min-w-full divide-y divide-slate-200">
+              <thead class="bg-slate-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Timestamp</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Action</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">User</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Target</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Outcome</th>
+                </tr>
+              </thead>
+              <tbody id="logs-table-body" class="bg-white divide-y divide-slate-200">
+                <!-- Logs will be loaded here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
       </main>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="add-user-modal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 p-4" role="dialog" aria-modal="true">
+      <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-2xl">
+        <div class="mb-4 flex items-start justify-between">
+          <h3 class="text-xl font-bold text-slate-900">Add New User</h3>
+          <button type="button" class="text-slate-400 hover:text-slate-600 text-2xl font-bold leading-none cursor-pointer" onclick="closeModal('add-user-modal')">
+            ×
+          </button>
+        </div>
+        <form id="add-user-form" class="space-y-4">
+          <div>
+            <label for="user-email" class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+            <input id="user-email" type="email" required class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label for="user-role" class="block text-sm font-medium text-slate-700 mb-1">Role</label>
+            <select id="user-role" required class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+              <option value="">Select a role</option>
+              <option value="admin">Administrator</option>
+              <option value="board_reviewer">Board Reviewer</option>
+              <option value="ceo">CEO</option>
+            </select>
+          </div>
+          <div>
+            <label for="user-name" class="block text-sm font-medium text-slate-700 mb-1">Display Name (Optional)</label>
+            <input id="user-name" type="text" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+          </div>
+          <div class="flex justify-end gap-3 pt-4">
+            <button type="button" onclick="closeModal('add-user-modal')" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:border-slate-400">
+              Cancel
+            </button>
+            <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+              Add User
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="edit-user-modal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 p-4" role="dialog" aria-modal="true">
+      <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-2xl">
+        <div class="mb-4 flex items-start justify-between">
+          <h3 class="text-xl font-bold text-slate-900">Edit User</h3>
+          <button type="button" class="text-slate-400 hover:text-slate-600 text-2xl font-bold leading-none cursor-pointer" onclick="closeModal('edit-user-modal')">
+            ×
+          </button>
+        </div>
+        <form id="edit-user-form" class="space-y-4">
+          <input id="edit-user-id" type="hidden" />
+          <div>
+            <label for="edit-user-email" class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+            <input id="edit-user-email" type="email" readonly class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm bg-slate-100" />
+          </div>
+          <div>
+            <label for="edit-user-role" class="block text-sm font-medium text-slate-700 mb-1">Role</label>
+            <select id="edit-user-role" required class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+              <option value="admin">Administrator</option>
+              <option value="board_reviewer">Board Reviewer</option>
+              <option value="ceo">CEO</option>
+            </select>
+          </div>
+          <div>
+            <label for="edit-user-name" class="block text-sm font-medium text-slate-700 mb-1">Display Name (Optional)</label>
+            <input id="edit-user-name" type="text" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+          </div>
+          <div class="flex items-center">
+            <input id="edit-user-active" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded" />
+            <label for="edit-user-active" class="ml-2 block text-sm text-slate-900">Active User</label>
+          </div>
+          <div class="flex justify-end gap-3 pt-4">
+            <button type="button" onclick="closeModal('edit-user-modal')" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:border-slate-400">
+              Cancel
+            </button>
+            <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Review Detail Modal -->
+    <div id="review-detail-modal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 p-4" role="dialog" aria-modal="true">
+      <div class="w-full max-w-4xl rounded-lg bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div class="mb-4 flex items-start justify-between">
+          <h3 class="text-xl font-bold text-slate-900">Review Details</h3>
+          <button type="button" class="text-slate-400 hover:text-slate-600 text-2xl font-bold leading-none cursor-pointer" onclick="closeModal('review-detail-modal')">
+            ×
+          </button>
+        </div>
+        <div id="review-detail-content">
+          <!-- Review content will be loaded here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="notification-container" class="fixed top-4 right-4 z-[100] space-y-2">
+      <!-- Notifications will be inserted here -->
     </div>
 
     <!-- Firebase SDKs -->

@@ -1,98 +1,314 @@
 # REAP Marlborough – CEO Self-Review
 
-An interactive, client‑side (no backend) self‑review form for the REAP Marlborough CEO. It captures structured reflections, KPI ratings, strategic priority progress, professional development, and forward planning—designed to be completed prior to a formal review meeting.
+A comprehensive, cloud-enabled self-review application for the REAP Marlborough CEO. Features structured 7-part assessment with Firebase authentication, data persistence, professional PDF generation, and **comprehensive administrative oversight system**.
+
+## 🚀 NEW: Advanced Admin System
+
+The application now includes a **full governance oversight platform** with:
+- **Dashboard Analytics** - Real-time metrics, charts, and KPI tracking
+- **Review Management** - View, filter, search, and export all reviews
+- **User & Access Control** - Role-based permissions and user management
+- **Reports & Insights** - Board-ready analytics and year-over-year comparisons
+- **System Configuration** - Settings, maintenance mode, and data backup
+- **Comprehensive Audit Trail** - Full logging of all admin actions
+
+### 🎯 Quick Setup for Admin System
+
+**First-time setup requires database seeding:**
+
+1. **Start the server:** `npm run serve`
+2. **Seed the database:** Visit http://localhost:8080/seed.html
+3. **Access admin panel:** Visit http://localhost:8080/admin.html
+
+The admin system provides complete governance oversight with enterprise-grade security and comprehensive audit capabilities.
 
 ## Features
-- Structured 7‑part self‑review form (Reflection → Dialogue with Board)
-- Dynamic repeatable sections (challenges, past goals, PD, future goals, board requests)
-- KPI & competency rating matrix with tooltips for scale definitions
-- Strategic priorities & job description alignment sections
-- Local persistence via `localStorage` (Save Progress button)
-- Minimum enforced future goals (3) with guarded removal
-- Accessible, responsive UI using Tailwind CSS (CDN) + Inter font
-- Lightweight: no build step (static HTML + external CSS/JS assets)
+- **Structured 7‑part self‑review form** (Performance Reflection → Dialogue with Board)
+- **Firebase Authentication** with secure user login/signup and password reset
+- **Dual Data Persistence**: Cloud storage (Firebase Firestore) + local backup (localStorage)
+- **Professional PDF Generation** using jsPDF with A4 formatting and clean styling
+- **Test Data Population** for development and demonstration purposes
+- **Admin Dashboard** for reviewing submitted assessments with CSV export
+- **Dynamic Sections**: Repeatable challenges, goals, professional development, and board requests
+- **KPI & Competency Ratings** with 5-point scale and descriptive tooltips
+- **Strategic Priorities & Job Description Alignment** assessments
+- **Responsive Design** using Tailwind CSS with accessible, professional UI
+- **Previous Review Context** loading for year-over-year comparisons
 
 ## Tech Stack
-- HTML5 + vanilla JavaScript (single-page app style)
-- Tailwind CSS via CDN (no build pipeline)
-- LocalStorage for offline persistence (data stays in the user’s browser)
-- Simple modular separation: `index.html` (structure), `assets/css/styles.css` (custom styles), `assets/js/app.js` (logic & data)
+- **Frontend**: HTML5 + Vanilla JavaScript (ES6+)
+- **Styling**: Tailwind CSS via CDN + custom CSS
+- **Authentication**: Firebase Auth (email/password)
+- **Database**: Firebase Firestore (cloud) + localStorage (local backup)
+- **File Storage**: Firebase Storage for CSV exports
+- **PDF Generation**: jsPDF v2.5.1 + html2canvas v1.4.1
+- **Testing**: Jest, Playwright E2E, ESLint
+- **Development**: http-server for local hosting
 
 ## Quick Start
-1. Open `index.html` directly in a modern browser (Chrome, Edge, Firefox, Safari).
-2. Begin entering responses; dynamic sections can be added with the + buttons.
-3. Click “Save Progress” periodically (writes a JSON snapshot to `localStorage`).
-4. On revisiting/reloading, saved answers auto‑restore if the same browser + device are used.
-5. Click “Submit Review” (currently shows a confirmation only—no server post).
 
-## Data Persistence
-All content is stored under the key `ceoReviewFormData` in `localStorage`:
+### For Development
+1. **Install dependencies**: `npm install`
+2. **Start local server**: `npm run serve` (serves on http://localhost:8080)
+3. **Run tests**: `npm test` (Jest) or `npm run test:e2e` (Playwright)
+4. **Lint code**: `npm run lint`
+
+### For Users
+1. **Sign Up/Login**: Create account or sign in with existing credentials
+2. **Complete Review**: Fill out the 7-part structured assessment
+3. **Save Progress**: Automatically saves to cloud + local backup on form changes
+4. **Load Test Data**: Use 🧪 button to populate sample data for testing
+5. **Generate PDF**: Use 📄 button to download professional PDF report
+6. **Submit Review**: Final submission with timestamp and CSV export
+
+### 🆕 For Administrators
+
+**Initial Setup (Required Once):**
+1. **Seed Database**: Visit `/seed.html` to initialize admin system
+2. **Access Admin Panel**: Navigate to `/admin.html` 
+3. **User Management**: Add board members and assign roles
+4. **System Configuration**: Configure settings and backup procedures
+
+**Admin Features:**
+- **Dashboard**: Analytics, trends, and quick actions
+- **Review Management**: View all submissions with filtering and search
+- **User Control**: Role-based permissions (Admin/Board Reviewer/CEO)
+- **Insights & Reports**: KPI analytics and board-ready summaries
+- **Audit Logging**: Complete trail of all administrative actions
+- **Data Export**: CSV, PDF, and bulk export capabilities
+
+## 🗄️ Database Setup & Seeding
+
+### Initial Database Seeding (Required)
+
+The admin system requires initial database seeding to create essential collections:
+
+**Automatic Seeding (Recommended):**
+```bash
+npm run serve                    # Start local server
+# Visit http://localhost:8080/seed.html
+# Click "Seed Database" button
 ```
-{
-	timestamp: <ISO string>,
-	data: { simple: { ... }, repeaters: { ... }, kpis: [...], priorities: [...], jdAlignment: [...] }
-}
+
+**Manual Seeding (Advanced):**
+```javascript
+// In browser console with Firebase loaded
+await checkIfSeeded();    // Check current status
+await seedFirestore();    // Initialize database
 ```
-Clearing browser storage or using another device/browser will remove access to saved progress.
 
-## Customisation
-- Add / remove KPI labels: edit the `kpis` array in `assets/js/app.js`.
-- Update strategic priorities (`strategicPriorities`) or job description areas (`jdAreas`) in `assets/js/app.js`.
-- Change rating scale text in `ratingDescriptions` (also in `assets/js/app.js`).
-- Adjust minimum required future goals by editing the guard inside `removeFutureGoal()`.
-- To persist to a server: in `assets/js/app.js`, replace the submit handler (inside the `DOMContentLoaded` block) with a `fetch()` POST sending the object produced in `saveProgress()`.
-- To add autosave: attach a debounced wrapper to `input` / `change` events that calls `saveProgress()`.
+**What Gets Created:**
+- `system_settings` - Configuration and KPI categories
+- `users` - Admin user (louisa@whiringa.com) with full permissions
+- `analytics_cache` - Dashboard metrics storage
+- `notifications` - System alerts and messages
+- `audit_logs` - Security and compliance tracking
 
-## Potential Enhancements
-- Export to PDF / printable summary
-- Server backend (auth + audit trail)
-- Import / export JSON file for portability
-- Validation rules (e.g., required fields before submission)
-- Autosave debounce instead of manual save button
-- Accessibility audit (ARIA labels for dynamic items)
+### Database Reset (Development Only)
+```javascript
+await resetDatabase();    // ⚠️ DESTRUCTIVE - Deletes all admin data
+await seedFirestore();    // Recreate default setup
+```
+
+## Data Architecture
+
+### Cloud Storage (Primary)
+- **Firebase Firestore Collections**:
+  - `drafts/{userId}`: Work-in-progress reviews
+  - `submissions/{userId}`: Final submitted reviews  
+  - `users/{userId}`: User roles, permissions, and authentication metadata
+  - `system_settings/general`: Configuration, KPI categories, review templates
+  - `analytics_cache/{year}`: Pre-computed dashboard metrics
+  - `audit_logs/{logId}`: Comprehensive action logging
+  - `notifications/{notifId}`: System alerts and messages
+  - `exports/{exportId}`: Data export tracking
+- **Firebase Storage**: CSV exports at `reviews/{userId}/{filename}`
+- **Authentication**: Firebase Auth with email/password and role-based access
+
+### Local Backup
+- **localStorage key**: `ceoReviewFormData`
+- **Structure**: 
+  ```json
+  {
+    "timestamp": "2024-01-01T00:00:00.000Z",
+    "data": {
+      "simple": { "successes": "...", "not-well": "..." },
+      "repeaters": { "challenges": [...], "futureGoals": [...] },
+      "kpis": [{"name": "...", "rating": 4, "comments": "..."}],
+      "priorities": [...],
+      "jdAlignment": [...]
+    }
+  }
+  ```
+- **Fallback**: Automatically uses local data when offline or cloud unavailable
+
+## Configuration
+
+### Review Content (assets/js/app.js)
+```javascript
+const kpis = [
+  "Conflict Resolution",
+  "Financial Resilience", 
+  "Board–CEO Communication",
+  "Values Alignment"
+];
+
+const strategicPriorities = [
+  "Strengthen Iwi relationships",
+  "Increase trusted relationships & social cohesion",
+  "Contribute to intergenerational wellbeing",
+  "Operate a positive & professional organisation"
+];
+
+const jdAreas = [
+  "Strategic Leadership",
+  "People & Resources", 
+  "Partnerships",
+  "Growth Opportunities",
+  "Accountability",
+  "Team & Culture"
+];
+```
+
+### Firebase Configuration (assets/js/firebase.js)
+- Update `firebaseConfig` object with your Firebase project credentials
+- Ensure Firestore security rules allow authenticated read/write
+- Configure Firebase Storage for CSV file uploads
+
+### Admin Access (admin.html)
+```javascript
+window.ADMIN_EMAIL_WHITELIST = ['admin@example.com'];
+```
+
+## Key Features Implemented
+
+### PDF Generation
+- **Professional Layout**: A4 format with proper margins and typography
+- **Clean Export**: Navigation and UI elements excluded from PDF
+- **Text Sanitization**: Removes stray characters and formatting artifacts
+- **Preview Available**: View PDF content before download
+
+### Authentication & Security
+- **Email/Password Auth**: Secure Firebase authentication
+- **Role-Based Access**: Admin dashboard with email whitelist
+- **Password Reset**: Built-in password recovery system
+- **Session Management**: Automatic login state handling
+
+### Development Features
+- **Test Data Population**: One-click sample data loading
+- **Comprehensive Testing**: Jest unit tests + Playwright E2E
+- **Error Handling**: Graceful fallbacks and user feedback
+- **Development Server**: Hot reload with http-server
 
 ## Project Structure
 ```
-index.html               # Markup wiring external assets
-assets/
-	css/
-		styles.css           # Custom styling (animations, tooltips, fonts)
-	js/
-		app.js               # Core logic (data config, save/load, init)
-README.md                # Project documentation
+├── index.html              # Main application interface
+├── admin.html              # Admin dashboard for reviewing submissions  
+├── package.json            # Dependencies and scripts
+├── jest.config.js          # Jest testing configuration
+├── playwright.config.js    # Playwright E2E test configuration
+├── eslint.config.mjs       # ESLint configuration
+├── assets/
+│   ├── css/
+│   │   ├── styles.css      # Custom styling, animations, tooltips
+│   │   └── print.css       # Print-specific styles (legacy)
+│   └── js/
+│       ├── app.js          # Main application logic (2600+ lines)
+│       ├── firebase.js     # Firebase configuration and helpers
+│       └── admin.js        # Admin dashboard functionality
+├── tests/
+│   ├── sample.e2e.spec.js  # End-to-end tests
+│   ├── sample.lint.test.js # Linting tests
+│   └── ui.helpers.test.js  # UI component tests
+├── e2e/
+│   └── sample.e2e.spec.js  # Playwright E2E tests
+└── README.md               # This documentation
 ```
 
-If you later modularise templates / components, consider splitting `app.js` into:
-`config.js`, `templates.js`, `persistence.js`, `init.js`.
-
 ## Development Workflow
-1. Edit HTML structure in `index.html` (avoid inline scripts/styles to keep separation clean).
-2. Add logic or data arrays in `assets/js/app.js`.
-3. Add or override styles in `assets/css/styles.css` (prefer utility classes first; only add bespoke CSS when utilities are insufficient).
-4. Open the file in the browser and use DevTools for quick iteration.
-5. Commit with conventional short messages (e.g., `feat: add PDF export`, `fix: restore repeater hydration`).
+
+### Local Development
+1. **Start development server**: `npm run serve`
+2. **Access application**: http://localhost:8080
+3. **Access admin dashboard**: http://localhost:8080/admin.html
+4. **Live reload**: Server automatically refreshes on file changes
+
+### Code Organization
+- **HTML**: Structure in `index.html` and `admin.html`
+- **Styling**: Tailwind utilities + custom CSS in `assets/css/`
+- **Logic**: Main app logic in `assets/js/app.js` (core functions)
+- **Firebase**: Authentication and data in `assets/js/firebase.js`
+- **Admin**: Dashboard logic in `assets/js/admin.js`
+
+### Testing
+- **Unit Tests**: `npm test` (Jest with jsdom environment)
+- **E2E Tests**: `npm run test:e2e` (Playwright with browser automation)
+- **Linting**: `npm run lint` (ESLint with modern JS standards)
+
+### Git Workflow
+- Use conventional commits: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`
+- Recent example: `🧹 Fix stray characters in PDF sections`
 
 ## Troubleshooting
+
+### Common Issues
 | Issue | Resolution |
 |-------|------------|
-| Data not loading after refresh | Ensure `localStorage` still contains key `ceoReviewFormData`; if JSON corrupted, clear it and re-enter data. |
-| Buttons unresponsive | Check for console errors—likely a JS syntax error in modified templates. |
-| Styles missing | Confirm the path `assets/css/styles.css` is correct relative to `index.html`. |
-| Old data after changing arrays | Clear `localStorage` so new structure is generated. |
+| **Authentication Failed** | Check Firebase config in `firebase.js`, ensure network connectivity |
+| **PDF Generation Error** | Verify jsPDF and html2canvas libraries loaded, check browser console |
+| **Data Not Saving** | Ensure Firebase auth working, check Firestore security rules |
+| **Admin Access Denied** | Verify email in `ADMIN_EMAIL_WHITELIST` in `admin.html` |
+| **Test Server Won't Start** | Run `npm install` then `npm run serve`, check port 8080 availability |
+| **Styles Missing** | Confirm Tailwind CDN loading, check `assets/css/styles.css` path |
 
-## Planned (Optional) Enhancements
-- Print / PDF export page (CSS print stylesheet or `html2pdf.js`)
-- JSON import/export for portability
-- Field validation + progress indicator
-- Autosave with idle/debounce logic
-- Accessibility refinements (labelling dynamic repeater groups)
+### Debug Steps
+1. **Check Browser Console**: Look for JavaScript errors or network failures
+2. **Verify Firebase**: Ensure authentication working and data saving to Firestore
+3. **Test Locally**: Use `npm run serve` instead of opening HTML directly
+4. **Clear Cache**: Browser cache or localStorage corruption can cause issues
+5. **Check Network**: Firebase requires internet connectivity for auth and data
 
+### Development Debugging
+- **Firebase Console**: Monitor auth, database, and storage in Firebase Console
+- **Network Tab**: Check API calls and resource loading
+- **Application Tab**: Inspect localStorage data structure
+- **Console Logging**: Use browser DevTools console for runtime debugging
+
+
+## Recent Enhancements
+
+### PDF Generation System
+- **Complete Overhaul**: Replaced browser print-to-PDF with professional jsPDF implementation
+- **A4 Formatting**: Proper margins, typography, and page breaks
+- **Text Cleaning**: Resolved stray character issues in section titles
+- **Preview Feature**: View generated PDF before download
+
+### Firebase Integration  
+- **Authentication**: Email/password signup, login, password reset
+- **Cloud Persistence**: Firestore database with real-time sync
+- **File Storage**: CSV export uploads with download links
+- **Admin Dashboard**: Role-based access for reviewing submissions
+
+### Testing & Development
+- **Comprehensive Test Suite**: Jest + Playwright + ESLint
+- **Development Server**: Local http-server with live reload
+- **Test Data Population**: One-click sample data for development
+- **Error Handling**: Graceful fallbacks and user feedback
 
 ## Contributing
-Small, focused PRs welcome. Keep everything self‑contained unless a build system is introduced. Prefer progressive enhancement and no framework unless justified.
+- **Code Style**: Follow existing patterns, use ESLint for consistency
+- **Testing**: Add tests for new features, ensure existing tests pass
+- **Documentation**: Update README for significant changes
+- **Firebase**: Test authentication and data persistence thoroughly
+- **PDF Generation**: Verify output formatting across different content lengths
 
 ## License
-Add appropriate license (e.g., MIT) when distribution requirements are confirmed.
+ISC License (as specified in package.json)
+
+## Repository
+- **GitHub**: https://github.com/louisamurray/ceoreview
+- **Issues**: https://github.com/louisamurray/ceoreview/issues
+- **Current Branch**: main
 
 ## Contact
-For context or review process changes, coordinate with the REAP Marlborough governance team.
+For questions about REAP Marlborough review processes or technical support, coordinate with the development team or REAP governance.
