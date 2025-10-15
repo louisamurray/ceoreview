@@ -24,14 +24,24 @@
     font-family: 'Times New Roman', serif !important;
   }
   
-  /* Hide interactive elements */
+  /* Hide interactive and navigation elements */
   .print\:hidden, .print\:hidden * {
     display: none !important;
   }
   
+  /* Hide all navigation, buttons, and interactive elements */
   button, .tooltip, #save-status, .section-toggle, 
   .rich-text-toolbar, .rich-text-count, .empty-placeholder,
-  .modal, #login-modal, .action-chip, .primary-chip {
+  .modal, #login-modal, .action-chip, .primary-chip,
+  nav, .navigation, .nav, .section-nav, .section-nav-pill,
+  .collapse-all, #collapse-all-btn, .info-dot,
+  header .flex, .header-actions, .user-actions {
+    display: none !important;
+  }
+  
+  /* Hide any element with navigation-related classes */
+  [class*="nav"], [class*="toggle"], [class*="button"], 
+  [class*="chip"], [class*="action"] {
     display: none !important;
   }
   
@@ -40,21 +50,48 @@
     box-shadow: none !important;
     border: none !important;
     background: #fff !important;
-    padding: 0 !important;
+    padding: 24pt 0 !important;
     max-width: 100% !important;
+    margin: 0 !important;
+  }
+  
+  /* Clean up header area */
+  header {
+    padding: 0 !important;
+    margin-bottom: 24pt !important;
+  }
+  
+  /* Ensure only the form content shows */
+  form {
+    padding: 0 !important;
     margin: 0 !important;
   }
   
   /* Headers and sections */
   h1 {
-    font-size: 20pt !important;
+    font-size: 22pt !important;
     font-weight: bold !important;
-    margin-bottom: 18pt !important;
+    margin-bottom: 24pt !important;
     margin-top: 0 !important;
     page-break-after: avoid !important;
     text-align: center !important;
     border-bottom: 2px solid #222 !important;
-    padding-bottom: 8pt !important;
+    padding-bottom: 12pt !important;
+    color: #000 !important;
+  }
+  
+  /* Hide any buttons or actions that might be in the header */
+  h1 + *, header .flex, header > div {
+    display: none !important;
+  }
+  
+  /* Show only the title text */
+  h1, h1 * {
+    display: block !important;
+  }
+  
+  h1 button, h1 .action-chip, h1 .primary-chip {
+    display: none !important;
   }
   
   h2 {
@@ -120,25 +157,29 @@
   .print-content {
     display: block !important;
     width: 100% !important;
-    padding: 4pt 0 !important;
-    margin-bottom: 8pt !important;
+    padding: 6pt 0 !important;
+    margin-bottom: 10pt !important;
     border-bottom: 1px solid #ccc !important;
     font-family: 'Times New Roman', serif !important;
     font-size: 11pt !important;
-    line-height: 1.4 !important;
+    line-height: 1.5 !important;
     color: #222 !important;
     white-space: pre-wrap !important;
     word-wrap: break-word !important;
     overflow-wrap: break-word !important;
-    min-height: 14pt !important;
+    min-height: auto !important;
+    height: auto !important;
     page-break-inside: avoid !important;
+    orphans: 3 !important;
+    widows: 3 !important;
   }
   
   .print-content-inline {
-    display: inline !important;
+    display: inline-block !important;
     width: auto !important;
     margin-bottom: 4pt !important;
-    margin-right: 8pt !important;
+    margin-right: 12pt !important;
+    vertical-align: baseline !important;
   }
   
   .print-content:empty::before {
@@ -179,12 +220,30 @@
     page-break-inside: avoid !important;
   }
   
-  /* Repeater items */
+  /* Repeater items - prevent breaking across pages */
   .repeater-item {
-    margin-bottom: 16pt !important;
-    padding: 8pt !important;
-    border: 1px solid #ddd !important;
+    margin-bottom: 20pt !important;
+    padding: 12pt !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4pt !important;
+    background-color: #fafafa !important;
     page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    display: block !important;
+    orphans: 5 !important;
+    widows: 5 !important;
+  }
+  
+  /* Ensure repeater item children don't break */
+  .repeater-item * {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  
+  /* Special handling for large repeater items */
+  .repeater-item.large-content {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
   }
   
   /* Tables and structured content */
@@ -242,12 +301,24 @@
     visibility: visible !important;
     height: auto !important;
     overflow: visible !important;
+    padding-top: 8pt !important;
   }
   
   /* Remove collapsible functionality in print */
   .collapsible-section[data-collapsed="true"] .section-body {
     display: block !important;
     height: auto !important;
+  }
+  
+  /* Hide any remaining interactive elements */
+  *[onclick], *[data-modal], *[data-target], 
+  .cursor-pointer, .hover\:*, .focus\:* {
+    pointer-events: none !important;
+  }
+  
+  /* Ensure clean document flow */
+  .space-y-6 > *:first-child {
+    margin-top: 0 !important;
   }
   
   /* Table styling for structured data */

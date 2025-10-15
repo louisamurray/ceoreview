@@ -2038,14 +2038,31 @@ function preparePrintLayout() {
   // Handle repeater items to avoid awkward breaks
   const repeaterItems = document.querySelectorAll('.repeater-item');
   repeaterItems.forEach(item => {
-    item.style.pageBreakInside = 'avoid';
-    item.style.marginBottom = '12pt';
+    // Calculate content size to determine if item can fit on one page
+    const textContent = item.textContent.trim();
+    const estimatedHeight = textContent.length * 0.15; // Rough estimate in pts
+    const hasLongContent = textContent.length > 800 || estimatedHeight > 200;
+    
+    if (hasLongContent) {
+      // Allow breaking for very large items
+      item.classList.add('large-content');
+      item.style.pageBreakInside = 'auto';
+      item.style.breakInside = 'auto';
+    } else {
+      // Keep smaller items together
+      item.style.pageBreakInside = 'avoid';
+      item.style.breakInside = 'avoid';
+    }
+    
+    item.style.marginBottom = '20pt';
+    item.style.orphans = '5';
+    item.style.widows = '5';
   });
 }
 
 // Convert form elements to static content for reliable printing
 function convertFormElementsToStaticContent() {
-  // Handle textareas
+  // Handle textareas - auto-expand to show full content
   const textareas = document.querySelectorAll('textarea');
   textareas.forEach(textarea => {
     if (!textarea.dataset.printConverted) {
@@ -2053,18 +2070,26 @@ function convertFormElementsToStaticContent() {
       const printDiv = document.createElement('div');
       printDiv.className = 'print-content';
       printDiv.textContent = content;
+      
+      // Calculate if this is long content that might need to break
+      const isLongContent = content.length > 500 || content.split('\n').length > 8;
+      
       printDiv.style.cssText = `
         display: none;
         font-family: 'Times New Roman', serif;
         font-size: 11pt;
-        line-height: 1.4;
+        line-height: 1.5;
         color: #222;
         white-space: pre-wrap;
         word-wrap: break-word;
-        padding: 4pt 0;
-        margin-bottom: 8pt;
+        padding: 6pt 0;
+        margin-bottom: 10pt;
         border-bottom: 1px solid #ccc;
-        min-height: 14pt;
+        height: auto;
+        min-height: auto;
+        ${isLongContent ? 'page-break-inside: auto;' : 'page-break-inside: avoid;'}
+        orphans: 3;
+        widows: 3;
       `;
       
       // Insert after the textarea
