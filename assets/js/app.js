@@ -1834,7 +1834,7 @@ function collectFormData() {
   }));
   // KPIs
   data.kpis = Array.from(document.getElementById('kpi-container')?.children || []).map(card => ({
-    name: card.querySelector('.font-semibold')?.textContent || '',
+    name: (card.querySelector('.font-semibold')?.textContent || '').replace(/\s+/g, ' ').trim(),
     rating: card.querySelector('input[type="radio"]:checked')?.value || '',
     evidence: card.querySelector('textarea')?.value || '',
     compared: card.querySelector('select')?.value || '',
@@ -1842,13 +1842,13 @@ function collectFormData() {
   }));
   // JD Alignment
   data.jdAlignment = Array.from(document.getElementById('jd-alignment-container')?.children || []).map(card => ({
-    area: card.querySelector('.font-semibold')?.textContent || '',
+    area: (card.querySelector('.font-semibold')?.textContent || '').replace(/\s+/g, ' ').trim(),
     wentWell: card.querySelectorAll('textarea')[0]?.value || '',
     notWell: card.querySelectorAll('textarea')[1]?.value || ''
   }));
   // Strategic Priorities
   data.strategicPriorities = Array.from(document.getElementById('strategic-priorities-container')?.children || []).map(card => ({
-    name: card.querySelector('.font-semibold')?.textContent || '',
+    name: (card.querySelector('.font-semibold')?.textContent || '').replace(/\s+/g, ' ').trim(),
     progress: card.querySelectorAll('textarea')[0]?.value || '',
     challenges: card.querySelectorAll('textarea')[1]?.value || '',
     trend: card.querySelector('select')?.value || ''
@@ -2168,23 +2168,29 @@ function formatGoalsForPDF(goals) {
 
 function formatKPIsForPDF(kpis) {
   if (!kpis || !kpis.length) return '';
-  return kpis.filter(k => k.rating || k.evidence).map((kpi, i) => 
-    `${i + 1}. ${kpi.name || 'Unnamed KPI'}\n   Rating: ${kpi.rating || 'Not rated'}/5\n   Evidence: ${kpi.evidence || 'Not provided'}\n   Compared to last year: ${kpi.compared || 'Not specified'}\n   Why: ${kpi.why || 'Not specified'}`
-  ).join('\n\n');
+  return kpis.filter(k => k.rating || k.evidence).map((kpi, i) => {
+    // Clean the KPI name by removing extra characters and trimming
+    const cleanName = (kpi.name || 'Unnamed KPI').replace(/\s+/g, ' ').trim();
+    return `${i + 1}. ${cleanName}\n   Rating: ${kpi.rating || 'Not rated'}/5\n   Evidence: ${kpi.evidence || 'Not provided'}\n   Compared to last year: ${kpi.compared || 'Not specified'}\n   Why: ${kpi.why || 'Not specified'}`;
+  }).join('\n\n');
 }
 
 function formatJDAlignmentForPDF(alignment) {
-  if (!alignment || !alignment.length) return '—';
-  return alignment.map((area, i) => 
-    `${i + 1}. ${area.area}\n   What went well: ${area.wentWell}\n   What did not go well: ${area.notWell}`
-  ).join('\n\n');
+  if (!alignment || !alignment.length) return '';
+  return alignment.filter(a => a.area || a.wentWell || a.notWell).map((area, i) => {
+    // Clean the area name by removing extra characters and trimming
+    const cleanArea = (area.area || 'Not specified').replace(/\s+/g, ' ').trim();
+    return `${i + 1}. ${cleanArea}\n   What went well: ${area.wentWell || 'Not provided'}\n   What did not go well: ${area.notWell || 'Not provided'}`;
+  }).join('\n\n');
 }
 
 function formatStrategicPrioritiesForPDF(priorities) {
-  if (!priorities || !priorities.length) return '—';
-  return priorities.map((priority, i) => 
-    `${i + 1}. ${priority.name}\n   Progress: ${priority.progress}\n   Challenges: ${priority.challenges}\n   Trend: ${priority.trend}`
-  ).join('\n\n');
+  if (!priorities || !priorities.length) return '';
+  return priorities.filter(p => p.name || p.progress || p.challenges).map((priority, i) => {
+    // Clean the priority name by removing extra characters and trimming
+    const cleanName = (priority.name || 'Not specified').replace(/\s+/g, ' ').trim();
+    return `${i + 1}. ${cleanName}\n   Progress: ${priority.progress || 'Not provided'}\n   Challenges: ${priority.challenges || 'Not provided'}\n   Trend: ${priority.trend || 'Not specified'}`;
+  }).join('\n\n');
 }
 
 function formatPDUndertakenForPDF(pd) {
