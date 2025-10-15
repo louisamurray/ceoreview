@@ -1980,28 +1980,33 @@ const savePdfBtn = document.getElementById('save-pdf-btn');
 if (savePdfBtn) {
   savePdfBtn.onclick = function() {
     preparePrintLayout();
+    
+    // Listen for after print to clean up
+    const afterPrint = () => {
+      cleanupPrintLayout();
+      window.removeEventListener('afterprint', afterPrint);
+    };
+    window.addEventListener('afterprint', afterPrint);
+    
     setTimeout(() => {
       window.print();
-    }, 100);
+    }, 200);
   };
+}
+
+// Clean up print elements after printing
+function cleanupPrintLayout() {
+  const printElements = document.querySelectorAll('.print-content');
+  printElements.forEach(el => el.remove());
+  
+  const formElements = document.querySelectorAll('[data-print-converted]');
+  formElements.forEach(el => delete el.dataset.printConverted);
 }
 
 // Prepare layout for printing
 function preparePrintLayout() {
-  // Expand all textareas to show their full content
-  const textareas = document.querySelectorAll('textarea');
-  textareas.forEach(textarea => {
-    if (textarea.value.trim()) {
-      // Calculate the height needed for the content
-      textarea.style.height = 'auto';
-      textarea.style.height = textarea.scrollHeight + 'px';
-      
-      // Ensure text is visible and properly formatted
-      textarea.style.whiteSpace = 'pre-wrap';
-      textarea.style.wordWrap = 'break-word';
-      textarea.style.overflow = 'visible';
-    }
-  });
+  // Convert all form elements to static content for reliable PDF generation
+  convertFormElementsToStaticContent();
   
   // Ensure all collapsible sections are expanded
   const collapsibleSections = document.querySelectorAll('.collapsible-section[data-collapsed="true"]');
@@ -2022,8 +2027,12 @@ function preparePrintLayout() {
       section.style.pageBreakBefore = 'always';
     }
     
-    // Ensure sections don't break awkwardly
-    section.style.pageBreakInside = 'avoid';
+    // Ensure sections don't break awkwardly - but allow for large sections
+    if (section.id === 'part-1' || section.id === 'part-2' || section.id === 'part-6') {
+      section.style.pageBreakInside = 'avoid';
+    } else {
+      section.style.pageBreakInside = 'auto';
+    }
   });
   
   // Handle repeater items to avoid awkward breaks
@@ -2031,6 +2040,127 @@ function preparePrintLayout() {
   repeaterItems.forEach(item => {
     item.style.pageBreakInside = 'avoid';
     item.style.marginBottom = '12pt';
+  });
+}
+
+// Convert form elements to static content for reliable printing
+function convertFormElementsToStaticContent() {
+  // Handle textareas
+  const textareas = document.querySelectorAll('textarea');
+  textareas.forEach(textarea => {
+    if (!textarea.dataset.printConverted) {
+      const content = textarea.value.trim() || '—';
+      const printDiv = document.createElement('div');
+      printDiv.className = 'print-content';
+      printDiv.textContent = content;
+      printDiv.style.cssText = `
+        display: none;
+        font-family: 'Times New Roman', serif;
+        font-size: 11pt;
+        line-height: 1.4;
+        color: #222;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        padding: 4pt 0;
+        margin-bottom: 8pt;
+        border-bottom: 1px solid #ccc;
+        min-height: 14pt;
+      `;
+      
+      // Insert after the textarea
+      textarea.parentNode.insertBefore(printDiv, textarea.nextSibling);
+      textarea.dataset.printConverted = 'true';
+    }
+  });
+  
+  // Handle text inputs
+  const textInputs = document.querySelectorAll('input[type="text"], input[type="email"]');
+  textInputs.forEach(input => {
+    if (!input.dataset.printConverted) {
+      const content = input.value.trim() || '—';
+      const printSpan = document.createElement('span');
+      printSpan.className = 'print-content print-content-inline';
+      printSpan.textContent = content;
+      printSpan.style.cssText = `
+        display: none;
+        font-family: 'Times New Roman', serif;
+        font-size: 11pt;
+        color: #222;
+        border-bottom: 1px solid #ccc;
+        padding: 2pt 0;
+        margin-right: 8pt;
+      `;
+      
+      // Insert after the input
+      input.parentNode.insertBefore(printSpan, input.nextSibling);
+      input.dataset.printConverted = 'true';
+    }
+  });
+  
+  // Handle select elements
+  const selects = document.querySelectorAll('select');
+  selects.forEach(select => {
+    if (!select.dataset.printConverted) {
+      const selectedOption = select.options[select.selectedIndex];
+      const content = selectedOption ? selectedOption.text : '—';
+      const printSpan = document.createElement('span');
+      printSpan.className = 'print-content print-content-inline';
+      printSpan.textContent = content;
+      printSpan.style.cssText = `
+        display: none;
+        font-family: 'Times New Roman', serif;
+        font-size: 11pt;
+        color: #222;
+        border-bottom: 1px solid #ccc;
+        padding: 2pt 0;
+        margin-right: 8pt;
+        font-weight: 500;
+      `;
+      
+      // Insert after the select
+      select.parentNode.insertBefore(printSpan, select.nextSibling);
+      select.dataset.printConverted = 'true';
+    }
+  });
+  
+  // Handle radio buttons
+  const radioGroups = {};
+  const radios = document.querySelectorAll('input[type="radio"]');
+  radios.forEach(radio => {
+    const name = radio.name;
+    if (!radioGroups[name]) radioGroups[name] = [];
+    radioGroups[name].push(radio);
+  });
+  
+  Object.keys(radioGroups).forEach(groupName => {
+    const group = radioGroups[groupName];
+    const checkedRadio = group.find(r => r.checked);
+    
+    if (checkedRadio && !checkedRadio.dataset.printConverted) {
+      const label = document.querySelector(`label[for="${checkedRadio.id}"]`);
+      const content = label ? label.textContent.trim() : checkedRadio.value;
+      
+      const printSpan = document.createElement('span');
+      printSpan.className = 'print-content print-content-inline';
+      printSpan.innerHTML = `<strong>Selected:</strong> ${content}`;
+      printSpan.style.cssText = `
+        display: none;
+        font-family: 'Times New Roman', serif;
+        font-size: 11pt;
+        color: #222;
+        margin-right: 12pt;
+        font-weight: normal;
+      `;
+      
+      // Insert after the radio group container
+      const container = checkedRadio.closest('.grid') || checkedRadio.closest('div');
+      if (container) {
+        container.appendChild(printSpan);
+      }
+      
+      // Mark all radios in group as converted
+      group.forEach(r => r.dataset.printConverted = 'true');
+    }
   });
 }
 
