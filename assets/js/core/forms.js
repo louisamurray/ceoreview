@@ -429,6 +429,74 @@ function clearForm() {
   });
 }
 
+/**
+ * Populate form with sample/test data for demonstration
+ * @function populateTestData
+ * @returns {Promise<void>}
+ */
+async function populateTestData() {
+  const testSections = {
+    'part-1': {
+      successes: 'Successfully led the team through a major transition and delivered all key projects on time.',
+      'not-well': 'Struggled with some aspects of budget management due to increased operational costs.',
+      challenges: [
+        { challenge: 'Resource constraints', action: 'Reallocated team members', result: 'Improved efficiency' },
+        { challenge: 'Market volatility', action: 'Adjusted strategy', result: 'Maintained profitability' }
+      ]
+    },
+    'part-2': {
+      lastYearGoals: [
+        { goal: 'Increase market share by 15%', achieved: 'Achieved 12% increase' },
+        { goal: 'Reduce operational costs by 20%', achieved: 'Achieved 18% reduction' }
+      ],
+      kpis: [
+        { name: 'Revenue Growth', rating: 4 },
+        { name: 'Team Satisfaction', rating: 4 },
+        { name: 'Customer Retention', rating: 5 }
+      ],
+      jobAlignment: [
+        { area: 'Strategic Leadership', whatWentWell: 'Strong vision', whatNotWell: 'Some execution gaps' },
+        { area: 'Financial Management', whatWentWell: 'Solid budgeting', whatNotWell: 'Overcosts in Q3' }
+      ]
+    },
+    'part-3': {
+      strategicPriorities: [
+        { priority: 'Digital Transformation', progress: 'On track', challenges: 'Integration issues', trend: 'Improving' },
+        { priority: 'Team Development', progress: 'Exceeding targets', challenges: 'Retention', trend: 'About the Same' }
+      ]
+    },
+    'part-4': {
+      pdUndertaken: [
+        { activity: 'Executive Leadership Program' },
+        { activity: 'Advanced Financial Management Course' }
+      ],
+      pdNeeded: [
+        { area: 'Digital Strategy', priority: 'High' },
+        { area: 'AI & Automation', priority: 'Medium' }
+      ]
+    },
+    'part-5': {
+      futureGoals: [
+        { goal: 'Achieve 25% revenue growth', timeline: '2026', support: 'Team expansion needed' },
+        { goal: 'Expand into new markets', timeline: '2026-2027', support: 'Market research required' }
+      ]
+    },
+    'part-6': {
+      boardRequests: [
+        { request: 'Approval for new product line', rationale: 'Market opportunity identified' },
+        { request: 'Budget for digital transformation', rationale: 'Competitive necessity' }
+      ]
+    },
+    'part-7': {
+      personalReflection: 'This year has been transformative. I have learned to balance strategic vision with operational excellence.',
+      supportNeeded: 'Mentoring in new market entry strategies'
+    }
+  };
+  
+  populateFormFromData(testSections);
+  updateAllSectionSummaries();
+}
+
 // --- Export to global namespace ---
 window.FormUtils = {
   collect: collectFormData,
@@ -442,5 +510,13 @@ window.FormUtils = {
 };
 
 // --- Legacy function names for backwards compatibility ---
-// These are called from HTML event handlers and need to remain in window
-// Old code will call collectFormData(), new code can call FormUtils.collect()
+// These are called from HTML event handlers and button handlers
+window.collectFormData = collectFormData;
+window.populateFormFromData = populateFormFromData;
+window.flattenSectionsToFlat = flattenSectionsToFlat;
+window.collectDynamicItems = collectDynamicItems;
+window.collectKPIs = collectKPIs;
+window.collectJobAlignment = collectJobAlignment;
+window.collectStrategicPriorities = collectStrategicPriorities;
+window.clearForm = clearForm;
+window.populateTestData = populateTestData;

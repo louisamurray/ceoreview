@@ -179,4 +179,4 @@ window.PDFGenerator = {
 };
 
 // Legacy export for backwards compatibility
-// Code that calls generatePDF() will still work
+window.generatePDF = generatePDF;
