@@ -464,7 +464,7 @@ function saveReview(uid, flatFormData, status = 'draft') {
   const completion = calculateCompletion(sections);
   
   const reviewData = {
-    id: uid,
+    uid: uid,
     metadata: {
       userEmail: user?.email || null,
       userDisplayName: user?.displayName || null,
@@ -477,6 +477,9 @@ function saveReview(uid, flatFormData, status = 'draft') {
   };
   
   const collection = status === 'submitted' ? 'submissions' : 'drafts';
+  
+  // Save with UID as document ID for both drafts and submissions
+  // This allows Firestore rules to work with isOwner() check
   return getReviewDocRef(uid, collection).set(reviewData, { merge: false });
 }
 

@@ -1078,6 +1078,451 @@ async function clearForm() {
   updateAllSectionSummaries();
 }
 
+// --- Admin-only UI Logic ---
+function checkAdminStatusAndUpdateUI(user) {
+  // Elements that should only be visible to admins
+  const adminElements = document.querySelectorAll('.admin-only, #populate-test-data-btn');
+  if (!user) {
+    adminElements.forEach(el => { el.style.display = 'none'; });
+    return;
+  }
+  // Fetch user data first, then check if admin
+  if (window.firebaseHelpers && typeof window.firebaseHelpers.getUserData === 'function') {
+    window.firebaseHelpers.getUserData(user.uid).then(userData => {
+      const isAdmin = window.firebaseHelpers.isAdmin(userData);
+      adminElements.forEach(el => {
+        el.style.display = isAdmin ? '' : 'none';
+      });
+    }).catch((err) => {
+      // On error, hide admin-only elements
+      console.warn('Failed to check admin status:', err);
+      adminElements.forEach(el => { el.style.display = 'none'; });
+    });
+  } else {
+    // Fallback: hide admin-only elements
+    adminElements.forEach(el => { el.style.display = 'none'; });
+  }
+}
+
+// --- Logout Button Visibility ---
+function updateLogoutButtonVisibility(isLoggedIn) {
+  const logoutBtn = document.getElementById('logout-btn');
+  const loginBtn = document.getElementById('login-btn');
+  if (logoutBtn) logoutBtn.style.display = isLoggedIn ? '' : 'none';
+  if (loginBtn) loginBtn.style.display = isLoggedIn ? 'none' : '';
+}
+
+// --- Form State Tracking ---
+function markFormAsSaved() {
+  // Mark form as saved - can be used for tracking unsaved changes
+  window.formHasUnsavedChanges = false;
+}
+
+// --- Clear Form ---
+function clearForm() {
+  // Clear all text inputs and textareas
+  document.querySelectorAll('input[type="text"], input[type="email"], textarea').forEach(el => {
+    el.value = '';
+  });
+  
+  // Reset all selects
+  document.querySelectorAll('select').forEach(el => {
+    el.selectedIndex = 0;
+  });
+  
+  // Clear dynamic containers
+  ['challenges-container', 'last-year-goals-container', 'pd-undertaken-container', 
+   'pd-needed-container', 'future-goals-container', 'board-requests-container'].forEach(containerId => {
+    const container = document.getElementById(containerId);
+    if (container) {
+      container.innerHTML = '';
+      ensureEmptyState(container);
+    }
+  });
+  
+  // Update section summaries
+  if (typeof updateAllSectionSummaries === 'function') {
+    updateAllSectionSummaries();
+  }
+}
+
+// --- Dynamic Form Element Functions ---
+window.addChallenge = function() {
+  const container = document.getElementById('challenges-container');
+  if (!container) return;
+  
+  removeEmptyState(container);
+  
+  const div = document.createElement('div');
+  div.className = 'challenge-group p-4 bg-slate-50 border border-slate-200 rounded-lg';
+  div.innerHTML = `
+    <div class="flex justify-between items-center mb-2">
+      <h4 class="font-medium text-slate-700">Challenge ${container.children.length + 1}</h4>
+      <button type="button" onclick="this.closest('.challenge-group').remove(); ensureEmptyState('challenges-container'); updateAllSectionSummaries();" 
+              class="text-red-600 hover:text-red-800 text-sm">Remove</button>
+    </div>
+    <div class="space-y-2">
+      <textarea class="w-full p-2 border border-slate-300 rounded-md" placeholder="Describe the challenge..." rows="2"></textarea>
+      <textarea class="w-full p-2 border border-slate-300 rounded-md" placeholder="Actions taken..." rows="2"></textarea>
+      <textarea class="w-full p-2 border border-slate-300 rounded-md" placeholder="Result..." rows="2"></textarea>
+    </div>
+  `;
+  container.appendChild(div);
+  if (typeof updateAllSectionSummaries === 'function') {
+    updateAllSectionSummaries();
+  }
+};
+
+window.addLastYearGoal = function() {
+  const container = document.getElementById('last-year-goals-container');
+  if (!container) return;
+  
+  removeEmptyState(container);
+  
+  const div = document.createElement('div');
+  div.className = 'goal-group p-4 bg-slate-50 border border-slate-200 rounded-lg';
+  div.innerHTML = `
+    <div class="flex justify-between items-center mb-2">
+      <h4 class="font-medium text-slate-700">Goal ${container.children.length + 1}</h4>
+      <button type="button" onclick="this.closest('.goal-group').remove(); ensureEmptyState('last-year-goals-container'); updateAllSectionSummaries();" 
+              class="text-red-600 hover:text-red-800 text-sm">Remove</button>
+    </div>
+    <div class="space-y-2">
+      <input type="text" class="w-full p-2 border border-slate-300 rounded-md" placeholder="Goal description...">
+      <textarea class="w-full p-2 border border-slate-300 rounded-md" placeholder="Progress/outcome..." rows="2"></textarea>
+      <select class="w-full p-2 border border-slate-300 rounded-md">
+        <option value="">Status...</option>
+        <option value="Exceeded">Exceeded</option>
+        <option value="Achieved">Achieved</option>
+        <option value="Partially Achieved">Partially Achieved</option>
+        <option value="Not Achieved">Not Achieved</option>
+      </select>
+    </div>
+  `;
+  container.appendChild(div);
+  if (typeof updateAllSectionSummaries === 'function') {
+    updateAllSectionSummaries();
+  }
+};
+
+window.addPDUndertaken = function() {
+  const container = document.getElementById('pd-undertaken-container');
+  if (!container) return;
+  
+  removeEmptyState(container);
+  
+  const div = document.createElement('div');
+  div.className = 'pd-group p-4 bg-slate-50 border border-slate-200 rounded-lg';
+  div.innerHTML = `
+    <div class="flex justify-between items-center mb-2">
+      <h4 class="font-medium text-slate-700">Professional Development ${container.children.length + 1}</h4>
+      <button type="button" onclick="this.closest('.pd-group').remove(); ensureEmptyState('pd-undertaken-container'); updateAllSectionSummaries();" 
+              class="text-red-600 hover:text-red-800 text-sm">Remove</button>
+    </div>
+    <div class="space-y-2">
+      <input type="text" class="w-full p-2 border border-slate-300 rounded-md" placeholder="Course/program name...">
+      <textarea class="w-full p-2 border border-slate-300 rounded-md" placeholder="What you learned / outcomes..." rows="2"></textarea>
+    </div>
+  `;
+  container.appendChild(div);
+  if (typeof updateAllSectionSummaries === 'function') {
+    updateAllSectionSummaries();
+  }
+};
+
+window.addPDNeeded = function() {
+  const container = document.getElementById('pd-needed-container');
+  if (!container) return;
+  
+  removeEmptyState(container);
+  
+  const div = document.createElement('div');
+  div.className = 'pd-group p-4 bg-slate-50 border border-slate-200 rounded-lg';
+  div.innerHTML = `
+    <div class="flex justify-between items-center mb-2">
+      <h4 class="font-medium text-slate-700">Development Need ${container.children.length + 1}</h4>
+      <button type="button" onclick="this.closest('.pd-group').remove(); ensureEmptyState('pd-needed-container'); updateAllSectionSummaries();" 
+              class="text-red-600 hover:text-red-800 text-sm">Remove</button>
+    </div>
+    <div class="space-y-2">
+      <input type="text" class="w-full p-2 border border-slate-300 rounded-md" placeholder="Type of development needed...">
+      <textarea class="w-full p-2 border border-slate-300 rounded-md" placeholder="Why / rationale..." rows="2"></textarea>
+    </div>
+  `;
+  container.appendChild(div);
+  if (typeof updateAllSectionSummaries === 'function') {
+    updateAllSectionSummaries();
+  }
+};
+
+window.addFutureGoal = function() {
+  const container = document.getElementById('future-goals-container');
+  if (!container) return;
+  
+  removeEmptyState(container);
+  
+  const div = document.createElement('div');
+  div.className = 'goal-group p-4 bg-slate-50 border border-slate-200 rounded-lg';
+  div.innerHTML = `
+    <div class="flex justify-between items-center mb-2">
+      <h4 class="font-medium text-slate-700">Future Goal ${container.children.length + 1}</h4>
+      <button type="button" onclick="this.closest('.goal-group').remove(); ensureEmptyState('future-goals-container'); updateAllSectionSummaries();" 
+              class="text-red-600 hover:text-red-800 text-sm">Remove</button>
+    </div>
+    <div class="space-y-2">
+      <input type="text" class="w-full p-2 border border-slate-300 rounded-md" placeholder="Goal description...">
+      <textarea class="w-full p-2 border border-slate-300 rounded-md" placeholder="Expected outcomes..." rows="2"></textarea>
+      <textarea class="w-full p-2 border border-slate-300 rounded-md" placeholder="Timeline / milestones..." rows="2"></textarea>
+    </div>
+  `;
+  container.appendChild(div);
+  if (typeof updateAllSectionSummaries === 'function') {
+    updateAllSectionSummaries();
+  }
+};
+
+window.addBoardRequest = function() {
+  const container = document.getElementById('board-requests-container');
+  if (!container) return;
+  
+  removeEmptyState(container);
+  
+  const div = document.createElement('div');
+  div.className = 'request-group p-4 bg-slate-50 border border-slate-200 rounded-lg';
+  div.innerHTML = `
+    <div class="flex justify-between items-center mb-2">
+      <h4 class="font-medium text-slate-700">Request ${container.children.length + 1}</h4>
+      <button type="button" onclick="this.closest('.request-group').remove(); ensureEmptyState('board-requests-container'); updateAllSectionSummaries();" 
+              class="text-red-600 hover:text-red-800 text-sm">Remove</button>
+    </div>
+    <div class="space-y-2">
+      <input type="text" class="w-full p-2 border border-slate-300 rounded-md" placeholder="Request summary...">
+      <textarea class="w-full p-2 border border-slate-300 rounded-md" placeholder="Rationale / justification..." rows="2"></textarea>
+    </div>
+  `;
+  container.appendChild(div);
+  if (typeof updateAllSectionSummaries === 'function') {
+    updateAllSectionSummaries();
+  }
+};
+
+// Helper function to ensure empty states are updated
+function ensureAllEmptyStates() {
+  ['challenges-container', 'last-year-goals-container', 'pd-undertaken-container', 
+   'pd-needed-container', 'future-goals-container', 'board-requests-container'].forEach(containerId => {
+    ensureEmptyState(containerId);
+  });
+}
+
+// --- Populate Test Data ---
+async function populateTestData() {
+  // Clear form first
+  clearForm();
+  
+  // Part 1: Performance Reflection
+  document.getElementById('successes').value = `This year has been marked by significant achievements:
+  
+• Successfully launched the new community engagement program, reaching over 500 families
+• Secured $2.3M in additional funding from diverse sources including central government grants
+• Led the strategic planning process that resulted in unanimous board approval of our 2025-2027 plan
+• Improved staff retention rate from 65% to 82% through enhanced workplace culture initiatives
+• Established three new strategic partnerships with iwi organizations, strengthening our community connections`;
+
+  document.getElementById('not-well').value = `Several areas require improvement and reflection:
+  
+• Digital transformation project experienced significant delays (6 months behind schedule)
+• Communication with some board members could have been more frequent and transparent
+• Budget variance in Q2 exceeded acceptable limits due to unforeseen infrastructure costs
+• Staff survey revealed concerns about workload distribution that need addressing
+• Some key stakeholder relationships require rebuilding after challenging policy discussions`;
+
+  document.getElementById('comparative-reflection').value = `Compared to last year, this has been a year of consolidation and growth. While we faced more complex challenges, our responses were more strategic and measured. The organization's financial position is significantly stronger (reserve fund increased by 40%), and stakeholder satisfaction scores improved by 15 percentage points. However, internal systems and processes haven't kept pace with our growth, creating bottlenecks that weren't present last year. Overall, I'd rate this year as more successful, but with clearer areas for improvement identified.`;
+
+  // Add sample challenges (if addChallenge function exists)
+  if (typeof window.addChallenge === 'function') {
+    window.addChallenge();
+    setTimeout(() => {
+      const challengeInputs = document.querySelectorAll('#challenges-container .challenge-group');
+      if (challengeInputs.length > 0) {
+        const lastChallenge = challengeInputs[challengeInputs.length - 1];
+        const textareas = lastChallenge.querySelectorAll('textarea');
+        if (textareas[0]) textareas[0].value = 'Staff recruitment and retention in specialized roles';
+        if (textareas[1]) textareas[1].value = 'Implemented competitive salary review, flexible working arrangements, and professional development pathways';
+        if (textareas[2]) textareas[2].value = 'Successfully filled 4 critical positions, improved staff satisfaction scores by 20%';
+      }
+    }, 100);
+  }
+
+  // Part 2: Goals & KPIs (populate KPI ratings if visible)
+  const kpiCards = document.querySelectorAll('#kpi-container .p-6');
+  if (kpiCards.length > 0) {
+    const ratings = [4, 5, 3, 4]; // Sample ratings for each KPI
+    kpiCards.forEach((card, index) => {
+      const select = card.querySelector('select');
+      const input = card.querySelector('input[type="text"]');
+      if (select && ratings[index]) {
+        select.value = ratings[index];
+      }
+      if (input) {
+        const reasons = [
+          'Improved conflict resolution processes led to faster resolution times',
+          'Exceeded budget targets and built strong reserves',
+          'Regular reporting and open dialogue enhanced trust and transparency',
+          'Organizational values consistently reflected in decision-making and culture'
+        ];
+        input.value = reasons[index] || 'Consistent performance throughout the year';
+      }
+    });
+  }
+
+  // Add last year goals (if function exists)
+  if (typeof window.addLastYearGoal === 'function') {
+    window.addLastYearGoal();
+    setTimeout(() => {
+      const goalInputs = document.querySelectorAll('#last-year-goals-container .goal-group');
+      if (goalInputs.length > 0) {
+        const lastGoal = goalInputs[goalInputs.length - 1];
+        const inputs = lastGoal.querySelectorAll('input, textarea, select');
+        if (inputs[0]) inputs[0].value = 'Increase community engagement by 25%';
+        if (inputs[1]) inputs[1].value = 'Exceeded target - achieved 32% increase through new programs and partnerships';
+        if (inputs[2] && inputs[2].tagName === 'SELECT') inputs[2].value = 'Exceeded';
+      }
+    }, 100);
+  }
+
+  // Part 3: Job Description Alignment
+  const jdCards = document.querySelectorAll('#jd-alignment-container .p-6');
+  if (jdCards.length > 0) {
+    const wellExamples = [
+      'Developed and implemented 3-year strategic plan with clear KPIs and milestones. Board approval achieved with strong support.',
+      'Built high-performing team through targeted recruitment and professional development. Staff engagement scores increased significantly.',
+      'Strengthened relationships with key partners including iwi, government agencies, and community organizations.',
+      'Identified and secured new funding streams totaling $800K. Explored innovative program delivery models.',
+      'Implemented robust reporting systems and maintained regulatory compliance across all areas.',
+      'Fostered positive workplace culture with emphasis on collaboration, respect, and continuous improvement.'
+    ];
+    const notWellExamples = [
+      'Digital systems and infrastructure improvements delayed. Need better project management.',
+      'Workload distribution concerns raised in staff survey. Need to review resource allocation.',
+      'Some partnership communications could be more frequent and proactive.',
+      'Risk assessment processes need strengthening to better identify emerging opportunities.',
+      'Board reporting format could be more concise while maintaining necessary detail.',
+      'Change management processes need refining to better support team through transitions.'
+    ];
+    jdCards.forEach((card, index) => {
+      const textareas = card.querySelectorAll('textarea');
+      if (textareas[0]) textareas[0].value = wellExamples[index] || 'Met expectations in this area';
+      if (textareas[1]) textareas[1].value = notWellExamples[index] || 'Areas for continuous improvement identified';
+    });
+  }
+
+  // Part 4: Strategic Priorities
+  const spCards = document.querySelectorAll('#strategic-priorities-container .p-6');
+  if (spCards.length > 0) {
+    const progressExamples = [
+      'Established formal protocols with three iwi partners. Participated in 12 hui and collaborative projects. Co-designed new program with iwi input.',
+      'Launched community connection initiatives reaching 200+ new participants. Increased inter-generational program participation by 45%.',
+      'Implemented youth mentoring programs supporting 80 rangatahi. Developed sustainability framework for long-term impact.',
+      'Achieved 95% staff satisfaction score. Maintained positive workplace culture. Enhanced professional development opportunities.'
+    ];
+    const challengeExamples = [
+      'Building trust takes time. Need to ensure consistency and follow-through on commitments.',
+      'Resource constraints limit program expansion. Competing priorities in community require careful navigation.',
+      'Measuring long-term wellbeing outcomes remains challenging. Need better evaluation frameworks.',
+      'Balancing growth with organizational capacity. Ensuring sustainability of positive culture during change.'
+    ];
+    spCards.forEach((card, index) => {
+      const textareas = card.querySelectorAll('textarea');
+      const select = card.querySelector('select');
+      if (textareas[0]) textareas[0].value = progressExamples[index] || 'Good progress made';
+      if (textareas[1]) textareas[1].value = challengeExamples[index] || 'Some challenges encountered';
+      if (select) select.value = ['Improving', 'Improving', 'About the Same', 'Improving'][index] || 'About the Same';
+    });
+  }
+
+  // Part 5: Personal Assessment
+  document.getElementById('strengths').value = `• Strategic thinking and long-term planning
+• Building and maintaining stakeholder relationships
+• Financial management and resource allocation
+• Creating and sustaining positive organizational culture
+• Change leadership and adaptive management
+• Clear communication across diverse audiences`;
+
+  document.getElementById('limitations').value = `• Time management when juggling multiple priorities
+• Sometimes struggle with delegation, tendency to be too hands-on
+• Digital technology implementation and systems thinking
+• Balancing operational details with strategic focus
+• Need to improve conflict avoidance tendencies`;
+
+  // Part 6: Future Goals (if function exists)
+  if (typeof window.addFutureGoal === 'function') {
+    window.addFutureGoal();
+    setTimeout(() => {
+      const goalInputs = document.querySelectorAll('#future-goals-container .goal-group');
+      if (goalInputs.length > 0) {
+        const lastGoal = goalInputs[goalInputs.length - 1];
+        const inputs = lastGoal.querySelectorAll('input, textarea');
+        if (inputs[0]) inputs[0].value = 'Complete digital transformation project and enhance operational systems';
+        if (inputs[1]) inputs[1].value = 'Improved efficiency, better data for decision-making, enhanced stakeholder experience';
+        if (inputs[2]) inputs[2].value = 'Project completion by Q3, staff training by Q4, full implementation by year-end';
+      }
+    }, 100);
+  }
+
+  // Part 7: Board Requests (if function exists)
+  if (typeof window.addBoardRequest === 'function') {
+    window.addBoardRequest();
+    setTimeout(() => {
+      const requestInputs = document.querySelectorAll('#board-requests-container .request-group');
+      if (requestInputs.length > 0) {
+        const lastRequest = requestInputs[requestInputs.length - 1];
+        const inputs = lastRequest.querySelectorAll('input, textarea');
+        if (inputs[0]) inputs[0].value = 'Increased budget allocation for digital infrastructure ($250K)';
+        if (inputs[1]) inputs[1].value = 'Current systems are constraining growth and efficiency. Investment will enable scalability and better service delivery.';
+      }
+    }, 100);
+  }
+
+  // Add PD Undertaken (if function exists)
+  if (typeof window.addPDUndertaken === 'function') {
+    window.addPDUndertaken();
+    setTimeout(() => {
+      const pdInputs = document.querySelectorAll('#pd-undertaken-container .pd-group');
+      if (pdInputs.length > 0) {
+        const lastPD = pdInputs[pdInputs.length - 1];
+        const inputs = lastPD.querySelectorAll('input, textarea');
+        if (inputs[0]) inputs[0].value = 'Executive Leadership Program, Massey University';
+        if (inputs[1]) inputs[1].value = 'Enhanced strategic leadership capabilities, improved change management skills, valuable peer network';
+      }
+    }, 100);
+  }
+
+  // Add PD Needed (if function exists)
+  if (typeof window.addPDNeeded === 'function') {
+    window.addPDNeeded();
+    setTimeout(() => {
+      const pdInputs = document.querySelectorAll('#pd-needed-container .pd-group');
+      if (pdInputs.length > 0) {
+        const lastPD = pdInputs[pdInputs.length - 1];
+        const inputs = lastPD.querySelectorAll('input, textarea');
+        if (inputs[0]) inputs[0].value = 'Digital transformation leadership course';
+        if (inputs[1]) inputs[1].value = 'Need stronger technical understanding to lead digital initiatives effectively';
+      }
+    }, 100);
+  }
+
+  // Update all section summaries after populating
+  setTimeout(() => {
+    if (typeof updateAllSectionSummaries === 'function') {
+      updateAllSectionSummaries();
+    }
+    ensureAllEmptyStates();
+  }, 500);
+  
+  console.log('Test data populated successfully');
+  alert('Test data has been loaded into the form. You can now review, edit, or submit.');
+}
+
 // --- Auth Change Listener ---
 window.onFirebaseAuthStateChanged = function(user) {
   const appContainer = document.getElementById('app-container');
@@ -1134,8 +1579,502 @@ window.onFirebaseAuthStateChanged = function(user) {
     
     // Hide logout button when user is not logged in
     updateLogoutButtonVisibility(false);
+    
+    // Hide admin-only elements when not logged in
+    checkAdminStatusAndUpdateUI(null);
   }
 };
+
+// --- Form Data Collection ---
+function collectFormData() {
+  const sections = {};
+  
+  // Part 1: Performance Reflection
+  sections['part-1'] = {
+    successes: document.getElementById('successes')?.value || '',
+    'not-well': document.getElementById('not-well')?.value || '',
+    'comparative-reflection': document.getElementById('comparative-reflection')?.value || '',
+    challenges: collectDynamicItems('#challenges-container .challenge-group', ['textarea', 'textarea', 'textarea'], ['challenge', 'action', 'result'])
+  };
+  
+  // Part 2: Goals & KPIs
+  sections['part-2'] = {
+    lastYearGoals: collectDynamicItems('#last-year-goals-container .goal-group', ['input', 'textarea', 'select'], ['goal', 'progress', 'status']),
+    kpis: collectKPIs()
+  };
+  
+  // Part 3: Job Description Alignment
+  sections['part-3'] = {
+    jdAlignment: collectJobAlignment()
+  };
+  
+  // Part 4: Strategic Priorities
+  sections['part-4'] = {
+    strategicPriorities: collectStrategicPriorities()
+  };
+  
+  // Part 5: Personal Assessment
+  sections['part-5'] = {
+    strengths: document.getElementById('strengths')?.value || '',
+    limitations: document.getElementById('limitations')?.value || '',
+    pdUndertaken: collectDynamicItems('#pd-undertaken-container .pd-group', ['input', 'textarea'], ['name', 'outcome']),
+    pdNeeded: collectDynamicItems('#pd-needed-container .pd-group', ['input', 'textarea'], ['type', 'rationale'])
+  };
+  
+  // Part 6: Future Goals
+  sections['part-6'] = {
+    futureGoals: collectDynamicItems('#future-goals-container .goal-group', ['input', 'textarea', 'textarea'], ['goal', 'outcomes', 'timeline'])
+  };
+  
+  // Part 7: Board Requests
+  sections['part-7'] = {
+    boardRequests: collectDynamicItems('#board-requests-container .request-group', ['input', 'textarea'], ['request', 'rationale'])
+  };
+  
+  return sections;
+}
+
+function collectDynamicItems(containerSelector, fieldSelectors, fieldNames) {
+  const items = [];
+  const groups = document.querySelectorAll(containerSelector);
+  
+  groups.forEach(group => {
+    const item = {};
+    fieldSelectors.forEach((selector, index) => {
+      const element = group.querySelector(selector);
+      if (element) {
+        item[fieldNames[index]] = element.value || '';
+      }
+    });
+    
+    // Only add if at least one field has content
+    if (Object.values(item).some(val => val.trim() !== '')) {
+      items.push(item);
+    }
+  });
+  
+  return items;
+}
+
+function collectKPIs() {
+  const kpis = [];
+  const kpiCards = document.querySelectorAll('#kpi-container .p-6');
+  
+  kpiCards.forEach((card, index) => {
+    const title = card.querySelector('.font-semibold')?.textContent?.trim() || `KPI ${index + 1}`;
+    const select = card.querySelector('select');
+    const input = card.querySelector('input[type="text"]');
+    
+    kpis.push({
+      name: title,
+      rating: select?.value || '',
+      why: input?.value || ''
+    });
+  });
+  
+  return kpis;
+}
+
+function collectJobAlignment() {
+  const alignments = [];
+  const jdCards = document.querySelectorAll('#jd-alignment-container .p-6');
+  
+  jdCards.forEach((card, index) => {
+    const title = card.querySelector('.font-semibold')?.textContent?.trim() || `Area ${index + 1}`;
+    const textareas = card.querySelectorAll('textarea');
+    
+    alignments.push({
+      area: title,
+      wentWell: textareas[0]?.value || '',
+      notWell: textareas[1]?.value || ''
+    });
+  });
+  
+  return alignments;
+}
+
+function collectStrategicPriorities() {
+  const priorities = [];
+  const spCards = document.querySelectorAll('#strategic-priorities-container .p-6');
+  
+  spCards.forEach((card, index) => {
+    const title = card.querySelector('.font-semibold')?.textContent?.trim() || `Priority ${index + 1}`;
+    const textareas = card.querySelectorAll('textarea');
+    const select = card.querySelector('select');
+    
+    priorities.push({
+      priority: title,
+      progress: textareas[0]?.value || '',
+      challenges: textareas[1]?.value || '',
+      trend: select?.value || ''
+    });
+  });
+  
+  return priorities;
+}
+
+// --- Populate Form from Data ---
+function populateFormFromData(sections) {
+  if (!sections) return;
+  
+  // Part 1
+  if (sections['part-1']) {
+    const part1 = sections['part-1'];
+    if (part1.successes) document.getElementById('successes').value = part1.successes;
+    if (part1['not-well']) document.getElementById('not-well').value = part1['not-well'];
+    if (part1['comparative-reflection']) document.getElementById('comparative-reflection').value = part1['comparative-reflection'];
+    
+    // Populate challenges
+    if (part1.challenges && Array.isArray(part1.challenges)) {
+      part1.challenges.forEach(challenge => {
+        window.addChallenge();
+        setTimeout(() => {
+          const groups = document.querySelectorAll('#challenges-container .challenge-group');
+          const lastGroup = groups[groups.length - 1];
+          if (lastGroup) {
+            const textareas = lastGroup.querySelectorAll('textarea');
+            if (textareas[0]) textareas[0].value = challenge.challenge || '';
+            if (textareas[1]) textareas[1].value = challenge.action || '';
+            if (textareas[2]) textareas[2].value = challenge.result || '';
+          }
+        }, 50);
+      });
+    }
+  }
+  
+  // Part 2
+  if (sections['part-2']) {
+    const part2 = sections['part-2'];
+    
+    // Populate last year goals
+    if (part2.lastYearGoals && Array.isArray(part2.lastYearGoals)) {
+      part2.lastYearGoals.forEach(goal => {
+        window.addLastYearGoal();
+        setTimeout(() => {
+          const groups = document.querySelectorAll('#last-year-goals-container .goal-group');
+          const lastGroup = groups[groups.length - 1];
+          if (lastGroup) {
+            const input = lastGroup.querySelector('input');
+            const textarea = lastGroup.querySelector('textarea');
+            const select = lastGroup.querySelector('select');
+            if (input) input.value = goal.goal || '';
+            if (textarea) textarea.value = goal.progress || '';
+            if (select) select.value = goal.status || '';
+          }
+        }, 50);
+      });
+    }
+    
+    // Populate KPIs
+    if (part2.kpis && Array.isArray(part2.kpis)) {
+      setTimeout(() => {
+        const kpiCards = document.querySelectorAll('#kpi-container .p-6');
+        part2.kpis.forEach((kpi, index) => {
+          if (kpiCards[index]) {
+            const select = kpiCards[index].querySelector('select');
+            const input = kpiCards[index].querySelector('input[type="text"]');
+            if (select) select.value = kpi.rating || '';
+            if (input) input.value = kpi.why || '';
+          }
+        });
+      }, 100);
+    }
+  }
+  
+  // Part 3
+  if (sections['part-3'] && sections['part-3'].jdAlignment) {
+    setTimeout(() => {
+      const jdCards = document.querySelectorAll('#jd-alignment-container .p-6');
+      sections['part-3'].jdAlignment.forEach((alignment, index) => {
+        if (jdCards[index]) {
+          const textareas = jdCards[index].querySelectorAll('textarea');
+          if (textareas[0]) textareas[0].value = alignment.wentWell || '';
+          if (textareas[1]) textareas[1].value = alignment.notWell || '';
+        }
+      });
+    }, 100);
+  }
+  
+  // Part 4
+  if (sections['part-4'] && sections['part-4'].strategicPriorities) {
+    setTimeout(() => {
+      const spCards = document.querySelectorAll('#strategic-priorities-container .p-6');
+      sections['part-4'].strategicPriorities.forEach((priority, index) => {
+        if (spCards[index]) {
+          const textareas = spCards[index].querySelectorAll('textarea');
+          const select = spCards[index].querySelector('select');
+          if (textareas[0]) textareas[0].value = priority.progress || '';
+          if (textareas[1]) textareas[1].value = priority.challenges || '';
+          if (select) select.value = priority.trend || '';
+        }
+      });
+    }, 100);
+  }
+  
+  // Part 5
+  if (sections['part-5']) {
+    const part5 = sections['part-5'];
+    if (part5.strengths) document.getElementById('strengths').value = part5.strengths;
+    if (part5.limitations) document.getElementById('limitations').value = part5.limitations;
+    
+    // Populate PD undertaken
+    if (part5.pdUndertaken && Array.isArray(part5.pdUndertaken)) {
+      part5.pdUndertaken.forEach(pd => {
+        window.addPDUndertaken();
+        setTimeout(() => {
+          const groups = document.querySelectorAll('#pd-undertaken-container .pd-group');
+          const lastGroup = groups[groups.length - 1];
+          if (lastGroup) {
+            const input = lastGroup.querySelector('input');
+            const textarea = lastGroup.querySelector('textarea');
+            if (input) input.value = pd.name || '';
+            if (textarea) textarea.value = pd.outcome || '';
+          }
+        }, 50);
+      });
+    }
+    
+    // Populate PD needed
+    if (part5.pdNeeded && Array.isArray(part5.pdNeeded)) {
+      part5.pdNeeded.forEach(pd => {
+        window.addPDNeeded();
+        setTimeout(() => {
+          const groups = document.querySelectorAll('#pd-needed-container .pd-group');
+          const lastGroup = groups[groups.length - 1];
+          if (lastGroup) {
+            const input = lastGroup.querySelector('input');
+            const textarea = lastGroup.querySelector('textarea');
+            if (input) input.value = pd.type || '';
+            if (textarea) textarea.value = pd.rationale || '';
+          }
+        }, 50);
+      });
+    }
+  }
+  
+  // Part 6
+  if (sections['part-6'] && sections['part-6'].futureGoals) {
+    sections['part-6'].futureGoals.forEach(goal => {
+      window.addFutureGoal();
+      setTimeout(() => {
+        const groups = document.querySelectorAll('#future-goals-container .goal-group');
+        const lastGroup = groups[groups.length - 1];
+        if (lastGroup) {
+          const inputs = lastGroup.querySelectorAll('input, textarea');
+          if (inputs[0]) inputs[0].value = goal.goal || '';
+          if (inputs[1]) inputs[1].value = goal.outcomes || '';
+          if (inputs[2]) inputs[2].value = goal.timeline || '';
+        }
+      }, 50);
+    });
+  }
+  
+  // Part 7
+  if (sections['part-7'] && sections['part-7'].boardRequests) {
+    sections['part-7'].boardRequests.forEach(request => {
+      window.addBoardRequest();
+      setTimeout(() => {
+        const groups = document.querySelectorAll('#board-requests-container .request-group');
+        const lastGroup = groups[groups.length - 1];
+        if (lastGroup) {
+          const inputs = lastGroup.querySelectorAll('input, textarea');
+          if (inputs[0]) inputs[0].value = request.request || '';
+          if (inputs[1]) inputs[1].value = request.rationale || '';
+        }
+      }, 50);
+    });
+  }
+  
+  // Update summaries after all data is loaded
+  setTimeout(() => {
+    if (typeof updateAllSectionSummaries === 'function') {
+      updateAllSectionSummaries();
+    }
+    ensureAllEmptyStates();
+  }, 500);
+}
+
+// --- Convert Structured Sections Back to Flat ---
+function flattenSectionsToFlat(sectionsData) {
+  const flatData = {};
+  
+  for (const [sectionId, sectionContent] of Object.entries(sectionsData)) {
+    if (typeof sectionContent === 'object' && sectionContent !== null) {
+      for (const [fieldName, value] of Object.entries(sectionContent)) {
+        // Convert all values to the format expected by saveReview
+        flatData[fieldName] = value;
+      }
+    }
+  }
+  
+  return flatData;
+}
+
+// --- PDF Generation ---
+async function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  if (!jsPDF) {
+    alert('PDF library not loaded. Please refresh the page and try again.');
+    return;
+  }
+  
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 15;
+  const maxWidth = pageWidth - (margin * 2);
+  let yPos = margin;
+  
+  // Helper function to add text with word wrap
+  const addText = (text, fontSize = 10, isBold = false) => {
+    if (!text || text.trim() === '') return;
+    
+    doc.setFontSize(fontSize);
+    doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+    
+    const lines = doc.splitTextToSize(String(text), maxWidth);
+    lines.forEach(line => {
+      if (yPos > pageHeight - margin - 10) {
+        doc.addPage();
+        yPos = margin;
+      }
+      doc.text(line, margin, yPos);
+      yPos += fontSize * 0.4;
+    });
+    yPos += 3;
+  };
+  
+  const addSection = (title) => {
+    yPos += 2;
+    if (yPos > pageHeight - margin - 15) {
+      doc.addPage();
+      yPos = margin;
+    }
+    addText(title, 12, true);
+  };
+  
+  // Title
+  addText('REAP Marlborough – CEO Self-Review', 14, true);
+  addText(`Generated: ${new Date().toLocaleDateString()}`, 9);
+  yPos += 3;
+  
+  // Collect and add form data
+  const formData = collectFormData();
+  
+  // Part 1: Performance Reflection
+  addSection('Part 1: Performance Reflection');
+  addText('Key Successes:', 11, true);
+  addText(formData['part-1'].successes || 'No response provided', 9);
+  addText('What Did Not Go Well:', 11, true);
+  addText(formData['part-1']['not-well'] || 'No response provided', 9);
+  addText('Comparative Reflection:', 11, true);
+  addText(formData['part-1']['comparative-reflection'] || 'No response provided', 9);
+  
+  if (formData['part-1'].challenges && formData['part-1'].challenges.length > 0) {
+    addText('Challenges:', 11, true);
+    formData['part-1'].challenges.forEach((ch, i) => {
+      addText(`${i + 1}. Challenge: ${ch.challenge}`, 9, true);
+      addText(`   Action: ${ch.action}`, 9);
+      addText(`   Result: ${ch.result}`, 9);
+    });
+  }
+  
+  // Part 2: Goals & KPIs
+  addSection('Part 2: Review of Previous Goals & KPIs');
+  
+  if (formData['part-2'].lastYearGoals && formData['part-2'].lastYearGoals.length > 0) {
+    addText('Last Year Goals:', 11, true);
+    formData['part-2'].lastYearGoals.forEach((goal, i) => {
+      addText(`${i + 1}. ${goal.goal}`, 9, true);
+      addText(`   Progress: ${goal.progress}`, 9);
+      addText(`   Status: ${goal.status}`, 9);
+    });
+  }
+  
+  if (formData['part-2'].kpis && formData['part-2'].kpis.length > 0) {
+    addText('KPI Ratings:', 11, true);
+    formData['part-2'].kpis.forEach((kpi, i) => {
+      if (kpi.name && kpi.rating) {
+        addText(`${i + 1}. ${kpi.name}: ${kpi.rating}/5`, 9, true);
+        if (kpi.why) addText(`   Why: ${kpi.why}`, 9);
+      }
+    });
+  }
+  
+  // Part 3: Job Description Alignment
+  addSection('Part 3: Job Description Alignment');
+  if (formData['part-3'] && formData['part-3'].jdAlignment && formData['part-3'].jdAlignment.length > 0) {
+    formData['part-3'].jdAlignment.forEach((alignment, i) => {
+      addText(`${i + 1}. ${alignment.area}`, 9, true);
+      addText(`   What Went Well: ${alignment.wentWell || 'No response'}`, 9);
+      addText(`   What Did Not Go Well: ${alignment.notWell || 'No response'}`, 9);
+    });
+  }
+  
+  // Part 4: Strategic Priorities
+  addSection('Part 4: Strategic Priorities (2022–2024)');
+  if (formData['part-4'] && formData['part-4'].strategicPriorities && formData['part-4'].strategicPriorities.length > 0) {
+    formData['part-4'].strategicPriorities.forEach((priority, i) => {
+      addText(`${i + 1}. ${priority.priority}`, 9, true);
+      addText(`   Progress: ${priority.progress || 'No response'}`, 9);
+      addText(`   Challenges: ${priority.challenges || 'No response'}`, 9);
+      addText(`   Trend: ${priority.trend || 'No response'}`, 9);
+    });
+  }
+  
+  // Part 5: Personal Assessment & Development
+  addSection('Part 5: Personal Assessment & Development');
+  addText('Key Strengths:', 11, true);
+  addText(formData['part-5'].strengths || 'No response provided', 9);
+  addText('Limitations / Restrictions:', 11, true);
+  addText(formData['part-5'].limitations || 'No response provided', 9);
+  
+  if (formData['part-5'].pdUndertaken && formData['part-5'].pdUndertaken.length > 0) {
+    addText('Professional Development Undertaken:', 11, true);
+    formData['part-5'].pdUndertaken.forEach((pd, i) => {
+      addText(`${i + 1}. ${pd.name}`, 9, true);
+      addText(`   Outcome: ${pd.outcome || 'No details'}`, 9);
+    });
+  }
+  
+  if (formData['part-5'].pdNeeded && formData['part-5'].pdNeeded.length > 0) {
+    addText('Future Professional Development Needs:', 11, true);
+    formData['part-5'].pdNeeded.forEach((pd, i) => {
+      addText(`${i + 1}. ${pd.type}`, 9, true);
+      addText(`   Rationale: ${pd.rationale || 'No details'}`, 9);
+    });
+  }
+  
+  // Part 6: Future Focus
+  addSection('Part 6: Future Focus (Next 12 Months)');
+  if (formData['part-6'] && formData['part-6'].futureGoals && formData['part-6'].futureGoals.length > 0) {
+    formData['part-6'].futureGoals.forEach((goal, i) => {
+      addText(`${i + 1}. ${goal.goal}`, 9, true);
+      addText(`   Expected Outcomes: ${goal.outcomes || 'No details'}`, 9);
+      addText(`   Timeline: ${goal.timeline || 'No timeline specified'}`, 9);
+    });
+  } else {
+    addText('No future goals added', 9);
+  }
+  
+  // Part 7: Dialogue with the Board
+  addSection('Part 7: Dialogue with the Board');
+  if (formData['part-7'] && formData['part-7'].boardRequests && formData['part-7'].boardRequests.length > 0) {
+    addText('Requests for the Board:', 11, true);
+    formData['part-7'].boardRequests.forEach((request, i) => {
+      addText(`${i + 1}. ${request.request}`, 9, true);
+      addText(`   Rationale: ${request.rationale || 'No rationale provided'}`, 9);
+    });
+  } else {
+    addText('No board requests added', 9);
+  }
+  
+  // Save PDF
+  const fileName = `CEO_Review_${new Date().toISOString().split('T')[0]}.pdf`;
+  doc.save(fileName);
+  
+  alert('PDF downloaded successfully!');
+}
 
 // --- Initialise Form App ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -1186,6 +2125,135 @@ document.addEventListener('DOMContentLoaded', () => {
         markFormAsSaved(); // Mark as saved after loading test data
       }
     };
+  }
+
+  // Load Last Saved Draft
+  const loadSavedBtn = document.getElementById('load-last-saved-btn');
+  if (loadSavedBtn) {
+    loadSavedBtn.onclick = async function() {
+      try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          alert('Please log in to load saved drafts.');
+          return;
+        }
+        
+        loadSavedBtn.disabled = true;
+        loadSavedBtn.textContent = 'Loading...';
+        
+        const draft = await window.firebaseHelpers.loadReview(user.uid, 'draft');
+        if (draft && draft.sections) {
+          populateFormFromData(draft.sections);
+          alert('Draft loaded successfully!');
+        } else {
+          alert('No saved draft found.');
+        }
+      } catch (error) {
+        console.error('Error loading draft:', error);
+        alert('Failed to load draft: ' + error.message);
+      } finally {
+        loadSavedBtn.disabled = false;
+        loadSavedBtn.textContent = 'Load Saved';
+      }
+    };
+  }
+
+  // Save Draft
+  const saveProgressBtn = document.getElementById('save-progress-btn');
+  if (saveProgressBtn) {
+    saveProgressBtn.onclick = async function() {
+      try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          alert('Please log in to save your progress.');
+          return;
+        }
+        
+        saveProgressBtn.disabled = true;
+        saveProgressBtn.textContent = 'Saving...';
+        
+        const formData = collectFormData();
+        const flatData = flattenSectionsToFlat(formData);
+        await window.firebaseHelpers.saveReview(user.uid, flatData, 'draft');
+        markFormAsSaved();
+        alert('Draft saved successfully!');
+      } catch (error) {
+        console.error('Error saving draft:', error);
+        alert('Failed to save draft: ' + error.message);
+      } finally {
+        saveProgressBtn.disabled = false;
+        saveProgressBtn.textContent = 'Save Draft';
+      }
+    };
+  }
+
+  // Download PDF
+  const savePdfBtn = document.getElementById('save-pdf-btn');
+  if (savePdfBtn) {
+    savePdfBtn.onclick = async function() {
+      try {
+        savePdfBtn.disabled = true;
+        savePdfBtn.textContent = 'Generating...';
+        
+        await generatePDF();
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        alert('Failed to generate PDF: ' + error.message);
+      } finally {
+        savePdfBtn.disabled = false;
+        savePdfBtn.textContent = 'Download PDF';
+      }
+    };
+  }
+
+  // Submit Review Form
+  const reviewForm = document.getElementById('reviewForm');
+  if (reviewForm) {
+    reviewForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          alert('Please log in to submit your review.');
+          return;
+        }
+        
+        if (!confirm('Are you sure you want to submit this review? Once submitted, it cannot be edited.')) {
+          return;
+        }
+        
+        const submitBtn = reviewForm.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Submitting...';
+        }
+        
+        const formData = collectFormData();
+        const flatData = flattenSectionsToFlat(formData);
+        console.log('Submitting review for user:', user.uid);
+        console.log('Flat data:', flatData);
+        await window.firebaseHelpers.saveReview(user.uid, flatData, 'submitted');
+        console.log('Review submitted successfully to Firestore');
+        
+        alert('Review submitted successfully!');
+        clearForm();
+        markFormAsSaved();
+        
+        if (submitBtn) {
+          submitBtn.textContent = 'Submit Review';
+        }
+      } catch (error) {
+        console.error('Error submitting review:', error);
+        alert('Failed to submit review: ' + error.message);
+        
+        const submitBtn = reviewForm.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit Review';
+        }
+      }
+    });
   }
 
   // Clear Performance Reflection section
@@ -1411,7 +2479,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
   }
-  attachLogoutHandler();
+  attachLoginLogoutHandlers();
   // Render KPI cards
   const kpiContainer = document.getElementById('kpi-container');
   if (kpiContainer && Array.isArray(window.ceoReviewConfig?.kpis)) {
@@ -1514,1843 +2582,57 @@ document.addEventListener('DOMContentLoaded', () => {
   updateAllSectionSummaries();
 });
 
-// --- Dynamic Field Functions ---
-function createItem(html) {
-  const div = document.createElement('div');
-  div.className = "p-4 border border-slate-200 rounded-md bg-slate-50 space-y-2";
-  div.innerHTML = html;
-  return div;
-}
+// --- Employee Review Schema (Flexible) ---
+const employeeReviewSchema = {
+  metadata: {
+    employeeName: "",
+    employeeId: "",
+    role: "",
+    department: "",
+    manager: "",
+    reviewPeriod: "",
+    status: "draft", // or "submitted"
+    timestamp: ""
+  },
+  sections: [
+    // Example section
+    // {
+    //   id: "performance",
+    //   title: "Performance Reflection",
+    //   description: "Reflect on your work during the review period.",
+    //   questions: [
+    //     { id: "successes", type: "text", label: "Key Successes" },
+    //     { id: "challenges", type: "repeater", label: "Challenges", fields: ["Challenge", "Action Taken", "Result"] },
+    //     { id: "rating", type: "rating", label: "Overall Rating", scale: [1,2,3,4,5] }
+    //   ]
+    // }
+  ]
+};
 
-function addChallenge() {
-  const container = document.getElementById("challenges-container");
-  if (!container) return;
-  removeEmptyState(container);
-  const idx = container.children.length + 1;
-  const div = document.createElement('div');
-  div.className = "p-6 bg-slate-50 border border-slate-200 rounded-xl shadow-sm mb-4 relative";
-  div.innerHTML = `
-    <div class="flex justify-between items-center mb-4">
-      <h4 class="text-lg font-semibold text-slate-900">Challenge #${idx}</h4>
-      <div class="flex gap-2">
-        <button type="button" class="clear-challenge-btn px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 text-sm font-medium">Clear</button>
-        <button type="button" class="remove-challenge-btn px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium">&times; Remove</button>
-      </div>
-    </div>
-    <div class="mb-3">
-      <label class="block text-sm font-medium text-slate-700 mb-1">Challenge</label>
-      <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="Describe the challenge..."></textarea>
-    </div>
-    <div class="mb-3">
-      <label class="block text-sm font-medium text-slate-700 mb-1">Action Taken</label>
-      <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="What action was taken?"></textarea>
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-slate-700 mb-1">Result</label>
-      <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="What was the outcome?"></textarea>
-    </div>
-  `;
-  // Clear button handler
-  div.querySelector('.clear-challenge-btn').onclick = function() {
-    Array.from(div.querySelectorAll('textarea')).forEach(t => t.value = '');
-    updateAllSectionSummaries();
-  };
-  // Remove button handler
-  div.querySelector('.remove-challenge-btn').onclick = function() {
-    div.remove();
-    // Re-number remaining cards
-    Array.from(container.children).forEach((el, i) => {
-      const h = el.querySelector('h4');
-      if (h) h.textContent = `Challenge #${i+1}`;
-    });
-    updateAllSectionSummaries();
-    ensureEmptyState(container);
-  };
-  container.appendChild(div);
-  enhanceAllTextareas(div);
-  updateAllSectionSummaries();
-  ensureEmptyState(container);
-}
-
-function addLastYearGoal() {
-  const container = document.getElementById("last-year-goals-container");
-  if (!container) return;
-  removeEmptyState(container);
-  const idx = container.children.length + 1;
-  const div = document.createElement('div');
-  div.className = "p-6 bg-slate-50 border border-slate-200 rounded-xl shadow-sm mb-4 relative";
-  div.innerHTML = `
-    <div class="flex justify-between items-center mb-4">
-      <h4 class="text-lg font-semibold text-slate-900">Goal from Last Year #${idx}</h4>
-      <div class="flex gap-2">
-        <button type="button" class="clear-goal-btn px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 text-sm font-medium">Clear</button>
-        <button type="button" class="remove-goal-btn px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium">&times; Remove</button>
-      </div>
-    </div>
-    <div class="mb-3">
-      <label class="block text-sm font-medium text-slate-700 mb-1">Goal</label>
-      <input type="text" class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="Enter the goal statement...">
-    </div>
-    <div class="mb-3">
-      <label class="block text-sm font-medium text-slate-700 mb-1">Status</label>
-      <select class="w-full p-2 border border-slate-300 rounded-md bg-white">
-        <option value="">Select status…</option>
-        <option value="Achieved">Achieved</option>
-        <option value="Partially Achieved">Partially Achieved</option>
-        <option value="Not Achieved">Not Achieved</option>
-      </select>
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-slate-700 mb-1">Evidence / Examples</label>
-      <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="Provide supporting evidence..."></textarea>
-    </div>
-  `;
-  // Clear button handler
-  div.querySelector('.clear-goal-btn').onclick = function() {
-    div.querySelector('input[type="text"]').value = '';
-    div.querySelector('select').selectedIndex = 0;
-    div.querySelector('textarea').value = '';
-    updateAllSectionSummaries();
-  };
-  div.querySelector('.remove-goal-btn').onclick = function() {
-    div.remove();
-    Array.from(container.children).forEach((el, i) => {
-      const h = el.querySelector('h4');
-      if (h) h.textContent = `Goal from Last Year #${i+1}`;
-    });
-    updateAllSectionSummaries();
-    ensureEmptyState(container);
-  };
-  container.appendChild(div);
-  enhanceAllTextareas(div);
-  updateAllSectionSummaries();
-  ensureEmptyState(container);
-}
-
-function addPDUndertaken() {
-  const container = document.getElementById("pd-undertaken-container");
-  if (!container) return;
-  removeEmptyState(container);
-  const idx = container.children.length + 1;
-  const div = document.createElement('div');
-  div.className = "p-6 bg-slate-50 border border-slate-200 rounded-xl shadow-sm mb-4 relative";
-  div.innerHTML = `
-    <div class="flex justify-between items-center mb-4">
-      <h4 class="text-lg font-semibold text-slate-900">Programme/Course #${idx}</h4>
-      <div class="flex gap-2">
-        <button type="button" class="clear-pd-btn px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 text-sm font-medium">Clear</button>
-        <button type="button" class="remove-pd-btn px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium">&times; Remove</button>
-      </div>
-    </div>
-    <div class="mb-3">
-      <label class="block text-sm font-medium text-slate-700 mb-1">Programme/Course Title</label>
-      <input type="text" class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="Programme/Course Title">
-    </div>
-    <div class="mb-3">
-      <label class="block text-sm font-medium text-slate-700 mb-1">Key Learnings</label>
-      <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="Key Learnings"></textarea>
-    </div>
-    <div class="mb-3">
-      <label class="block text-sm font-medium text-slate-700 mb-1">How Learnings Were Applied</label>
-      <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="How Learnings Were Applied"></textarea>
-    </div>
-    <div class="flex flex-col sm:flex-row gap-3">
-      <div class="flex-1">
-        <label class="block text-sm font-medium text-slate-700 mb-1">Was This Requested Previously?</label>
-        <select class="w-full p-2 border border-slate-300 rounded-md bg-white">
-          <option value="">Select an option…</option>
-          <option value="No">No</option>
-          <option value="Yes">Yes</option>
-        </select>
-      </div>
-      <div class="flex-1">
-        <label class="block text-sm font-medium text-slate-700 mb-1">Usefulness vs Last Year</label>
-        <select class="w-full p-2 border border-slate-300 rounded-md bg-white">
-          <option value="">Select usefulness…</option>
-          <option value="More Useful">More Useful</option>
-          <option value="About the Same">About the Same</option>
-          <option value="Less Useful">Less Useful</option>
-        </select>
-      </div>
-    </div>
-  `;
-  // Clear button handler
-  div.querySelector('.clear-pd-btn').onclick = function() {
-    div.querySelector('input[type="text"]').value = '';
-    Array.from(div.querySelectorAll('textarea')).forEach(t => t.value = '');
-    Array.from(div.querySelectorAll('select')).forEach(s => s.selectedIndex = 0);
-    updateAllSectionSummaries();
-  };
-  div.querySelector('.remove-pd-btn').onclick = function() {
-    div.remove();
-    Array.from(container.children).forEach((el, i) => {
-      const h = el.querySelector('h4');
-      if (h) h.textContent = `Programme/Course #${i+1}`;
-    });
-    updateAllSectionSummaries();
-    ensureEmptyState(container);
-  };
-  container.appendChild(div);
-  enhanceAllTextareas(div);
-  updateAllSectionSummaries();
-  ensureEmptyState(container);
-}
-
-function addPDNeeded() {
-  const container = document.getElementById("pd-needed-container");
-  if (!container) return;
-  removeEmptyState(container);
-  const idx = container.children.length + 1;
-  const div = document.createElement('div');
-  div.className = "p-6 bg-slate-50 border border-slate-200 rounded-xl shadow-sm mb-4 relative";
-  div.innerHTML = `
-    <div class="flex justify-between items-center mb-4">
-      <h4 class="text-lg font-semibold text-slate-900">Development Need #${idx}</h4>
-      <div class="flex gap-2">
-        <button type="button" class="clear-pdneed-btn px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 text-sm font-medium">Clear</button>
-        <button type="button" class="remove-pdneed-btn px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium">&times; Remove</button>
-      </div>
-    </div>
-    <div class="mb-3">
-      <label class="block text-sm font-medium text-slate-700 mb-1">Area of Need</label>
-      <input type="text" class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="Area of Need">
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-slate-700 mb-1">Expected Impact</label>
-      <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="Describe the expected impact of this PD..."></textarea>
-    </div>
-  `;
-  // Clear button handler
-  div.querySelector('.clear-pdneed-btn').onclick = function() {
-    div.querySelector('input[type="text"]').value = '';
-    div.querySelector('textarea').value = '';
-    updateAllSectionSummaries();
-  };
-  div.querySelector('.remove-pdneed-btn').onclick = function() {
-    div.remove();
-    Array.from(container.children).forEach((el, i) => {
-      const h = el.querySelector('h4');
-      if (h) h.textContent = `Development Need #${i+1}`;
-    });
-    updateAllSectionSummaries();
-    ensureEmptyState(container);
-  };
-  container.appendChild(div);
-  enhanceAllTextareas(div);
-  updateAllSectionSummaries();
-  ensureEmptyState(container);
-}
-
-function addFutureGoal() {
-  const container = document.getElementById("future-goals-container");
-  if (!container) return;
-  removeEmptyState(container);
-  const idx = container.children.length + 1;
-  const div = document.createElement('div');
-  div.className = "p-6 bg-slate-50 border border-slate-200 rounded-xl shadow-sm mb-4 relative";
-  div.innerHTML = `
-    <div class="flex justify-between items-center mb-4">
-      <h4 class="text-lg font-semibold text-slate-900">Future Goal #${idx}</h4>
-      <div class="flex gap-2">
-        <button type="button" class="clear-futuregoal-btn px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 text-sm font-medium">Clear</button>
-        <button type="button" class="remove-futuregoal-btn px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium">&times; Remove</button>
-      </div>
-    </div>
-    <div class="mb-3">
-      <label class="block text-sm font-medium text-slate-700 mb-1">Goal Statement</label>
-      <input type="text" class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="Enter the goal statement...">
-    </div>
-    <div class="mb-3">
-      <label class="block text-sm font-medium text-slate-700 mb-1">Desired Outcome</label>
-      <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="What will success look like?"></textarea>
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-slate-700 mb-1">Why It Matters (Alignment to strategic priorities)</label>
-      <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="How does this align with strategic priorities?"></textarea>
-    </div>
-  `;
-  // Clear button handler
-  div.querySelector('.clear-futuregoal-btn').onclick = function() {
-    div.querySelector('input[type="text"]').value = '';
-    Array.from(div.querySelectorAll('textarea')).forEach(t => t.value = '');
-    updateAllSectionSummaries();
-  };
-  div.querySelector('.remove-futuregoal-btn').onclick = function() {
-    div.remove();
-    Array.from(container.children).forEach((el, i) => {
-      const h = el.querySelector('h4');
-      if (h) h.textContent = `Future Goal #${i+1}`;
-    });
-    updateAllSectionSummaries();
-    ensureEmptyState(container);
-  };
-  container.appendChild(div);
-  enhanceAllTextareas(div);
-  updateAllSectionSummaries();
-  ensureEmptyState(container);
-}
-
-function removeFutureGoal() {
-  const container = document.getElementById("future-goals-container");
-  if (container && container.lastElementChild) container.removeChild(container.lastElementChild);
-}
-
-function addBoardRequest() {
-  const container = document.getElementById("board-requests-container");
-  if (!container) return;
-  removeEmptyState(container);
-  const idx = container.children.length + 1;
-  const div = document.createElement('div');
-  div.className = "p-6 bg-slate-50 border border-slate-200 rounded-xl shadow-sm mb-4 relative";
-  div.innerHTML = `
-    <div class="flex justify-between items-center mb-4">
-      <h4 class="text-lg font-semibold text-slate-900">Board Request #${idx}</h4>
-      <div class="flex gap-2">
-        <button type="button" class="clear-boardrequest-btn px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 text-sm font-medium">Clear</button>
-        <button type="button" class="remove-boardrequest-btn px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium">&times; Remove</button>
-      </div>
-    </div>
-    <div class="mb-3">
-      <label class="block text-sm font-medium text-slate-700 mb-1">Request</label>
-      <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="Request"></textarea>
-    </div>
-    <div class="mb-3">
-      <label class="block text-sm font-medium text-slate-700 mb-1">Why is this needed?</label>
-      <textarea class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="Why is this needed?"></textarea>
-    </div>
-    <div class="mb-3">
-      <label class="block text-sm font-medium text-slate-700 mb-1">Was this requested previously?</label>
-      <select class="w-full p-2 border border-slate-300 rounded-md bg-white">
-        <option value="">Select an option…</option>
-        <option value="No">No</option>
-        <option value="Yes">Yes</option>
-      </select>
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-slate-700 mb-1">If Yes, what has changed since last year?</label>
-      <input type="text" class="w-full p-2 border border-slate-300 rounded-md bg-white" placeholder="e.g., Still not in place, workload pressure continues...">
-    </div>
-  `;
-  // Clear button handler
-  div.querySelector('.clear-boardrequest-btn').onclick = function() {
-    Array.from(div.querySelectorAll('textarea')).forEach(t => t.value = '');
-    div.querySelector('select').selectedIndex = 0;
-    div.querySelector('input[type="text"]').value = '';
-    updateAllSectionSummaries();
-  };
-  div.querySelector('.remove-boardrequest-btn').onclick = function() {
-    div.remove();
-    Array.from(container.children).forEach((el, i) => {
-      const h = el.querySelector('h4');
-      if (h) h.textContent = `Board Request #${i+1}`;
-    });
-    updateAllSectionSummaries();
-    ensureEmptyState(container);
-  };
-  container.appendChild(div);
-  enhanceAllTextareas(div);
-  updateAllSectionSummaries();
-  ensureEmptyState(container);
-}
-
-// --- Global Exports ---
-
-// --- Form Data Collection ---
-function collectFormData() {
-  const data = {};
-  // Part 1
-  data.successes = document.getElementById('successes')?.value || '';
-  data['not-well'] = document.getElementById('not-well')?.value || '';
-  data['comparative-reflection'] = document.getElementById('comparative-reflection')?.value || '';
-  // Challenges
-  data.challenges = Array.from(document.getElementById('challenges-container')?.children || []).map(card => ({
-    challenge: card.querySelector('textarea[placeholder="Describe the challenge..."]')?.value || '',
-    action: card.querySelector('textarea[placeholder="What action was taken?"]')?.value || '',
-    result: card.querySelector('textarea[placeholder="What was the outcome?"]')?.value || ''
-  }));
-  // Goals from Last Year
-  data.lastYearGoals = Array.from(document.getElementById('last-year-goals-container')?.children || []).map(card => ({
-    goal: card.querySelector('input[placeholder="Enter the goal statement..."]')?.value || '',
-    status: card.querySelector('select')?.value || '',
-    evidence: card.querySelector('textarea[placeholder="Provide supporting evidence..."]')?.value || ''
-  }));
-  // KPIs
-  data.kpis = Array.from(document.getElementById('kpi-container')?.children || []).map(card => ({
-    name: (card.querySelector('.font-semibold')?.textContent || '').replace(/\s+/g, ' ').trim(),
-    rating: card.querySelector('input[type="radio"]:checked')?.value || '',
-    evidence: card.querySelector('textarea')?.value || '',
-    compared: card.querySelector('select')?.value || '',
-    why: card.querySelector('input[type="text"]')?.value || ''
-  }));
-  // JD Alignment
-  data.jdAlignment = Array.from(document.getElementById('jd-alignment-container')?.children || []).map(card => ({
-    area: (card.querySelector('.font-semibold')?.textContent || '').replace(/\s+/g, ' ').trim(),
-    wentWell: card.querySelectorAll('textarea')[0]?.value || '',
-    notWell: card.querySelectorAll('textarea')[1]?.value || ''
-  }));
-  // Strategic Priorities
-  data.strategicPriorities = Array.from(document.getElementById('strategic-priorities-container')?.children || []).map(card => ({
-    name: (card.querySelector('.font-semibold')?.textContent || '').replace(/\s+/g, ' ').trim(),
-    progress: card.querySelectorAll('textarea')[0]?.value || '',
-    challenges: card.querySelectorAll('textarea')[1]?.value || '',
-    trend: card.querySelector('select')?.value || ''
-  }));
-  // Part 5
-  data.strengths = document.getElementById('strengths')?.value || '';
-  data.limitations = document.getElementById('limitations')?.value || '';
-  // PD Undertaken
-  data.pdUndertaken = Array.from(document.getElementById('pd-undertaken-container')?.children || []).map(card => ({
-    title: card.querySelector('input[placeholder="Programme/Course Title"]')?.value || '',
-    learnings: card.querySelector('textarea[placeholder="Key Learnings"]')?.value || '',
-    applied: card.querySelector('textarea[placeholder="How Learnings Were Applied"]')?.value || '',
-    requested: card.querySelectorAll('select')[0]?.value || '',
-    usefulness: card.querySelectorAll('select')[1]?.value || ''
-  }));
-  // PD Needed
-  data.pdNeeded = Array.from(document.getElementById('pd-needed-container')?.children || []).map(card => ({
-    area: card.querySelector('input[placeholder="Area of Need"]')?.value || '',
-    impact: card.querySelector('textarea[placeholder*="expected impact"]')?.value || ''
-  }));
-  // Future Goals
-  data.futureGoals = Array.from(document.getElementById('future-goals-container')?.children || []).map(card => ({
-    statement: card.querySelector('input[placeholder="Enter the goal statement..."]')?.value || '',
-    outcome: card.querySelector('textarea[placeholder="What will success look like?"]')?.value || '',
-    why: card.querySelector('textarea[placeholder*="align with strategic priorities"]')?.value || ''
-  }));
-  // Board Requests
-  data.boardRequests = Array.from(document.getElementById('board-requests-container')?.children || []).map(card => ({
-    request: card.querySelector('textarea[placeholder="Request"]')?.value || '',
-    why: card.querySelector('textarea[placeholder="Why is this needed?"]')?.value || '',
-    requested: card.querySelector('select')?.value || '',
-    changed: card.querySelector('input[placeholder*="workload pressure"]')?.value || ''
-  }));
-  return data;
-}
-
-// --- Save Progress Handler ---
-async function saveProgress() {
-  const status = document.getElementById('save-status');
-  if (status) status.textContent = 'Saving...';
-  try {
-    const user = window.firebaseHelpers.auth.currentUser;
-    if (!user) throw new Error('Not logged in');
-    const data = collectFormData();
-    await window.firebaseHelpers.saveReview(user.uid, data, 'draft');
-    window.lastCloudSaveTime = new Date().toISOString();
-    renderAutosaveIndicator();
-    if (status) {
-      status.textContent = 'Draft saved!';
-      setTimeout(() => { if (status) status.textContent = ''; }, 2000);
-    }
-  } catch (err) {
-    if (status) status.textContent = 'Save failed: ' + (err.message || err);
-    if (status) {
-      status.textContent += ' Local draft still saved in this browser.';
-    }
-  }
-}
-
-// --- Submit Handler ---
-const reviewFormEl = document.getElementById('reviewForm');
-if (reviewFormEl) {
-  reviewFormEl.onsubmit = async function(e) {
-    e.preventDefault();
-    const status = document.getElementById('save-status');
-    if (status) status.textContent = 'Submitting...';
-    try {
-      const user = window.firebaseHelpers.auth.currentUser;
-      if (!user) throw new Error('Not logged in');
-      const data = collectFormData();
-      const submittedAt = new Date().toISOString();
-      console.log('About to save data:', data);
-      await window.firebaseHelpers.saveReview(user.uid, data, 'submitted');
-      console.log('Data saved successfully');
-      window.lastCloudSaveTime = new Date().toISOString();
-      renderAutosaveIndicator();
-      // CSV backup temporarily disabled to focus on core functionality
-      // try {
-      //   const csv = buildCsvString(data);
-      //   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-      //   const filename = `ceo-review-${stamp}.csv`;
-      //   // Save CSV data directly to Firestore instead of Storage
-      //   await window.firebaseHelpers.saveCsvToFirestore(user.uid, filename, csv);
-      //   await window.firebaseHelpers.updateReviewMetadata(user.uid, 'submissions', {
-      //     lastCsvFileName: filename,
-      //     lastCsvCreatedAt: new Date().toISOString()
-      //   });
-      // } catch (csvErr) {
-      //   console.error('CSV backup creation failed (non-critical):', csvErr);
-      //   // CSV backup is optional - main review data is already saved
-      // }
-      if (status) {
-        status.textContent = 'Review submitted successfully!';
-        setTimeout(() => { if (status) status.textContent = ''; }, 2000);
-      }
-      if (user.uid) renderPreviousReview(user.uid);
-    } catch (err) {
-      if (status) status.textContent = 'Submit failed: ' + (err.message || err) + ' Your responses remain locally saved.';
-    }
-  };
-}
-
-// --- Change Tracking and Dynamic Button Handling ---
-
-// Track form changes and update buttons accordingly
-let hasUnsavedChanges = false;
-let lastSavedFormData = null;
-
-function checkForUnsavedChanges() {
-  const currentFormData = JSON.stringify(collectFormData());
-  const hasChanges = lastSavedFormData && currentFormData !== lastSavedFormData;
-  
-  if (hasChanges !== hasUnsavedChanges) {
-    hasUnsavedChanges = hasChanges;
-    updateSaveLoadButton();
-  }
-}
-
-function updateSaveLoadButton() {
-  const saveProgressBtn = document.getElementById('save-progress-btn');
-  const loadSavedBtn = document.getElementById('load-last-saved-btn');
-  
-  if (hasUnsavedChanges) {
-    // Update Save Draft button
-    if (saveProgressBtn) {
-      saveProgressBtn.textContent = 'Save Draft';
-      saveProgressBtn.disabled = false;
-      saveProgressBtn.style.opacity = '1';
-    }
-    if (loadSavedBtn) {
-      loadSavedBtn.textContent = 'Load Saved';
-      loadSavedBtn.disabled = true;
-      loadSavedBtn.style.opacity = '0.5';
-    }
-  } else {
-    // Update Load Saved button state
-    if (saveProgressBtn) {
-      saveProgressBtn.textContent = 'Save Draft';
-      saveProgressBtn.disabled = true;
-      saveProgressBtn.style.opacity = '0.5';
-    }
-    if (loadSavedBtn) {
-      loadSavedBtn.textContent = 'Load Saved';
-      loadSavedBtn.disabled = false;
-      loadSavedBtn.style.opacity = '1';
-    }
-  }
-}
-
-function markFormAsSaved() {
-  lastSavedFormData = JSON.stringify(collectFormData());
-  hasUnsavedChanges = false;
-  updateSaveLoadButton();
-}
-
-// Check admin status and update UI accordingly
-async function checkAdminStatusAndUpdateUI(user) {
-  const populateTestDataBtn = document.getElementById('populate-test-data-btn');
-  
-  if (!populateTestDataBtn) return;
-  
-  try {
-    // Get user data to check admin status
-    const userData = await window.firebaseHelpers.getUserData(user.uid);
-    const isAdmin = window.firebaseHelpers.isAdmin(userData);
-    
-    if (isAdmin) {
-      populateTestDataBtn.style.display = 'inline-flex';
-      populateTestDataBtn.disabled = false;
-      populateTestDataBtn.style.opacity = '1';
-      populateTestDataBtn.title = 'Load comprehensive test data for form testing';
-    } else {
-      populateTestDataBtn.style.display = 'none';
-    }
-  } catch (error) {
-    console.error('Error checking admin status:', error);
-    // Hide button on error for security
-    populateTestDataBtn.style.display = 'none';
-  }
-}
-
-// Update login/logout button visibility based on login status
-function updateLogoutButtonVisibility(isLoggedIn) {
-  const logoutBtn = document.getElementById('logout-btn');
-  const loginBtn = document.getElementById('login-btn');
-  
-  if (isLoggedIn) {
-    // Show logout button, hide login button
-    if (logoutBtn) {
-      logoutBtn.style.display = 'inline-flex';
-      logoutBtn.disabled = false;
-      logoutBtn.style.opacity = '1';
-    }
-    if (loginBtn) {
-      loginBtn.style.display = 'none';
-    }
-  } else {
-    // Show login button, hide logout button
-    if (logoutBtn) {
-      logoutBtn.style.display = 'none';
-    }
-    if (loginBtn) {
-      loginBtn.style.display = 'inline-flex';
-      loginBtn.disabled = false;
-      loginBtn.style.opacity = '1';
-    }
-  }
-}
-
-// Save Progress Button
-const saveProgressBtn = document.getElementById('save-progress-btn');
-if (saveProgressBtn) {
-  saveProgressBtn.onclick = async function() {
-    if (saveProgressBtn.disabled) return; // Prevent action if disabled
-    
-    await saveProgress();
-    markFormAsSaved(); // Mark as saved after successful save
-  };
-}
-
-// Load Last Saved Button
-const loadBtn = document.getElementById('load-last-saved-btn');
-if (loadBtn) {
-  loadBtn.onclick = async function() {
-    if (loadBtn.disabled) return; // Prevent action if disabled
-    
-    await window.loadProgress();
-    markFormAsSaved(); // Mark as saved after loading
-  };
-}
-
-// Save as PDF Button - Generate and Download PDF
-const savePdfBtn = document.getElementById('save-pdf-btn');
-if (savePdfBtn) {
-  savePdfBtn.onclick = async function() {
-    await generateAndDownloadPDF();
-  };
-}
-
-// Generate and Download PDF
-async function generateAndDownloadPDF() {
-  const statusEl = document.getElementById('save-status');
-  if (statusEl) statusEl.textContent = 'Generating PDF...';
-  
-  try {
-    // Create a clean version of the form for PDF
-    const pdfContent = await createPDFContent();
-    
-    // Generate PDF using jsPDF
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4',
-      compress: true
-    });
-    
-    // Add content to PDF
-    await addContentToPDF(pdf, pdfContent);
-    
-    // Generate filename with current date
-    const currentDate = new Date().toISOString().split('T')[0];
-    const filename = `REAP-CEO-Review-${currentDate}.pdf`;
-    
-    // Download the PDF
-    pdf.save(filename);
-    
-    // Clean up
-    cleanupPDFContent(pdfContent);
-    
-    if (statusEl) {
-      statusEl.textContent = 'PDF downloaded successfully!';
-      setTimeout(() => { statusEl.textContent = ''; }, 3000);
-    }
-    
-  } catch (error) {
-    console.error('PDF generation error:', error);
-    if (statusEl) {
-      statusEl.textContent = 'PDF generation failed. Please try again.';
-      setTimeout(() => { statusEl.textContent = ''; }, 5000);
-    }
-  }
-}
-
-// Create clean PDF content structure
-async function createPDFContent() {
-  // Get form data
-  const formData = collectFormData();
-  
-  // Create a temporary container for PDF content with A4 sizing
-  const pdfContainer = document.createElement('div');
-  pdfContainer.id = 'pdf-content';
-  pdfContainer.style.cssText = `
-    position: absolute;
-    top: -9999px;
-    left: -9999px;
-    width: 180mm;
-    min-height: 257mm;
-    background: white;
-    font-family: 'Times New Roman', serif;
-    font-size: 11pt;
-    line-height: 1.6;
-    color: #374151;
-    padding: 0;
-    box-sizing: border-box;
-  `;
-  
-  // Build PDF HTML content with enhanced header styling
-  let html = `
-    <div style="margin-bottom: 40px;">
-      <div style="text-align: center; margin-bottom: 30px; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <h1 style="font-size: 24pt; font-weight: bold; margin: 0; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
-          REAP Marlborough
-        </h1>
-        <div style="font-size: 16pt; margin: 8px 0; color: #e5e7eb; font-weight: 500;">
-          CEO Self-Review
-        </div>
-        <div style="font-size: 11pt; color: #cbd5e1; margin-top: 15px; font-style: italic;">
-          Generated: ${new Date().toLocaleDateString('en-NZ', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })}
-        </div>
-      </div>
-    </div>
-  `;
-  
-  // Add each section
-  html += buildPDFSection('Part 1: Performance Reflection', [
-    { label: 'Key Successes & What Went Well', content: formData.successes },
-    { label: 'What Did Not Go Well', content: formData['not-well'] },
-    { label: 'Comparative Reflection', content: formData['comparative-reflection'] },
-    { label: 'Key Challenges', content: formatChallengesForPDF(formData.challenges) }
-  ]);
-  
-  html += buildPDFSection('Part 2: Review of Previous Goals & KPIs', [
-    { label: 'Goals from Last Year', content: formatGoalsForPDF(formData.lastYearGoals) },
-    { label: 'KPI & Competency Ratings', content: formatKPIsForPDF(formData.kpis) }
-  ]);
-  
-  html += buildPDFSection('Part 3: Job Description Alignment', [
-    { label: 'Job Description Areas', content: formatJDAlignmentForPDF(formData.jdAlignment) }
-  ]);
-  
-  html += buildPDFSection('Part 4: Strategic Priorities (2022-2024)', [
-    { label: 'Strategic Priorities Progress', content: formatStrategicPrioritiesForPDF(formData.strategicPriorities) }
-  ]);
-  
-  html += buildPDFSection('Part 5: Personal Assessment & Professional Development', [
-    { label: 'Key Strengths', content: formData.strengths },
-    { label: 'Limitations / Restrictions', content: formData.limitations },
-    { label: 'Professional Development Undertaken', content: formatPDUndertakenForPDF(formData.pdUndertaken) },
-    { label: 'Future Professional Development Needs', content: formatPDNeededForPDF(formData.pdNeeded) }
-  ]);
-  
-  html += buildPDFSection('Part 6: Future Focus', [
-    { label: 'Goals for Next 12 Months', content: formatFutureGoalsForPDF(formData.futureGoals) }
-  ]);
-  
-  html += buildPDFSection('Part 7: Dialogue with Board', [
-    { label: 'Requests for the Board', content: formatBoardRequestsForPDF(formData.boardRequests) }
-  ]);
-  
-  pdfContainer.innerHTML = html;
-  document.body.appendChild(pdfContainer);
-  
-  return pdfContainer;
-}
-
-// Build PDF section HTML with enhanced styling
-function buildPDFSection(title, fields) {
-  let html = `
-    <div style="margin-bottom: 35px; page-break-inside: avoid; border-left: 3px solid #e5e7eb; padding-left: 15px; background-color: #fafafa; padding: 15px; border-radius: 5px;">
-      <h2 style="font-size: 16pt; font-weight: bold; margin: 0 0 20px 0; color: #1f2937; border-bottom: 2px solid #3b82f6; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
-        ${title}
-      </h2>
-  `;
-  
-  fields.forEach(field => {
-    if (field.content && field.content.trim() !== '—') {
-      // Escape HTML and preserve line breaks
-      const escapedContent = field.content
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;')
-        .replace(/\n/g, '<br>');
-      
-      html += `
-        <div style="margin-bottom: 20px; page-break-inside: avoid; background: white; padding: 12px; border-radius: 3px; border-left: 2px solid #10b981;">
-          <div style="font-weight: bold; font-size: 11pt; margin-bottom: 8px; color: #059669; text-transform: capitalize;">
-            ${field.label}:
-          </div>
-          <div style="margin-left: 15px; line-height: 1.7; color: #374151; font-size: 10.5pt;">
-            ${escapedContent}
-          </div>
-        </div>
-      `;
-    }
-  });
-  
-  html += '</div>';
-  return html;
-}
-
-// Format different data types for PDF
-function formatChallengesForPDF(challenges) {
-  if (!challenges || !challenges.length) return '';
-  return challenges.filter(ch => ch.challenge || ch.action || ch.result).map((ch, i) => 
-    `${i + 1}. Challenge: ${ch.challenge || 'Not specified'}\n   Action: ${ch.action || 'Not specified'}\n   Result: ${ch.result || 'Not specified'}`
-  ).join('\n\n');
-}
-
-function formatGoalsForPDF(goals) {
-  if (!goals || !goals.length) return '';
-  return goals.filter(g => g.goal || g.status || g.evidence).map((goal, i) => 
-    `${i + 1}. Goal: ${goal.goal || 'Not specified'}\n   Status: ${goal.status || 'Not specified'}\n   Evidence: ${goal.evidence || 'Not provided'}`
-  ).join('\n\n');
-}
-
-function formatKPIsForPDF(kpis) {
-  if (!kpis || !kpis.length) return '';
-  return kpis.filter(k => k.rating || k.evidence).map((kpi, i) => {
-    // Clean the KPI name by removing extra characters and trimming
-    const cleanName = (kpi.name || 'Unnamed KPI').replace(/\s+/g, ' ').trim();
-    return `${i + 1}. ${cleanName}\n   Rating: ${kpi.rating || 'Not rated'}/5\n   Evidence: ${kpi.evidence || 'Not provided'}\n   Compared to last year: ${kpi.compared || 'Not specified'}\n   Why: ${kpi.why || 'Not specified'}`;
-  }).join('\n\n');
-}
-
-function formatJDAlignmentForPDF(alignment) {
-  if (!alignment || !alignment.length) return '';
-  return alignment.filter(a => a.area || a.wentWell || a.notWell).map((area, i) => {
-    // Clean the area name by removing extra characters and trimming
-    const cleanArea = (area.area || 'Not specified').replace(/\s+/g, ' ').trim();
-    return `${i + 1}. ${cleanArea}\n   What went well: ${area.wentWell || 'Not provided'}\n   What did not go well: ${area.notWell || 'Not provided'}`;
-  }).join('\n\n');
-}
-
-function formatStrategicPrioritiesForPDF(priorities) {
-  if (!priorities || !priorities.length) return '';
-  return priorities.filter(p => p.name || p.progress || p.challenges).map((priority, i) => {
-    // Clean the priority name by removing extra characters and trimming
-    const cleanName = (priority.name || 'Not specified').replace(/\s+/g, ' ').trim();
-    return `${i + 1}. ${cleanName}\n   Progress: ${priority.progress || 'Not provided'}\n   Challenges: ${priority.challenges || 'Not provided'}\n   Trend: ${priority.trend || 'Not specified'}`;
-  }).join('\n\n');
-}
-
-function formatPDUndertakenForPDF(pd) {
-  if (!pd || !pd.length) return '—';
-  return pd.map((item, i) => 
-    `${i + 1}. ${item.title}\n   Key Learnings: ${item.learnings}\n   How Applied: ${item.applied}\n   Requested by: ${item.requested}\n   Usefulness: ${item.usefulness}`
-  ).join('\n\n');
-}
-
-function formatPDNeededForPDF(pd) {
-  if (!pd || !pd.length) return '—';
-  return pd.map((item, i) => 
-    `${i + 1}. ${item.area}\n   Expected Impact: ${item.impact}`
-  ).join('\n\n');
-}
-
-function formatFutureGoalsForPDF(goals) {
-  if (!goals || !goals.length) return '—';
-  return goals.map((goal, i) => 
-    `${i + 1}. Goal: ${goal.statement}\n   Success Indicators: ${goal.outcome}\n   Strategic Alignment: ${goal.why}`
-  ).join('\n\n');
-}
-
-function formatBoardRequestsForPDF(requests) {
-  if (!requests || !requests.length) return '—';
-  return requests.map((req, i) => 
-    `${i + 1}. Request: ${req.request}\n   Justification: ${req.why}\n   Type: ${req.requested}\n   Impact: ${req.changed}`
-  ).join('\n\n');
-}
-
-// Add content to PDF with proper A4 sizing and margins on all pages
-async function addContentToPDF(pdf, contentElement) {
-  // A4 dimensions and margins in mm
-  const pageWidth = 210;
-  const pageHeight = 297;
-  const marginTop = 20;
-  const marginBottom = 25; // Extra space for page numbers
-  const marginLeft = 15;
-  const marginRight = 15;
-  
-  const contentWidth = pageWidth - marginLeft - marginRight;
-  const contentHeight = pageHeight - marginTop - marginBottom;
-  
-  // Split content into pages manually for better control
-  const sections = contentElement.querySelectorAll('div[style*="margin-bottom: 35px"]');
-  let currentPageHeight = 0;
-  let pageNumber = 1;
-  let currentPageContent = [];
-  
-  // Create pages with proper content distribution
-  for (let i = 0; i < sections.length; i++) {
-    const section = sections[i];
-    
-    // Create a temporary element to measure section height
-    const tempDiv = document.createElement('div');
-    tempDiv.style.cssText = `
-      position: absolute;
-      top: -9999px;
-      left: -9999px;
-      width: ${contentWidth}mm;
-      font-family: 'Times New Roman', serif;
-      font-size: 11pt;
-      line-height: 1.6;
-    `;
-    tempDiv.innerHTML = section.outerHTML;
-    document.body.appendChild(tempDiv);
-    
-    const sectionHeight = (tempDiv.offsetHeight * 0.264583); // Convert px to mm (96 DPI)
-    document.body.removeChild(tempDiv);
-    
-    // Check if section fits on current page
-    if (currentPageHeight + sectionHeight > contentHeight - 20 && currentPageContent.length > 0) {
-      // Create new page
-      await createPDFPage(pdf, currentPageContent, pageNumber, pageWidth, pageHeight, marginLeft, marginTop, contentWidth);
-      pageNumber++;
-      currentPageContent = [];
-      currentPageHeight = 0;
-    }
-    
-    currentPageContent.push(section);
-    currentPageHeight += sectionHeight;
-  }
-  
-  // Add final page if there's content
-  if (currentPageContent.length > 0) {
-    await createPDFPage(pdf, currentPageContent, pageNumber, pageWidth, pageHeight, marginLeft, marginTop, contentWidth);
-  }
-}
-
-// Create individual PDF page with proper margins and styling
-async function createPDFPage(pdf, sections, pageNumber, pageWidth, pageHeight, marginLeft, marginTop, contentWidth) {
-  // Add new page (except for first page)
-  if (pageNumber > 1) {
-    pdf.addPage();
-  }
-  
-  // Create page content container
-  const pageContainer = document.createElement('div');
-  pageContainer.style.cssText = `
-    position: absolute;
-    top: -9999px;
-    left: -9999px;
-    width: ${contentWidth}mm;
-    background: white;
-    font-family: 'Times New Roman', serif;
-    font-size: 11pt;
-    line-height: 1.6;
-    color: #000;
-    padding: 10mm 0;
-    box-sizing: border-box;
-  `;
-  
-  // Add sections to page
-  sections.forEach(section => {
-    pageContainer.appendChild(section.cloneNode(true));
-  });
-  
-  document.body.appendChild(pageContainer);
-  
-  // Render page to canvas
-  const canvas = await html2canvas(pageContainer, {
-    scale: 2,
-    useCORS: true,
-    allowTaint: true,
-    backgroundColor: '#ffffff',
-    width: pageContainer.offsetWidth,
-    height: pageContainer.offsetHeight
-  });
-  
-  // Add image to PDF with margins
-  const imgData = canvas.toDataURL('image/png');
-  const imgWidth = contentWidth;
-  const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  
-  pdf.addImage(imgData, 'PNG', marginLeft, marginTop, imgWidth, imgHeight);
-  
-  // Add page number and footer
-  pdf.setFontSize(10);
-  pdf.setTextColor(100, 100, 100);
-  pdf.text(`Page ${pageNumber}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
-  
-  // Add header line if not first page
-  if (pageNumber > 1) {
-    pdf.setDrawColor(200, 200, 200);
-    pdf.setLineWidth(0.5);
-    pdf.line(marginLeft, marginTop - 5, pageWidth - marginLeft, marginTop - 5);
-  }
-  
-  // Clean up
-  document.body.removeChild(pageContainer);
-}
-
-// Clean up PDF content
-function cleanupPDFContent(contentElement) {
-  if (contentElement && contentElement.parentNode) {
-    contentElement.parentNode.removeChild(contentElement);
-  }
-}
-
-// Clean up print elements after printing (keep for backward compatibility)
-function cleanupPrintLayout() {
-  const printElements = document.querySelectorAll('.print-content');
-  printElements.forEach(el => el.remove());
-  
-  const formElements = document.querySelectorAll('[data-print-converted]');
-  formElements.forEach(el => delete el.dataset.printConverted);
-}
-
-// Prepare layout for printing
-function preparePrintLayout() {
-  // Convert all form elements to static content for reliable PDF generation
-  convertFormElementsToStaticContent();
-  
-  // Ensure all collapsible sections are expanded
-  const collapsibleSections = document.querySelectorAll('.collapsible-section[data-collapsed="true"]');
-  collapsibleSections.forEach(section => {
-    const body = section.querySelector('.section-body');
-    if (body) {
-      body.style.display = 'block';
-      body.style.height = 'auto';
-      body.style.visibility = 'visible';
-    }
-  });
-  
-  // Minimal page break hints to prevent empty pages
-  const sections = document.querySelectorAll('section[id*="part-"]');
-  sections.forEach((section, index) => {
-    // Only add page break before part 4 (middle of document)
-    if (section.id === 'part-4') {
-      section.style.pageBreakBefore = 'always';
-    }
-    
-    // Allow all sections to break naturally
-    section.style.pageBreakInside = 'auto';
-  });
-  
-  // Handle repeater items to avoid awkward breaks
-  const repeaterItems = document.querySelectorAll('.repeater-item');
-  repeaterItems.forEach(item => {
-    // Calculate content size to determine if item can fit on one page
-    const textContent = item.textContent.trim();
-    const estimatedHeight = textContent.length * 0.15; // Rough estimate in pts
-    const hasLongContent = textContent.length > 800 || estimatedHeight > 200;
-    
-    if (hasLongContent) {
-      // Allow breaking for very large items
-      item.classList.add('large-content');
-      item.style.pageBreakInside = 'auto';
-      item.style.breakInside = 'auto';
-    } else {
-      // Keep smaller items together
-      item.style.pageBreakInside = 'avoid';
-      item.style.breakInside = 'avoid';
-    }
-    
-    item.style.marginBottom = '20pt';
-    item.style.orphans = '5';
-    item.style.widows = '5';
-  });
-}
-
-// Convert form elements to static content for reliable printing
-function convertFormElementsToStaticContent() {
-  // Handle textareas - auto-expand to show full content
-  const textareas = document.querySelectorAll('textarea');
-  textareas.forEach(textarea => {
-    if (!textarea.dataset.printConverted) {
-      const content = textarea.value.trim() || '—';
-      const printDiv = document.createElement('div');
-      printDiv.className = 'print-content';
-      printDiv.textContent = content;
-      
-      // Calculate if this is long content that might need to break
-      const isLongContent = content.length > 500 || content.split('\n').length > 8;
-      
-      printDiv.style.cssText = `
-        display: none;
-        font-family: 'Times New Roman', serif;
-        font-size: 11pt;
-        line-height: 1.5;
-        color: #222;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        padding: 6pt 0;
-        margin-bottom: 10pt;
-        border-bottom: 1px solid #ccc;
-        height: auto;
-        min-height: auto;
-        ${isLongContent ? 'page-break-inside: auto;' : 'page-break-inside: avoid;'}
-        orphans: 3;
-        widows: 3;
-      `;
-      
-      // Insert after the textarea
-      textarea.parentNode.insertBefore(printDiv, textarea.nextSibling);
-      textarea.dataset.printConverted = 'true';
-    }
-  });
-  
-  // Handle text inputs
-  const textInputs = document.querySelectorAll('input[type="text"], input[type="email"]');
-  textInputs.forEach(input => {
-    if (!input.dataset.printConverted) {
-      const content = input.value.trim() || '—';
-      const printSpan = document.createElement('span');
-      printSpan.className = 'print-content print-content-inline';
-      printSpan.textContent = content;
-      printSpan.style.cssText = `
-        display: none;
-        font-family: 'Times New Roman', serif;
-        font-size: 11pt;
-        color: #222;
-        border-bottom: 1px solid #ccc;
-        padding: 2pt 0;
-        margin-right: 8pt;
-      `;
-      
-      // Insert after the input
-      input.parentNode.insertBefore(printSpan, input.nextSibling);
-      input.dataset.printConverted = 'true';
-    }
-  });
-  
-  // Handle select elements
-  const selects = document.querySelectorAll('select');
-  selects.forEach(select => {
-    if (!select.dataset.printConverted) {
-      const selectedOption = select.options[select.selectedIndex];
-      const content = selectedOption ? selectedOption.text : '—';
-      const printSpan = document.createElement('span');
-      printSpan.className = 'print-content print-content-inline';
-      printSpan.textContent = content;
-      printSpan.style.cssText = `
-        display: none;
-        font-family: 'Times New Roman', serif;
-        font-size: 11pt;
-        color: #222;
-        border-bottom: 1px solid #ccc;
-        padding: 2pt 0;
-        margin-right: 8pt;
-        font-weight: 500;
-      `;
-      
-      // Insert after the select
-      select.parentNode.insertBefore(printSpan, select.nextSibling);
-      select.dataset.printConverted = 'true';
-    }
-  });
-  
-  // Handle radio buttons
-  const radioGroups = {};
-  const radios = document.querySelectorAll('input[type="radio"]');
-  radios.forEach(radio => {
-    const name = radio.name;
-    if (!radioGroups[name]) radioGroups[name] = [];
-    radioGroups[name].push(radio);
-  });
-  
-  Object.keys(radioGroups).forEach(groupName => {
-    const group = radioGroups[groupName];
-    const checkedRadio = group.find(r => r.checked);
-    
-    if (checkedRadio && !checkedRadio.dataset.printConverted) {
-      const label = document.querySelector(`label[for="${checkedRadio.id}"]`);
-      const content = label ? label.textContent.trim() : checkedRadio.value;
-      
-      const printSpan = document.createElement('span');
-      printSpan.className = 'print-content print-content-inline';
-      printSpan.innerHTML = `<strong>Selected:</strong> ${content}`;
-      printSpan.style.cssText = `
-        display: none;
-        font-family: 'Times New Roman', serif;
-        font-size: 11pt;
-        color: #222;
-        margin-right: 12pt;
-        font-weight: normal;
-      `;
-      
-      // Insert after the radio group container
-      const container = checkedRadio.closest('.grid') || checkedRadio.closest('div');
-      if (container) {
-        container.appendChild(printSpan);
-      }
-      
-      // Mark all radios in group as converted
-      group.forEach(r => r.dataset.printConverted = 'true');
-    }
-  });
-}
-
-async function loadProgress() {
-  const status = document.getElementById('save-status');
-  status.textContent = 'Loading...';
-  try {
-    let data = null;
-    const user = window.firebaseHelpers.auth.currentUser;
-    if (user) {
-      // Try Firestore first
-      const doc = await window.firebaseHelpers.loadReview(user.uid, 'draft');
-      if (doc && doc.sections) {
-        data = window.firebaseHelpers.flattenSections(doc.sections);
-      }
-    }
-    if (!data) throw new Error('No saved draft found.');
-    // Hydrate static fields
-    document.getElementById('successes').value = data.successes || '';
-    document.getElementById('not-well').value = data['not-well'] || '';
-    document.getElementById('comparative-reflection').value = data['comparative-reflection'] || '';
-    document.getElementById('strengths').value = data.strengths || '';
-    document.getElementById('limitations').value = data.limitations || '';
-    // Hydrate dynamic repeaters
-    function clearAndAdd(containerId, addFn, items, hydrateFn) {
-      const container = document.getElementById(containerId);
-      if (!container) return;
-      container.innerHTML = '';
-      (items || []).forEach((item, i) => {
-        addFn();
-        hydrateFn(container.children[i], item);
-      });
-      if (!items || !items.length) {
-        ensureEmptyState(container);
-      }
-    }
-    // Challenges
-    clearAndAdd('challenges-container', addChallenge, data.challenges, (el, item) => {
-      el.querySelector('textarea[placeholder="Describe the challenge..."]').value = item.challenge || '';
-      el.querySelector('textarea[placeholder="What action was taken?"]').value = item.action || '';
-      el.querySelector('textarea[placeholder="What was the outcome?"]').value = item.result || '';
-    });
-    // Last Year Goals
-    clearAndAdd('last-year-goals-container', addLastYearGoal, data.lastYearGoals, (el, item) => {
-      el.querySelector('input[placeholder="Enter the goal statement..."]').value = item.goal || '';
-      el.querySelector('select').value = item.status || '';
-      el.querySelector('textarea[placeholder="Provide supporting evidence..."]').value = item.evidence || '';
-    });
-    // KPIs
-    (data.kpis || []).forEach((item, i) => {
-      const card = document.getElementById('kpi-container').children[i];
-      if (!card) return;
-      if (item.rating) card.querySelector(`input[type="radio"][value="${item.rating}"]`).checked = true;
-      card.querySelector('textarea').value = item.evidence || '';
-      card.querySelector('select').value = item.compared || '';
-      card.querySelector('input[type="text"]').value = item.why || '';
-    });
-    // JD Alignment
-    (data.jdAlignment || []).forEach((item, i) => {
-      const card = document.getElementById('jd-alignment-container').children[i];
-      if (!card) return;
-      card.querySelectorAll('textarea')[0].value = item.wentWell || '';
-      card.querySelectorAll('textarea')[1].value = item.notWell || '';
-    });
-    // Strategic Priorities
-    (data.strategicPriorities || []).forEach((item, i) => {
-      const card = document.getElementById('strategic-priorities-container').children[i];
-      if (!card) return;
-      card.querySelectorAll('textarea')[0].value = item.progress || '';
-      card.querySelectorAll('textarea')[1].value = item.challenges || '';
-      card.querySelector('select').value = item.trend || '';
-    });
-    // PD Undertaken
-    clearAndAdd('pd-undertaken-container', addPDUndertaken, data.pdUndertaken, (el, item) => {
-      el.querySelector('input[placeholder="Programme/Course Title"]').value = item.title || '';
-      el.querySelector('textarea[placeholder="Key Learnings"]').value = item.learnings || '';
-      el.querySelector('textarea[placeholder="How Learnings Were Applied"]').value = item.applied || '';
-      el.querySelectorAll('select')[0].value = item.requested || '';
-      el.querySelectorAll('select')[1].value = item.usefulness || '';
-    });
-    // PD Needed
-    clearAndAdd('pd-needed-container', addPDNeeded, data.pdNeeded, (el, item) => {
-      el.querySelector('input[placeholder="Area of Need"]').value = item.area || '';
-      el.querySelector('textarea[placeholder*="expected impact"]').value = item.impact || '';
-    });
-    // Future Goals
-    clearAndAdd('future-goals-container', addFutureGoal, data.futureGoals, (el, item) => {
-      el.querySelector('input[placeholder="Enter the goal statement..."]').value = item.statement || '';
-      el.querySelector('textarea[placeholder="What will success look like?"]').value = item.outcome || '';
-      el.querySelector('textarea[placeholder*="align with strategic priorities"]').value = item.why || '';
-    });
-    // Board Requests
-    clearAndAdd('board-requests-container', addBoardRequest, data.boardRequests, (el, item) => {
-      el.querySelector('textarea[placeholder="Request"]').value = item.request || '';
-      el.querySelector('textarea[placeholder="Why is this needed?"]').value = item.why || '';
-      el.querySelector('select').value = item.requested || '';
-      el.querySelector('input[placeholder*="workload pressure"]').value = item.changed || '';
-    });
-    updateAllSectionSummaries();
-    markFormAsSaved(); // Mark form as saved after loading
-    status.textContent = 'Loaded!';
-    setTimeout(() => { status.textContent = ''; }, 2000);
-  } catch (err) {
-    status.textContent = 'Load failed: ' + (err.message || err);
-    setTimeout(() => { status.textContent = ''; }, 4000);
-  }
-}
-window.loadProgress = loadProgress;
-window.saveProgress = saveProgress;
-window.clearForm = clearForm;
-
-window.addChallenge = addChallenge;
-window.addLastYearGoal = addLastYearGoal;
-window.addPDUndertaken = addPDUndertaken;
-window.addPDNeeded = addPDNeeded;
-window.addFutureGoal = addFutureGoal;
-window.removeFutureGoal = removeFutureGoal;
-window.addBoardRequest = addBoardRequest;
-
-// --- Test Data Population Function ---
-async function populateTestData() {
-  const testData = {
-    // Part 1: Performance Reflection
-    successes: `• Successfully launched the Community Hub initiative, serving 150+ whānau in its first 6 months
-• Secured $250,000 in additional funding through strategic partnership with local iwi
-• Implemented new conflict resolution framework resulting in 40% faster case resolution
-• Led organizational restructure that improved staff satisfaction scores from 72% to 89%
-• Established mentoring programme connecting 25 rangatahi with community leaders`,
-
-    'not-well': `• Recruitment timeline for Senior Social Worker position extended by 3 months due to limited candidate pool
-• Initial community consultation for new facility location faced unexpected resistance requiring redesign
-• IT system upgrade caused temporary service disruptions affecting client scheduling
-• Staff development budget overspent by 15% due to increased demand for specialized training`,
-
-    'comparative-reflection': `This year showed marked improvement in stakeholder relationships compared to 2023. The establishment of regular hui with iwi partners created trust that was previously lacking. Financial management became more robust with the implementation of quarterly forecasting, contrasting sharply with the reactive approach of previous years. However, staff retention challenges persist, though at lower levels than the 25% turnover experienced in 2023. The organization's community profile has strengthened significantly through increased media presence and successful events.`,
-
-    // Challenges
-    challenges: [
-      {
-        challenge: "Securing sustainable funding for core programmes beyond government contracts",
-        action: "Developed diversified funding strategy including corporate partnerships, community fundraising, and fee-for-service offerings. Engaged professional grant writer and established donor stewardship programme.",
-        result: "Secured $180,000 in non-government funding and established ongoing revenue stream generating $15,000 monthly. Reduced dependency on government funding from 90% to 72%."
-      },
-      {
-        challenge: "Managing increased demand for services with limited staffing capacity",
-        action: "Implemented waitlist management system, expanded volunteer programme, and negotiated flexible working arrangements. Prioritized service delivery through triage assessment process.",
-        result: "Reduced average wait times from 6 weeks to 3 weeks while maintaining service quality. Volunteer hours increased by 200% contributing equivalent of 1.5 FTE positions."
-      },
-      {
-        challenge: "Navigating complex regulatory changes affecting service delivery standards",
-        action: "Established compliance working group with legal consultation, provided staff training on new requirements, and updated all policies and procedures. Created monitoring dashboard for compliance tracking.",
-        result: "Achieved 100% compliance with new regulations ahead of deadline. Avoided potential $50,000 penalty and maintained all funding contracts. Process improvements identified efficiency gains."
-      }
-    ],
-
-    // Goals from Last Year
-    lastYearGoals: [
-      {
-        goal: "Establish Community Hub facility serving North Marlborough region",
-        status: "Fully Achieved",
-        evidence: "Hub opened March 2024, serving 150+ clients monthly. User satisfaction survey shows 94% approval rating. Partnership agreements signed with 8 local organizations for co-location."
-      },
-      {
-        goal: "Achieve financial sustainability with 30% non-government revenue",
-        status: "Partially Achieved",
-        evidence: "Reached 28% non-government revenue by year-end. Established corporate partnerships worth $85,000 annually and fee-for-service programmes generating $180,000. Target missed by 2% due to delayed grant outcome."
-      },
-      {
-        goal: "Implement comprehensive staff development programme",
-        status: "Fully Achieved",
-        evidence: "100% of staff completed core competency training. Leadership development programme launched with 6 participants. Staff satisfaction improved from 72% to 89%. Professional development budget fully utilized."
-      },
-      {
-        goal: "Expand iwi partnership framework to include all local iwi",
-        status: "Partially Achieved",
-        evidence: "Formal partnerships established with 3 of 5 local iwi through signed MOUs. Regular hui schedule implemented. Cultural competency training completed by all staff. Remaining 2 iwi partnerships in development."
-      }
-    ],
-
-    // KPIs (will be populated separately as they have specific structure)
-    kpis: [
-      {
-        name: "Conflict Resolution",
-        rating: "4",
-        evidence: "Implemented new restorative justice approach reducing average case duration from 8 to 5 weeks. Client satisfaction with resolution process increased to 87%. Successfully mediated 42 complex family disputes with 95% resolution rate.",
-        compared: "Better",
-        why: "New framework and staff training provided tools for more effective intervention strategies"
-      },
-      {
-        name: "Financial Resilience", 
-        rating: "3",
-        evidence: "Maintained 3-month operating reserves throughout the year. Diversified revenue streams reduced government dependency to 72%. All audit recommendations implemented with clean audit report received.",
-        compared: "Similar",
-        why: "Solid financial management maintained despite challenging funding environment"
-      },
-      {
-        name: "Board–CEO Communication",
-        rating: "4", 
-        evidence: "Introduced monthly CEO reports with KPI dashboard. Board meeting attendance averaged 92%. All board requests addressed within agreed timeframes. Regular 1:1 meetings with Chair established.",
-        compared: "Better",
-        why: "Structured communication protocols improved transparency and board engagement"
-      },
-      {
-        name: "Values Alignment",
-        rating: "5",
-        evidence: "Staff survey shows 94% feel organizational values are lived daily. Community feedback consistently highlights cultural responsiveness. Values-based decision making framework implemented for all major decisions.",
-        compared: "Much Better", 
-        why: "Dedicated focus on embedding values into operational practice and decision-making processes"
-      }
-    ],
-
-    // Job Description Alignment (will be populated separately)
-    jdAlignment: [
-      {
-        area: "Strategic Leadership",
-        wentWell: "Successfully developed and communicated 3-year strategic plan with board and staff input. Led organizational change management for new service delivery model. Established strong external relationships with key stakeholders including local government and iwi partners.",
-        notWell: "Strategic planning timeline extended due to extensive consultation requirements. Some strategic initiatives delayed by 3-6 months due to competing priorities. Need to improve strategic communication to wider community."
-      },
-      {
-        area: "People & Resources", 
-        wentWell: "Improved staff retention rates and satisfaction scores. Successfully recruited for key positions including Senior Social Worker and Community Liaison roles. Implemented performance management system with regular feedback loops.",
-        notWell: "Recruitment processes took longer than anticipated for specialized roles. Professional development budget management could be improved. Need better succession planning for key positions."
-      },
-      {
-        area: "Partnerships",
-        wentWell: "Established formal partnerships with 3 local iwi and 8 community organizations. Secured new funding partnerships worth $180,000. Developed collaborative service delivery models reducing duplication.",
-        notWell: "Partnership development with remaining 2 iwi progressing slower than expected. Some partnership agreements require renegotiation due to changing organizational needs. Communication protocols with partners need strengthening."
-      },
-      {
-        area: "Growth Opportunities",
-        wentWell: "Successfully expanded service delivery to North Marlborough region. Identified and pursued new funding opportunities resulting in 28% revenue diversification. Established innovation fund for pilot programmes.",
-        notWell: "Some growth initiatives required more resources than initially planned. Market analysis for new services took longer than expected. Need better systems for evaluating growth opportunity ROI."
-      },
-      {
-        area: "Accountability", 
-        wentWell: "Implemented comprehensive reporting framework for all stakeholders. All compliance requirements met ahead of deadlines. Board reporting improved with monthly KPI dashboards and quarterly reviews.",
-        notWell: "Some reporting systems require integration to reduce duplication. Stakeholder feedback mechanisms could be more systematic. Need to improve transparency in decision-making processes."
-      },
-      {
-        area: "Team & Culture",
-        wentWell: "Staff satisfaction increased significantly from 72% to 89%. Successful cultural competency training programme implemented. Team building initiatives improved collaboration across departments.",
-        notWell: "Still experiencing challenges with work-life balance in high-demand periods. Communication between departments needs improvement. Need to address workload distribution more equitably."
-      }
-    ],
-
-    // Strategic Priorities (will be populated separately) 
-    strategicPriorities: [
-      {
-        name: "Strengthen Iwi relationships",
-        progress: "Significant progress made with formal MOUs signed with 3 of 5 local iwi. Regular hui established monthly with attendance averaging 85%. Cultural competency training completed by 100% of staff. Joint initiatives launched including rangatahi mentoring programme.",
-        challenges: "Remaining 2 iwi partnerships progressing slowly due to internal iwi governance processes. Balancing different iwi perspectives and protocols requires careful navigation. Resource allocation for cultural activities needs increase.",
-        trend: "Improving"
-      },
-      {
-        name: "Increase trusted relationships & social cohesion", 
-        progress: "Community Hub establishment has created central meeting place fostering natural connections. Conflict resolution programme showing 95% success rate. Community events attendance increased by 150% year-on-year. Social media engagement up 300%.",
-        challenges: "Reaching isolated community members remains difficult. Some community tensions persist around resource allocation. Measuring social cohesion improvements requires better metrics development.",
-        trend: "Improving"
-      },
-      {
-        name: "Contribute to intergenerational wellbeing",
-        progress: "Rangatahi mentoring programme connecting 25 young people with community elders. Family support services expanded to include parenting programmes. Educational support provided to 40+ students. Housing advocacy secured stable accommodation for 15 families.",
-        challenges: "Long-term impact measurement systems need development. Intergenerational programmes require sustained funding beyond current grants. Balancing immediate needs with long-term wellbeing goals challenging.",
-        trend: "Steady"
-      },
-      {
-        name: "Operate a positive & professional organisation",
-        progress: "Staff satisfaction increased to 89% with improved professional development opportunities. All compliance requirements exceeded. Financial management systems strengthened with clean audit results. Workplace culture assessment shows significant improvement.",
-        challenges: "Workload management during peak periods affects staff wellbeing. Professional development budget constraints limit opportunities. Office space limitations impact productivity and staff satisfaction.",
-        trend: "Improving"
-      }
-    ],
-
-    // Part 5: Personal Assessment
-    strengths: `• Strategic thinking and planning - able to see big picture while managing operational details
-• Relationship building and stakeholder engagement - strong connections across diverse community groups
-• Crisis management and decision-making under pressure - calm leadership during challenging situations  
-• Cultural competency and responsiveness - deep understanding of Te Ao Māori principles and practices
-• Financial stewardship and resource management - proven track record of prudent financial oversight
-• Change management and organizational development - successful leadership through significant transitions`,
-
-    limitations: `• Technology systems knowledge - require support for complex IT implementations and digital transformation initiatives
-• Limited bandwidth for concurrent major projects - need to improve delegation and prioritization during high-demand periods
-• Grant writing expertise - while strategic, could benefit from technical writing skills development for complex funding applications
-• Regional networking beyond Marlborough - opportunities to expand connections with national sector leaders and organizations`,
-
-    // Professional Development Undertaken
-    pdUndertaken: [
-      {
-        title: "Advanced Conflict Resolution & Mediation Certificate",
-        learnings: "Gained expertise in restorative justice approaches, de-escalation techniques, and cultural mediation practices. Learned structured frameworks for complex multi-party disputes and trauma-informed conflict resolution.",
-        applied: "Implemented new mediation protocols reducing case resolution time by 37%. Training used in 42 family disputes with 95% success rate. Developed staff training programme based on learnings benefiting entire team.",
-        requested: "Board Requested",
-        usefulness: "Extremely Useful"
-      },
-      {
-        title: "Nonprofit Financial Management Intensive",
-        learnings: "Advanced understanding of nonprofit accounting standards, grant compliance requirements, and diversified revenue strategies. Learned forecasting models and risk management approaches specific to community sector.",
-        applied: "Implemented quarterly financial forecasting improving budget accuracy by 25%. Developed diversified funding strategy achieving 28% non-government revenue. Enhanced board financial reporting with KPI dashboards.",
-        requested: "Self-Initiated", 
-        usefulness: "Very Useful"
-      },
-      {
-        title: "Te Reo Māori Level 2 Certification",
-        learnings: "Improved conversational Te Reo capability and deeper understanding of tikanga Māori. Enhanced cultural competency for engaging with iwi partners and Māori whānau in appropriate cultural context.",
-        applied: "Used Te Reo in all hui and formal iwi engagements. Improved cultural responsiveness in service delivery. Led organizational karakia and supported staff cultural development. Enhanced community trust and relationships.",
-        requested: "Self-Initiated",
-        usefulness: "Extremely Useful"
-      }
-    ],
-
-    // Professional Development Needed
-    pdNeeded: [
-      {
-        area: "Digital Leadership & Technology Strategy",
-        impact: "Essential for leading organizational digital transformation. Will enable better service delivery through technology platforms, improve efficiency through automation, and enhance community engagement through digital channels. Critical for remaining competitive and meeting evolving client expectations."
-      },
-      {
-        area: "Advanced Grant Writing & Funding Strategy", 
-        impact: "Will significantly increase funding success rates and enable pursuit of larger collaborative grants. Essential for achieving financial sustainability goals and reducing government funding dependency. Will build organizational capacity for long-term resource security."
-      },
-      {
-        area: "National Sector Leadership Programme",
-        impact: "Will enhance national profile and sector influence, creating opportunities for policy input and collaborative initiatives. Essential for staying current with sector trends and building networks that benefit local community. Will position organization as regional leader."
-      }
-    ],
-
-    // Part 6: Future Goals
-    futureGoals: [
-      {
-        statement: "Establish Marlborough as regional hub for restorative justice practice",
-        outcome: "Recognition as leading practice region with 50% of family disputes using restorative approaches. Training centre established providing professional development regionally. Partnership agreements with justice sector agencies for referral pathways.",
-        why: "Aligns directly with strengthening iwi relationships and increasing social cohesion. Builds on successful conflict resolution improvements and community trust. Positions organization as innovative sector leader while meeting community needs."
-      },
-      {
-        statement: "Achieve 35% non-government revenue diversification",
-        outcome: "Sustainable funding mix reducing government dependency risk. Established social enterprise generating $200,000+ annually. Corporate partnership programme worth $150,000 per year. Community fundraising capability producing $100,000 annually.",
-        why: "Critical for operating positive professional organization with financial resilience. Enables pursuit of innovative programmes aligned with community priorities. Provides flexibility to respond quickly to emerging needs without funding constraints."
-      },
-      {
-        statement: "Launch intergenerational housing development project",
-        outcome: "20-unit housing complex designed with cultural principles enabling whānau of different generations to live interdependently. Project fully funded through partnership model. Waitlist of eligible whānau established with support wraparound services designed.",
-        why: "Directly contributes to intergenerational wellbeing strategic priority. Addresses critical housing shortage while maintaining cultural connections. Creates tangible legacy project demonstrating organizational capability and community commitment."
-      }
-    ],
-
-    // Part 7: Board Requests  
-    boardRequests: [
-      {
-        request: "Support for attending National Nonprofit Leadership Summit in Wellington (3 days)",
-        why: "Critical for staying current with sector developments and policy changes affecting community organizations. Opportunity to represent Marlborough region perspectives and build national networks. Learning will directly benefit strategic planning and organizational development.",
-        requested: "Professional Development",
-        changed: "Increased national focus and policy advocacy workload requiring dedicated time allocation"
-      },
-      {
-        request: "Approval for strategic partnership development with South Island community organizations", 
-        why: "Opportunity to leverage resources and expertise through collaborative service delivery models. Will strengthen funding applications and enable shared professional development. Critical for achieving growth and sustainability goals.",
-        requested: "Strategic Direction",
-        changed: "Expanded regional focus requiring travel and relationship management beyond current scope"
-      },
-      {
-        request: "Board champion for digital transformation project leadership and community engagement",
-        why: "Major organizational change requiring board-level advocacy and community leadership. Technology transformation affects all aspects of service delivery and requires strong governance oversight. Board member expertise in digital strategy would accelerate implementation.",
-        requested: "Governance Support", 
-        changed: "Complex change management requiring additional board meeting time and decision-making support"
-      }
+// --- Example: Dynamic Section Template ---
+const defaultSections = [
+  {
+    id: "performance",
+    title: "Performance Reflection",
+    description: "Reflect on your work during the review period.",
+    questions: [
+      { id: "successes", type: "text", label: "Key Successes" },
+      { id: "challenges", type: "repeater", label: "Challenges", fields: ["Challenge", "Action Taken", "Result"] },
+      { id: "rating", type: "rating", label: "Overall Rating", scale: [1,2,3,4,5] }
     ]
-  };
-
-  // Clear existing form
-  await clearForm();
-  
-  // Wait a moment for form to clear
-  setTimeout(async () => {
-    // Populate static fields
-    document.getElementById('successes').value = testData.successes;
-    document.getElementById('not-well').value = testData['not-well']; 
-    document.getElementById('comparative-reflection').value = testData['comparative-reflection'];
-    document.getElementById('strengths').value = testData.strengths;
-    document.getElementById('limitations').value = testData.limitations;
-
-    // Populate challenges
-    testData.challenges.forEach(() => addChallenge());
-    const challengeCards = document.getElementById('challenges-container').children;
-    testData.challenges.forEach((item, i) => {
-      if (challengeCards[i]) {
-        challengeCards[i].querySelector('textarea[placeholder="Describe the challenge..."]').value = item.challenge;
-        challengeCards[i].querySelector('textarea[placeholder="What action was taken?"]').value = item.action;
-        challengeCards[i].querySelector('textarea[placeholder="What was the outcome?"]').value = item.result;
-      }
-    });
-
-    // Populate last year goals
-    testData.lastYearGoals.forEach(() => addLastYearGoal());
-    const goalCards = document.getElementById('last-year-goals-container').children;
-    testData.lastYearGoals.forEach((item, i) => {
-      if (goalCards[i]) {
-        goalCards[i].querySelector('input[placeholder="Enter the goal statement..."]').value = item.goal;
-        goalCards[i].querySelector('select').value = item.status;
-        goalCards[i].querySelector('textarea[placeholder="Provide supporting evidence..."]').value = item.evidence;
-      }
-    });
-
-    // Populate KPIs
-    const kpiCards = document.getElementById('kpi-container').children;
-    testData.kpis.forEach((item, i) => {
-      if (kpiCards[i]) {
-        const ratingInput = kpiCards[i].querySelector(`input[type="radio"][value="${item.rating}"]`);
-        if (ratingInput) ratingInput.checked = true;
-        kpiCards[i].querySelector('textarea').value = item.evidence;
-        kpiCards[i].querySelector('select').value = item.compared;
-        kpiCards[i].querySelector('input[type="text"]').value = item.why;
-      }
-    });
-
-    // Populate JD alignment
-    const jdCards = document.getElementById('jd-alignment-container').children;
-    testData.jdAlignment.forEach((item, i) => {
-      if (jdCards[i]) {
-        const textareas = jdCards[i].querySelectorAll('textarea');
-        if (textareas[0]) textareas[0].value = item.wentWell;
-        if (textareas[1]) textareas[1].value = item.notWell;
-      }
-    });
-
-    // Populate strategic priorities  
-    const priorityCards = document.getElementById('strategic-priorities-container').children;
-    testData.strategicPriorities.forEach((item, i) => {
-      if (priorityCards[i]) {
-        const textareas = priorityCards[i].querySelectorAll('textarea');
-        if (textareas[0]) textareas[0].value = item.progress;
-        if (textareas[1]) textareas[1].value = item.challenges;
-        const select = priorityCards[i].querySelector('select');
-        if (select) select.value = item.trend;
-      }
-    });
-
-    // Populate PD undertaken
-    testData.pdUndertaken.forEach(() => addPDUndertaken());
-    const pdUndertakenCards = document.getElementById('pd-undertaken-container').children;
-    testData.pdUndertaken.forEach((item, i) => {
-      if (pdUndertakenCards[i]) {
-        pdUndertakenCards[i].querySelector('input[placeholder="Programme/Course Title"]').value = item.title;
-        pdUndertakenCards[i].querySelector('textarea[placeholder="Key Learnings"]').value = item.learnings;
-        pdUndertakenCards[i].querySelector('textarea[placeholder="How Learnings Were Applied"]').value = item.applied;
-        const selects = pdUndertakenCards[i].querySelectorAll('select');
-        if (selects[0]) selects[0].value = item.requested;
-        if (selects[1]) selects[1].value = item.usefulness;
-      }
-    });
-
-    // Populate PD needed
-    testData.pdNeeded.forEach(() => addPDNeeded());
-    const pdNeededCards = document.getElementById('pd-needed-container').children;
-    testData.pdNeeded.forEach((item, i) => {
-      if (pdNeededCards[i]) {
-        pdNeededCards[i].querySelector('input[placeholder="Area of Need"]').value = item.area;
-        pdNeededCards[i].querySelector('textarea[placeholder*="expected impact"]').value = item.impact;
-      }
-    });
-
-    // Populate future goals
-    testData.futureGoals.forEach(() => addFutureGoal());
-    const futureGoalCards = document.getElementById('future-goals-container').children;
-    testData.futureGoals.forEach((item, i) => {
-      if (futureGoalCards[i]) {
-        futureGoalCards[i].querySelector('input[placeholder="Enter the goal statement..."]').value = item.statement;
-        futureGoalCards[i].querySelector('textarea[placeholder="What will success look like?"]').value = item.outcome;
-        futureGoalCards[i].querySelector('textarea[placeholder*="align with strategic priorities"]').value = item.why;
-      }
-    });
-
-    // Populate board requests
-    testData.boardRequests.forEach(() => addBoardRequest());
-    const boardRequestCards = document.getElementById('board-requests-container').children;
-    testData.boardRequests.forEach((item, i) => {
-      if (boardRequestCards[i]) {
-        boardRequestCards[i].querySelector('textarea[placeholder="Request"]').value = item.request;
-        boardRequestCards[i].querySelector('textarea[placeholder="Why is this needed?"]').value = item.why;
-        boardRequestCards[i].querySelector('select').value = item.requested;
-        boardRequestCards[i].querySelector('input[placeholder*="workload pressure"]').value = item.changed;
-      }
-    });
-
-    // Update all section summaries and progress
-    updateAllSectionSummaries();
-    
-    // Save the test data to Firestore
-    const user = window.firebaseHelpers.auth.currentUser;
-    if (user) {
-      try {
-        await window.firebaseHelpers.saveReview(user.uid, testData, 'draft');
-        window.lastCloudSaveTime = new Date().toISOString();
-      } catch (error) {
-        console.error('Failed to save test data to Firestore:', error);
-      }
-    }
-
-    // Show success message
-    const status = document.getElementById('save-status');
-    if (status) {
-      status.textContent = '✅ Test data loaded successfully!';
-      status.style.color = '#059669';
-      setTimeout(() => {
-        status.textContent = '';
-        status.style.color = '';
-      }, 3000);
-    }
-    
-    // Mark form as saved after loading test data
-    markFormAsSaved();
-
-  }, 100);
-}
-
-// PDF preview function
-async function previewPDFContent() {
-  const statusEl = document.getElementById('save-status');
-  if (statusEl) statusEl.textContent = 'Generating preview...';
-  
-  try {
-    // Create PDF content
-    const pdfContent = await createPDFContent();
-    
-    // Style it for preview
-    pdfContent.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: #f0f0f0;
-      z-index: 9999;
-      overflow: auto;
-      padding: 20px;
-      box-sizing: border-box;
-    `;
-    
-    // Add preview styles to match A4 PDF format
-    pdfContent.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: #e5e7eb;
-      z-index: 9999;
-      overflow: auto;
-      padding: 40px 20px;
-      box-sizing: border-box;
-    `;
-    
-    const contentInner = pdfContent.children[0];
-    if (contentInner) {
-      contentInner.style.cssText = `
-        width: 210mm;
-        min-height: 297mm;
-        margin: 0 auto;
-        background: white;
-        padding: 20mm 15mm 25mm 15mm;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        font-family: 'Times New Roman', serif;
-        font-size: 11pt;
-        line-height: 1.6;
-        color: #374151;
-        border-radius: 4px;
-      `;
-    }
-    
-    // Add close button
-    const closeBtn = document.createElement('button');
-    closeBtn.innerHTML = '✕ Close Preview';
-    closeBtn.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #dc2626;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      z-index: 10000;
-      font-weight: bold;
-    `;
-    closeBtn.onclick = () => {
-      document.body.removeChild(pdfContent);
-      if (statusEl) statusEl.textContent = '';
-    };
-    
-    pdfContent.appendChild(closeBtn);
-    
-    if (statusEl) {
-      statusEl.textContent = 'Preview ready!';
-      setTimeout(() => { statusEl.textContent = ''; }, 2000);
-    }
-    
-  } catch (error) {
-    console.error('Preview generation error:', error);
-    if (statusEl) {
-      statusEl.textContent = 'Preview generation failed.';
-      setTimeout(() => { statusEl.textContent = ''; }, 3000);
-    }
+  },
+  {
+    id: "goals",
+    title: "Goals & KPIs",
+    description: "Review your goals and key performance indicators.",
+    questions: [
+      { id: "lastYearGoals", type: "repeater", label: "Last Year Goals", fields: ["Goal", "Status", "Evidence"] },
+      { id: "kpiRatings", type: "matrix", label: "KPI Ratings", kpis: ["Teamwork", "Communication", "Initiative"] }
+    ]
   }
-}
+  // Add more sections as needed
+];
 
-// Add print debug styles
-function addPrintDebugStyles() {
-  if (document.getElementById('print-debug-styles')) return;
-  
-  const style = document.createElement('style');
-  style.id = 'print-debug-styles';
-  style.textContent = `
-    body.print-preview {
-      background: #f3f4f6 !important;
-      padding: 20px;
-    }
-    
-    body.print-preview .container {
-      background: white !important;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-      max-width: 8.5in !important;
-      margin: 0 auto !important;
-      padding: 1in 0.75in !important;
-    }
-    
-    body.print-preview [style*="page-break-before: always"] {
-      position: relative;
-    }
-    
-    body.print-preview [style*="page-break-before: always"]::before {
-      content: "📄 New Page";
-      position: absolute;
-      top: -15px;
-      left: 0;
-      background: #dc2626;
-      color: white;
-      padding: 2px 8px;
-      font-size: 12px;
-      border-radius: 4px;
-    }
-  `;
-  
-  document.head.appendChild(style);
-}
-
-// Initialize debug styles
-addPrintDebugStyles();
-
-// Expose test function globally
-window.populateTestData = populateTestData;
-window.previewPDFContent = previewPDFContent;
-
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    debounce,
-    smoothScrollTo,
-    setSectionCollapsed,
-    updateSectionSummary,
-    updateAllSectionSummaries,
-    updateOverallProgress,
-    setupCollapsibles,
-    setupSectionNav,
-    enhanceTextarea,
-    enhanceAllTextareas,
-    buildCsvString,
-    buildReviewRows,
-  };
-}
+// Use this schema for new reviews going forward
+window.employeeReviewSchema = employeeReviewSchema;
+window.defaultSections = defaultSections;
