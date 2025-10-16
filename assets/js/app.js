@@ -94,13 +94,26 @@ document.addEventListener('DOMContentLoaded', () => {
       const password = document.getElementById('login-password').value;
       const errorDiv = document.getElementById('login-error');
       errorDiv.textContent = '';
+      
+      // Validate inputs
+      if (!email || !password) {
+        errorDiv.textContent = 'Please enter both email and password.';
+        return;
+      }
+      
       try {
+        if (!window.firebaseHelpers) {
+          throw new Error('Firebase not initialized. Please reload the page.');
+        }
         await window.firebaseHelpers.loginWithEmail(email, password);
         // Success: modal will close via auth state listener
       } catch (err) {
+        console.error('Login error:', err);
         errorDiv.textContent = err.message || 'Login failed. Please try again.';
       }
     };
+  } else {
+    console.warn('Login form not found');
   }
 
   // Sign-up form handler
@@ -113,6 +126,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const confirm = document.getElementById('signup-confirm').value;
       const errorDiv = document.getElementById('signup-error');
       errorDiv.textContent = '';
+      
+      // Validate inputs
+      if (!email || !password || !confirm) {
+        errorDiv.textContent = 'Please fill in all fields.';
+        return;
+      }
+      
       if (password !== confirm) {
         errorDiv.textContent = 'Passwords do not match.';
         return;
@@ -122,12 +142,18 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       try {
+        if (!window.firebaseHelpers) {
+          throw new Error('Firebase not initialized. Please reload the page.');
+        }
         await window.firebaseHelpers.signUpWithEmail(email, password);
         // Success: modal will close via auth state listener
       } catch (err) {
+        console.error('Signup error:', err);
         errorDiv.textContent = err.message || 'Sign up failed. Please try again.';
       }
     };
+  } else {
+    console.warn('Signup form not found');
   }
 
   const resetForm = document.getElementById('reset-form');
@@ -136,11 +162,20 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const email = document.getElementById('reset-email').value.trim();
       const status = document.getElementById('reset-status');
+      
+      if (!email) {
+        if (status) status.textContent = 'Please enter your email address.';
+        return;
+      }
+      
       if (status) {
         status.textContent = 'Sending reset email…';
         status.className = 'text-sm min-h-[1.5em] text-slate-600';
       }
       try {
+        if (!window.firebaseHelpers) {
+          throw new Error('Firebase not initialized. Please reload the page.');
+        }
         await window.firebaseHelpers.sendPasswordReset(email);
         if (status) {
           status.textContent = 'Email sent! Check your inbox for further instructions.';
@@ -150,12 +185,15 @@ document.addEventListener('DOMContentLoaded', () => {
           showResetModal(false);
         }, 2000);
       } catch (err) {
+        console.error('Reset error:', err);
         if (status) {
           status.textContent = err.message || 'Unable to send reset email. Please try again.';
           status.className = 'text-sm min-h-[1.5em] text-red-600';
         }
       }
     };
+  } else {
+    console.warn('Reset form not found');
   }
   
   attachLoginLogoutHandlers();
