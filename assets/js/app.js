@@ -88,20 +88,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (typeof window.showSignupModal === 'function') {
         window.showSignupModal(false);
       }
+      if (typeof window.showResetModal === 'function') {
+        window.showResetModal(false);
+      }
       updateLogoutButtonVisibility(true);
       checkAdminStatusAndUpdateUI(user);
     } else {
-      // User is logged out - show login modal and hide app
+      // User is logged out - ONLY show login modal, hide everything else
       updateLogoutButtonVisibility(false);
       checkAdminStatusAndUpdateUI(null);
-      // Show login modal only if we're not already in a modal context
-      const loginModal = document.getElementById('login-modal');
-      const appContainer = document.getElementById('app-container');
-      if (loginModal && !loginModal.classList.contains('hidden')) {
-        // Already showing a modal, don't interfere
-      } else if (appContainer && appContainer.style.display !== 'none') {
-        // User logged out while using the app, might want to show modal
-        // But for now, just keep the app visible
+      if (typeof window.showLoginModal === 'function') {
+        window.showLoginModal(true);
       }
     }
   };
