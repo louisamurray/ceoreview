@@ -1341,19 +1341,6 @@ async function showAddUserModal() {
   }
 }
 
-function showEditUserModal(userId) {
-  const user = state.users.find(u => u.id === userId);
-  if (!user) return;
-  
-  const newRole = prompt(`Edit role for ${user.email}:`, user.role);
-  if (!newRole || !['admin', 'board_reviewer', 'ceo'].includes(newRole)) {
-    alert('Invalid role');
-    return;
-  }
-  
-  updateUserRole(userId, newRole);
-}
-
 async function updateUserRole(userId, newRole) {
   try {
     await window.firebaseHelpers.setUserRole(userId, newRole);
@@ -1797,12 +1784,6 @@ function closeModal(modalId) {
     modal.classList.add('hidden');
     document.body.style.overflow = '';
   }
-}
-
-function showAddUserModal() {
-  // Reset form
-  document.getElementById('add-user-form').reset();
-  showModal('add-user-modal');
 }
 
 function showEditUserModal(userId) {

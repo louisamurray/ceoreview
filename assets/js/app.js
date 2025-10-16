@@ -1055,35 +1055,7 @@ function markFormAsSaved() {
   window.formHasUnsavedChanges = false;
 }
 
-// --- Clear Form ---
-function clearForm() {
-  // Clear all text inputs and textareas
-  document.querySelectorAll('input[type="text"], input[type="email"], textarea').forEach(el => {
-    el.value = '';
-  });
-  
-  // Reset all selects
-  document.querySelectorAll('select').forEach(el => {
-    el.selectedIndex = 0;
-  });
-  
-  // Clear dynamic containers
-  ['challenges-container', 'last-year-goals-container', 'pd-undertaken-container', 
-   'pd-needed-container', 'future-goals-container', 'board-requests-container'].forEach(containerId => {
-    const container = document.getElementById(containerId);
-    if (container) {
-      container.innerHTML = '';
-      ensureEmptyState(container);
-    }
-  });
-  
-  // Update section summaries
-  if (typeof updateAllSectionSummaries === 'function') {
-    updateAllSectionSummaries();
-  }
-}
 
-// --- Dynamic Form Element Functions ---
 // All window.add* functions extracted to ui/components/form-inputs.js
 // window.DynamicFormItems.addChallenge(), addLastYearGoal(), addPDUndertaken(), addPDNeeded(), addFutureGoal(), addBoardRequest()
 // Backwards compatible exports available at window.addChallenge, window.addLastYearGoal, etc.
