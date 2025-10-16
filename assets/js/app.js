@@ -78,6 +78,34 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initially hide logout button until user is authenticated
   updateLogoutButtonVisibility(false);
 
+  // Handle Firebase auth state changes
+  window.onFirebaseAuthStateChanged = function(user) {
+    if (user) {
+      // User is logged in - close modals and show app
+      if (typeof window.showLoginModal === 'function') {
+        window.showLoginModal(false);
+      }
+      if (typeof window.showSignupModal === 'function') {
+        window.showSignupModal(false);
+      }
+      updateLogoutButtonVisibility(true);
+      checkAdminStatusAndUpdateUI(user);
+    } else {
+      // User is logged out - show login modal and hide app
+      updateLogoutButtonVisibility(false);
+      checkAdminStatusAndUpdateUI(null);
+      // Show login modal only if we're not already in a modal context
+      const loginModal = document.getElementById('login-modal');
+      const appContainer = document.getElementById('app-container');
+      if (loginModal && !loginModal.classList.contains('hidden')) {
+        // Already showing a modal, don't interfere
+      } else if (appContainer && appContainer.style.display !== 'none') {
+        // User logged out while using the app, might want to show modal
+        // But for now, just keep the app visible
+      }
+    }
+  };
+
   // Setup all button handlers from ButtonHandlers module
   if (typeof window.ButtonHandlers !== 'undefined') {
     window.ButtonHandlers.setupAll();
