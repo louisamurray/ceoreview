@@ -265,9 +265,18 @@ function checkAdminStatus() {
       try {
         if (window.firebaseHelpers?.getUserData) {
           const userData = await window.firebaseHelpers.getUserData(user.uid);
+          const adminRole = window.firebaseHelpers.USER_ROLES?.ADMIN;
+          const adminEmails = window.ADMIN_EMAILS || [];
+          const userEmail = user.email?.toLowerCase();
+          const userRole = userData?.role;
           const isAdmin =
-            (userData?.role === 'admin' || userData?.role === window.firebaseHelpers.USER_ROLES?.ADMIN) ||
-            (window.ADMIN_EMAILS && window.ADMIN_EMAILS.includes(user.email?.toLowerCase()));
+            (userRole === 'admin' || userRole === adminRole) ||
+            (adminEmails.includes(userEmail));
+          console.log('[Sidebar][AdminCheck] user:', user);
+          console.log('[Sidebar][AdminCheck] userData:', userData);
+          console.log('[Sidebar][AdminCheck] userRole:', userRole, 'adminRole:', adminRole);
+          console.log('[Sidebar][AdminCheck] userEmail:', userEmail, 'adminEmails:', adminEmails);
+          console.log('[Sidebar][AdminCheck] isAdmin:', isAdmin);
           sidebarState.isAdmin = isAdmin;
         }
       } catch (error) {
@@ -278,8 +287,8 @@ function checkAdminStatus() {
       sidebarState.currentUser = null;
       sidebarState.isAdmin = false;
     }
-  // Always re-populate navigation links after auth/admin check
-  setTimeout(populateNavigationLinks, 0);
+    // Always re-populate navigation links after auth/admin check
+    setTimeout(populateNavigationLinks, 0);
   });
 }
 
