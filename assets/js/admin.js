@@ -67,8 +67,13 @@ function initAdminDashboard() {
     state.currentUser = user;
     
     if (!user) {
-      showError('Please sign in via the main application to access the dashboard.');
+      // Not logged in - redirect to main site
+      showError('Please sign in to access the admin dashboard.');
       showUserBadge(null);
+      hideAdminContent();
+      setTimeout(() => {
+        window.location.href = '/index.html';
+      }, 2000);
       return;
     }
 
@@ -84,10 +89,17 @@ function initAdminDashboard() {
 
       // Check if user has admin or board reviewer access
       if (!isAuthorized(state.userData)) {
-        showError('You do not have permission to access the admin dashboard.');
+        showError('You do not have permission to access the admin dashboard. Redirecting...');
         showUserBadge(null);
+        hideAdminContent();
+        setTimeout(() => {
+          window.location.href = '/index.html';
+        }, 2000);
         return;
       }
+
+      // Authorization passed - show admin content
+      showAdminContent();
 
       // Update login info
       await window.firebaseHelpers.updateUserLoginInfo(user.uid);
@@ -102,6 +114,7 @@ function initAdminDashboard() {
     } catch (error) {
       console.error('Authentication error:', error);
       showError('Authentication failed. Please try again.');
+      hideAdminContent();
     }
   });
 }
@@ -703,6 +716,20 @@ function showUserBadge(email) {
     badge.classList.remove('hidden');
     badge.textContent = email;
   }
+}
+
+function hideAdminContent() {
+  const nav = document.querySelector('nav');
+  const main = document.querySelector('main');
+  if (nav) nav.style.display = 'none';
+  if (main) main.style.display = 'none';
+}
+
+function showAdminContent() {
+  const nav = document.querySelector('nav');
+  const main = document.querySelector('main');
+  if (nav) nav.style.display = '';
+  if (main) main.style.display = '';
 }
 
 function setStatus(message, variant = 'info') {
