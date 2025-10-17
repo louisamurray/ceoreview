@@ -29,7 +29,7 @@ function createSidebarHTML() {
     <!-- Sidebar -->
     <aside
       id="sidebar"
-      class="fixed left-0 top-0 z-40 h-screen w-64 -translate-x-full transform bg-slate-900 shadow-lg transition-transform duration-300 lg:static lg:translate-x-0 lg:shadow-none"
+      class="fixed left-0 top-0 z-40 h-screen w-64 -translate-x-full transform bg-slate-900 shadow-lg transition-transform duration-300 lg:static lg:z-0 lg:h-screen lg:w-64 lg:translate-x-0 lg:transform-none lg:shadow-none"
     >
       <!-- Header -->
       <div class="border-b border-slate-800 p-6">
@@ -50,7 +50,7 @@ function createSidebarHTML() {
       </div>
 
       <!-- Navigation -->
-      <nav class="space-y-2 p-6">
+      <nav class="space-y-2 overflow-y-auto p-6" style="max-height: calc(100vh - 300px);">
         <!-- My Reviews -->
         <a
           href="/my-reviews.html"
@@ -70,10 +70,10 @@ function createSidebarHTML() {
         >
           <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-          </svg>
-          <span>Admin Dashboard</span>
-          <span class="ml-auto rounded bg-red-600 px-2 py-1 text-xs font-semibold text-white">Admin</span>
-        </a>
+            </svg>
+            <span>Admin Dashboard</span>
+            <span class="ml-auto rounded bg-red-600 px-2 py-1 text-xs font-semibold text-white">Admin</span>
+          </a>
 
         <!-- Back to Review -->
         <a
@@ -118,12 +118,10 @@ function createSidebarHTML() {
   const body = document.body;
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = sidebarHTML;
-  body.insertBefore(tempDiv.firstElementChild, body.firstChild);
-  body.insertBefore(tempDiv.firstElementChild, body.firstChild);
-  body.insertBefore(tempDiv.firstElementChild, body.firstChild);
-}
-
-function setupSidebarListeners() {
+  body.insertBefore(tempDiv.querySelector('#sidebar-overlay'), body.firstChild);
+  body.insertBefore(tempDiv.querySelector('#sidebar'), body.firstChild);
+  body.appendChild(tempDiv.querySelector('#sidebar-toggle-btn'));
+}function setupSidebarListeners() {
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebar-overlay');
   const toggleBtn = document.getElementById('sidebar-toggle-btn');

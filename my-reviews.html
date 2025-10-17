@@ -53,9 +53,9 @@
       }
     </style>
   </head>
-  <body class="bg-slate-100 text-slate-800">
+  <body class="flex flex-col lg:flex-row bg-slate-100 text-slate-800">
     <!-- Auth Loading Indicator -->
-    <div id="auth-loading" class="flex min-h-screen items-center justify-center bg-slate-100">
+    <div id="auth-loading" class="flex flex-1 min-h-screen items-center justify-center bg-slate-100">
       <div class="text-center">
         <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
           <svg class="h-6 w-6 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
@@ -68,7 +68,7 @@
     </div>
 
     <!-- Main Content -->
-    <div id="reviews-content">
+    <div id="reviews-content" class="flex-1 flex flex-col">
       <!-- Header -->
       <header class="border-b border-slate-200 bg-white/90 backdrop-blur">
         <div class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
