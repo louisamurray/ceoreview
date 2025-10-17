@@ -1,31 +1,52 @@
+#sidebar .border-t {
+  margin-top: auto !important;
+}
+#sidebar-nav-links {
+  margin-top: 1.5rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.sidebar-nav-link {
+  margin-bottom: 1rem !important;
+  border: none !important;
+}
+
+#sidebar-close-btn {
+  margin-left: auto !important;
+  margin-top: 0.5rem !important;
+}
+
+#sidebar-logout-btn {
+  margin-top: 2rem !important;
+}
 #sidebar-nav-links * {
   color: #fff !important;
-  background: #1e293b !important;
   font-size: 1.2rem !important;
-  display: block !important;
   opacity: 1 !important;
   visibility: visible !important;
   z-index: 110 !important;
 }
 #sidebar, #sidebar nav, #sidebar-nav-links {
-  /* position: relative removed for all, set fixed only for #sidebar below */
   position: fixed !important;
   z-index: 100 !important;
   height: 100vh !important;
   min-height: 100vh !important;
   overflow: visible !important;
+  border: none !important;
 }
 
 #sidebar {
   display: flex !important;
   flex-direction: column !important;
   align-items: stretch !important;
+  border: none !important;
 }
 
 #sidebar-nav-links {
   flex: 1 1 auto !important;
   overflow-y: auto !important;
   max-height: calc(100vh - 120px) !important;
+  border: none !important;
 }
 
 /* Removed legacy yellow backgrounds and debug borders. Tailwind controls sidebar appearance. */
