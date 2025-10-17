@@ -237,51 +237,30 @@ function checkAdminStatus() {
   firebase.auth().onAuthStateChanged(async (user) => {
     if (user) {
       sidebarState.currentUser = user;
-      
       // Update user email in sidebar
       const userEmailEl = document.getElementById('sidebar-user-email');
       if (userEmailEl) {
         userEmailEl.textContent = user.email || user.uid;
       }
-
       // Check if admin
       try {
         if (window.firebaseHelpers?.getUserData) {
           const userData = await window.firebaseHelpers.getUserData(user.uid);
-          const isAdmin = 
+          const isAdmin =
             (userData?.role === 'admin' || userData?.role === window.firebaseHelpers.USER_ROLES?.ADMIN) ||
             (window.ADMIN_EMAILS && window.ADMIN_EMAILS.includes(user.email?.toLowerCase()));
-          
           sidebarState.isAdmin = isAdmin;
-          
-          // Show/hide admin dashboard link
-          const adminLink = document.getElementById('admin-dashboard-link');
-          if (adminLink) {
-            if (isAdmin) {
-              adminLink.classList.remove('hidden');
-            } else {
-              adminLink.classList.add('hidden');
-            }
-          }
         }
       } catch (error) {
         console.warn('Error checking admin status:', error);
-        // Hide admin link on error
-        const adminLink = document.getElementById('admin-dashboard-link');
-        if (adminLink) {
-          adminLink.classList.add('hidden');
-        }
+        sidebarState.isAdmin = false;
       }
     } else {
       sidebarState.currentUser = null;
       sidebarState.isAdmin = false;
-      
-      // Hide admin link when not logged in
-      const adminLink = document.getElementById('admin-dashboard-link');
-      if (adminLink) {
-        adminLink.classList.add('hidden');
-      }
     }
+    // Always re-populate navigation links after auth/admin check
+    populateNavigationLinks();
   });
 }
 
