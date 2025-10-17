@@ -51,40 +51,10 @@ function createSidebarHTML() {
 
       <!-- Navigation -->
       <nav class="space-y-2 overflow-y-auto p-6" style="max-height: calc(100vh - 300px);">
-        <!-- My Reviews -->
-        <a
-          href="/my-reviews.html"
-          class="sidebar-nav-link flex items-center gap-3 rounded-lg px-4 py-3 text-slate-300 transition hover:bg-slate-800 hover:text-white"
-        >
-          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <span>My Reviews</span>
-        </a>
-
-        <!-- Admin Dashboard (conditional) -->
-        <a
-          id="admin-dashboard-link"
-          href="/admin.html"
-          class="sidebar-nav-link hidden flex items-center gap-3 rounded-lg px-4 py-3 text-slate-300 transition hover:bg-slate-800 hover:text-white"
-        >
-          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-            </svg>
-            <span>Admin Dashboard</span>
-            <span class="ml-auto rounded bg-red-600 px-2 py-1 text-xs font-semibold text-white">Admin</span>
-          </a>
-
-        <!-- Back to Review -->
-        <a
-          href="/index.html"
-          class="sidebar-nav-link flex items-center gap-3 rounded-lg px-4 py-3 text-slate-300 transition hover:bg-slate-800 hover:text-white"
-        >
-          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-          </svg>
-          <span>Back to Review</span>
-        </a>
+        <!-- Dynamic Navigation Links -->
+        <div id="sidebar-nav-links">
+          <!-- Links will be inserted here based on current page -->
+        </div>
       </nav>
 
       <!-- Footer with User Info -->
@@ -121,13 +91,85 @@ function createSidebarHTML() {
   body.insertBefore(tempDiv.querySelector('#sidebar-overlay'), body.firstChild);
   body.insertBefore(tempDiv.querySelector('#sidebar'), body.firstChild);
   body.appendChild(tempDiv.querySelector('#sidebar-toggle-btn'));
+  
+  // Populate navigation links based on current page
+  populateNavigationLinks();
+}
+
+function populateNavigationLinks() {
+  const currentPage = window.location.pathname;
+  const navContainer = document.getElementById('sidebar-nav-links');
+  
+  if (!navContainer) return;
+  
+  let navLinksHTML = '';
+  
+  // Always show My Reviews (unless already on that page)
+  if (!currentPage.includes('/my-reviews.html')) {
+    navLinksHTML += `
+      <a
+        href="/my-reviews.html"
+        class="sidebar-nav-link flex items-center gap-3 rounded-lg px-4 py-3 text-slate-300 transition hover:bg-slate-800 hover:text-white"
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <span>My Reviews</span>
+      </a>
+    `;
+  }
+  
+  // Show Admin Dashboard link if admin (conditional)
+  navLinksHTML += `
+    <a
+      id="admin-dashboard-link"
+      href="/admin.html"
+      class="sidebar-nav-link hidden flex items-center gap-3 rounded-lg px-4 py-3 text-slate-300 transition hover:bg-slate-800 hover:text-white"
+    >
+      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+      </svg>
+      <span>Admin Dashboard</span>
+      <span class="ml-auto rounded bg-red-600 px-2 py-1 text-xs font-semibold text-white">Admin</span>
+    </a>
+  `;
+  
+  // Show different links based on current page
+  if (currentPage.includes('/admin.html')) {
+    // On admin page - show New Review link
+    navLinksHTML += `
+      <a
+        href="/index.html"
+        class="sidebar-nav-link flex items-center gap-3 rounded-lg px-4 py-3 text-slate-300 transition hover:bg-slate-800 hover:text-white"
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        <span>New Review</span>
+      </a>
+    `;
+  } else {
+    // On index.html or my-reviews.html - show Back to Review link
+    navLinksHTML += `
+      <a
+        href="/index.html"
+        class="sidebar-nav-link flex items-center gap-3 rounded-lg px-4 py-3 text-slate-300 transition hover:bg-slate-800 hover:text-white"
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+        </svg>
+        <span>Back to Review</span>
+      </a>
+    `;
+  }
+  
+  navContainer.innerHTML = navLinksHTML;
 }function setupSidebarListeners() {
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebar-overlay');
   const toggleBtn = document.getElementById('sidebar-toggle-btn');
   const closeBtn = document.getElementById('sidebar-close-btn');
   const logoutBtn = document.getElementById('sidebar-logout-btn');
-  const navLinks = document.querySelectorAll('.sidebar-nav-link');
 
   // Toggle sidebar
   toggleBtn?.addEventListener('click', () => {
@@ -144,13 +186,14 @@ function createSidebarHTML() {
   closeBtn?.addEventListener('click', closeSidebar);
   overlay?.addEventListener('click', closeSidebar);
 
-  // Close sidebar when clicking a nav link (mobile only)
-  navLinks.forEach(link => {
-    link.addEventListener('click', () => {
+  // Close sidebar when clicking any nav link (mobile only) - use event delegation
+  const navLinksContainer = document.getElementById('sidebar-nav-links');
+  navLinksContainer?.addEventListener('click', (e) => {
+    if (e.target.closest('.sidebar-nav-link')) {
       if (window.innerWidth < 1024) {
         closeSidebar();
       }
-    });
+    }
   });
 
   // Logout handler
