@@ -723,11 +723,11 @@ function hideAdminContent() {
   const main = document.querySelector('main[data-admin-main]');
   console.log('[Admin] Hiding content - nav found:', !!nav, 'main found:', !!main);
   if (nav) {
-    nav.style.display = 'none';
+    nav.classList.add('content-hidden');
     console.log('[Admin] Nav hidden');
   }
   if (main) {
-    main.style.display = 'none';
+    main.classList.add('content-hidden');
     console.log('[Admin] Main hidden');
   }
 }
@@ -737,11 +737,11 @@ function showAdminContent() {
   const main = document.querySelector('main[data-admin-main]');
   console.log('[Admin] Showing content - nav found:', !!nav, 'main found:', !!main);
   if (nav) {
-    nav.style.display = '';
+    nav.classList.remove('content-hidden');
     console.log('[Admin] Nav shown');
   }
   if (main) {
-    main.style.display = '';
+    main.classList.remove('content-hidden');
     console.log('[Admin] Main shown');
   }
 }
