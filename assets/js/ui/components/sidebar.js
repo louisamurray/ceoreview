@@ -1,51 +1,59 @@
 /**
  * Sidebar Navigation Component
- * Displays user menu with links to My Reviews and Admin Dashboard
- * Exported as window.SidebarNav namespace
+ * Provides responsive navigation for the CEO review experience.
+ * Exported as window.SidebarNav for backwards compatibility.
  */
 
-
 let sidebarInitialized = false;
+
 const sidebarState = {
   isOpen: false,
   isAdmin: false,
   currentUser: null
 };
 
+const NAV_ICON_PATHS = {
+  document: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+  plus: 'M12 4v16m8-8H4',
+  arrow: 'M11 19l-7-7 7-7m8 14l-7-7 7-7',
+  control: 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4'
+};
+
+const NAV_LINK_BASE_CLASSES = 'sidebar-nav-link text-sm font-semibold text-slate-100 transition-colors';
+
 function initializeSidebar() {
   if (sidebarInitialized) return;
   sidebarInitialized = true;
-  // Create sidebar HTML
-  createSidebarHTML();
-  // Setup event listeners
+
+  createSidebarStructure();
   setupSidebarListeners();
-  // Check if user is admin
-  checkAdminStatus();
+  attachAuthListener();
+  populateNavigationLinks();
 }
 
-function createSidebarHTML() {
-  // DEBUG: Add a large overlay to test if sidebar is being covered
-  const debugOverlay = '<div id="sidebar-debug-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(255,0,0,0.2);z-index:1000000;pointer-events:none;font-size:2rem;text-align:center;line-height:200px;">DEBUG OVERLAY</div>';
-  const sidebarHTML = `
-    ${debugOverlay}
-    <!-- Sidebar Overlay (mobile) -->
-    <div id="sidebar-overlay" class="fixed inset-0 z-30 hidden bg-black/50 transition-opacity lg:hidden"></div>
-    
-    <!-- Sidebar -->
+function createSidebarStructure() {
+  const markup = `
+    <div
+      id="sidebar-overlay"
+      class="fixed inset-0 z-30 hidden bg-slate-900/60 backdrop-blur-sm transition-opacity lg:hidden"
+      aria-hidden="true"
+    ></div>
     <aside
       id="sidebar"
-      class="fixed left-0 top-0 z-40 h-screen w-64 -translate-x-full transform bg-slate-900 shadow-lg transition-transform duration-300 lg:sticky lg:top-0 lg:z-0 lg:h-screen lg:w-64 lg:translate-x-0 lg:transform-none lg:shadow-none"
+      class="fixed left-0 top-0 z-40 flex h-screen w-64 -translate-x-full flex-col bg-slate-900/95 shadow-xl backdrop-blur lg:sticky lg:top-0 lg:z-0 lg:translate-x-0 lg:bg-slate-900"
+      aria-label="Secondary navigation"
     >
-      <!-- Header -->
-      <div class="border-b border-slate-800 p-6">
-        <div class="flex items-center justify-between">
+      <div class="border-b border-slate-800/70 p-6">
+        <div class="flex items-start justify-between gap-4">
           <div>
-            <h2 class="text-lg font-bold text-white">Menu</h2>
-            <p class="text-xs text-slate-400">REAP Marlborough</p>
+            <p class="text-xs uppercase tracking-wide text-slate-400">REAP Marlborough</p>
+            <h2 class="mt-1 text-lg font-semibold text-white">CEO Review</h2>
           </div>
           <button
             id="sidebar-close-btn"
-            class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white lg:hidden"
+            type="button"
+            class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 lg:hidden"
+            aria-label="Close menu"
           >
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -54,174 +62,221 @@ function createSidebarHTML() {
         </div>
       </div>
 
-      <!-- Navigation -->
-      <nav class="space-y-2 overflow-y-auto p-6" style="max-height: calc(100vh - 300px);">
-        <!-- Dynamic Navigation Links -->
-        <div id="sidebar-nav-links">
-          <!-- Links will be inserted here based on current page -->
-        </div>
+      <nav class="flex-1 overflow-y-auto p-6" aria-label="Sidebar">
+        <div id="sidebar-nav-links" class="space-y-1"></div>
       </nav>
 
-      <!-- Footer with User Info -->
-      <div class="absolute bottom-0 left-0 right-0 border-t border-slate-800 p-6">
-        <div class="mb-4 rounded-lg bg-slate-800 p-3">
-          <p class="text-xs text-slate-400">Logged in as</p>
-          <p id="sidebar-user-email" class="truncate text-sm font-semibold text-white"></p>
+      <div class="border-t border-slate-800/70 p-6">
+        <div class="mb-4 rounded-xl bg-slate-800/80 p-4">
+          <p class="text-xs uppercase tracking-wide text-slate-400">Logged in as</p>
+          <p id="sidebar-user-email" class="mt-2 truncate text-sm font-semibold text-white" title=""></p>
         </div>
         <button
           id="sidebar-logout-btn"
-          class="w-full rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-600"
+          type="button"
+          class="w-full rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
         >
-          Sign Out
+          Sign out
         </button>
       </div>
     </aside>
-
-    <!-- Sidebar Toggle Button (for mobile) -->
     <button
       id="sidebar-toggle-btn"
-      class="fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 shadow-lg transition hover:bg-blue-700 lg:hidden"
-      title="Toggle menu"
+      type="button"
+      class="fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 lg:hidden"
+      aria-controls="sidebar"
+      aria-expanded="false"
+      aria-label="Open menu"
     >
-      <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
       </svg>
     </button>
   `;
 
-  // Insert sidebar at the beginning of body
-  const body = document.body;
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = sidebarHTML;
-  body.insertBefore(tempDiv.querySelector('#sidebar-overlay'), body.firstChild);
-  body.insertBefore(tempDiv.querySelector('#sidebar'), body.firstChild);
-  body.appendChild(tempDiv.querySelector('#sidebar-toggle-btn'));
-  
-  // Populate navigation links based on current page
-  populateNavigationLinks();
+  const template = document.createElement('template');
+  template.innerHTML = markup.trim();
+
+  const overlay = template.content.querySelector('#sidebar-overlay');
+  const sidebar = template.content.querySelector('#sidebar');
+  const toggle = template.content.querySelector('#sidebar-toggle-btn');
+
+  if (!overlay || !sidebar || !toggle) {
+    console.warn('[Sidebar] Failed to generate markup');
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  fragment.appendChild(overlay);
+  fragment.appendChild(sidebar);
+
+  document.body.insertBefore(fragment, document.body.firstChild);
+  document.body.appendChild(toggle);
+}
+
+function attachAuthListener() {
+  const auth = window.firebase?.auth?.();
+  if (!auth) {
+    console.warn('[Sidebar] Firebase auth not available; navigation will render without user context.');
+    populateNavigationLinks();
+    return;
+  }
+
+  auth.onAuthStateChanged(async (user) => {
+    sidebarState.currentUser = user;
+
+    updateUserEmail(user);
+
+    if (user) {
+      sidebarState.isAdmin = await determineAdminStatus(user);
+    } else {
+      sidebarState.isAdmin = false;
+    }
+
+    populateNavigationLinks();
+  });
+}
+
+async function determineAdminStatus(user) {
+  try {
+    if (!window.firebaseHelpers) return false;
+    const userData = await window.firebaseHelpers.getUserData?.(user.uid);
+    const adminRole = window.firebaseHelpers.USER_ROLES?.ADMIN;
+    const adminEmails = (window.ADMIN_EMAILS || []).map((email) => email?.toLowerCase()).filter(Boolean);
+    const normalizedEmail = user.email?.toLowerCase();
+    const declaredRole = userData?.role;
+
+    return (
+      declaredRole === 'admin' ||
+      declaredRole === adminRole ||
+      (normalizedEmail ? adminEmails.includes(normalizedEmail) : false)
+    );
+  } catch (error) {
+    console.warn('[Sidebar] Error determining admin status:', error);
+    return false;
+  }
+}
+
+function updateUserEmail(user) {
+  const userEmailEl = document.getElementById('sidebar-user-email');
+  if (!userEmailEl) return;
+
+  const email = user?.email || user?.uid || '';
+  userEmailEl.textContent = email;
+  userEmailEl.title = email;
 }
 
 function populateNavigationLinks() {
-  // DEBUG: Add a test element to check visibility
-  setTimeout(() => {
-    const navContainer = document.getElementById('sidebar-nav-links');
-    if (navContainer && !document.getElementById('sidebar-test-element')) {
-      const testDiv = document.createElement('div');
-      testDiv.id = 'sidebar-test-element';
-      testDiv.textContent = 'TEST ELEMENT';
-      testDiv.style.cssText = 'color: red !important; background: yellow !important; font-size: 2rem !important; padding: 1rem !important;';
-      navContainer.appendChild(testDiv);
-    }
-  }, 100);
-  console.log('[Sidebar] Populating navigation links. isAdmin:', sidebarState.isAdmin, 'pathname:', window.location.pathname);
-  const currentPage = window.location.pathname;
   const navContainer = document.getElementById('sidebar-nav-links');
-  
   if (!navContainer) return;
-  
-  let navLinksHTML = '';
-  
-  // Always show My Reviews (unless already on that page)
-  if (!currentPage.includes('/my-reviews.html')) {
-    navLinksHTML += `
-      <a
-        href="/my-reviews.html"
-        class="sidebar-nav-link flex items-center gap-3 rounded-lg px-4 py-3 text-white transition hover:bg-slate-800 hover:text-yellow-300"
-      >
-        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-        <span>My Reviews</span>
-      </a>
-    `;
+
+  const currentPath = window.location.pathname;
+  const isIndexPage = currentPath === '/' || currentPath.endsWith('/index.html');
+  const isMyReviewsPage = currentPath.endsWith('/my-reviews.html');
+  const isAdminPage = currentPath.endsWith('/admin.html') || currentPath.includes('/admin.html');
+  const navItems = [];
+
+  if (!isMyReviewsPage) {
+    navItems.push(
+      createNavLink({
+        href: '/my-reviews.html',
+        label: 'My Reviews',
+        icon: 'document',
+        isActive: isMyReviewsPage
+      })
+    );
   }
 
-  // On admin page - always show New Review
-  if (currentPage.includes('/admin.html')) {
-    navLinksHTML += `
-      <a
-        href="/index.html"
-        class="sidebar-nav-link flex items-center gap-3 rounded-lg px-4 py-3 text-white transition hover:bg-slate-800 hover:text-yellow-300"
-      >
-        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg>
-        <span>New Review</span>
-      </a>
-    `;
+  if (isAdminPage) {
+    navItems.push(
+      createNavLink({
+        href: '/index.html',
+        label: 'New Review',
+        icon: 'plus',
+        isActive: isIndexPage
+      })
+    );
   } else {
-    // On index.html or my-reviews.html - show Back to Review link
-    navLinksHTML += `
-      <a
-        href="/index.html"
-        class="sidebar-nav-link flex items-center gap-3 rounded-lg px-4 py-3 text-white transition hover:bg-slate-800 hover:text-yellow-300"
-      >
-        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-        </svg>
-        <span>Back to Review</span>
-      </a>
-    `;
+    navItems.push(
+      createNavLink({
+        href: '/index.html',
+        label: 'Back to Review',
+        icon: 'arrow',
+        isActive: isIndexPage
+      })
+    );
   }
 
-  // Show Admin Dashboard link if admin (conditional)
   if (sidebarState.isAdmin) {
-    navLinksHTML += `
-      <a
-        id="admin-dashboard-link"
-        href="/admin.html"
-        class="sidebar-nav-link flex items-center gap-3 rounded-lg px-4 py-3 text-white transition hover:bg-slate-800 hover:text-yellow-300"
-      >
-        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-        </svg>
-        <span>Admin Dashboard</span>
-        <span class="ml-auto rounded bg-red-600 px-2 py-1 text-xs font-semibold text-white">Admin</span>
-      </a>
-    `;
+    navItems.push(
+      createNavLink({
+        href: '/admin.html',
+        label: 'Admin Dashboard',
+        icon: 'control',
+        isActive: isAdminPage,
+        badge: 'Admin'
+      })
+    );
   }
 
-  navContainer.innerHTML = navLinksHTML;
-  console.log('[Sidebar] navLinksHTML:', navLinksHTML);
-}function setupSidebarListeners() {
-  const sidebar = document.getElementById('sidebar');
+  navContainer.innerHTML = navItems.join('');
+}
+
+function createNavLink({ href, label, icon, badge, isActive }) {
+  const iconPath = NAV_ICON_PATHS[icon];
+  const iconMarkup = iconPath
+    ? `
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${iconPath}" />
+        </svg>
+      `
+    : '';
+
+  const badgeMarkup = badge ? `<span class="badge">${badge}</span>` : '';
+  const activeClass = isActive ? ' bg-white/10 text-white' : '';
+  const ariaCurrent = isActive ? ' aria-current="page"' : '';
+
+  return `
+    <a${ariaCurrent} href="${href}" class="${NAV_LINK_BASE_CLASSES}${activeClass}">
+      ${iconMarkup}
+      <span>${label}</span>
+      ${badgeMarkup}
+    </a>
+  `;
+}
+
+function setupSidebarListeners() {
   const overlay = document.getElementById('sidebar-overlay');
   const toggleBtn = document.getElementById('sidebar-toggle-btn');
   const closeBtn = document.getElementById('sidebar-close-btn');
   const logoutBtn = document.getElementById('sidebar-logout-btn');
 
-  // Toggle sidebar
-  toggleBtn?.addEventListener('click', () => {
-    sidebarState.isOpen = !sidebarState.isOpen;
-    updateSidebarVisibility();
-  });
-
-  // Close sidebar
   const closeSidebar = () => {
     sidebarState.isOpen = false;
     updateSidebarVisibility();
   };
 
+  toggleBtn?.addEventListener('click', () => {
+    sidebarState.isOpen = !sidebarState.isOpen;
+    updateSidebarVisibility();
+  });
+
   closeBtn?.addEventListener('click', closeSidebar);
   overlay?.addEventListener('click', closeSidebar);
 
-  // Close sidebar when clicking any nav link (mobile only) - use event delegation
   const navLinksContainer = document.getElementById('sidebar-nav-links');
-  navLinksContainer?.addEventListener('click', (e) => {
-    if (e.target.closest('.sidebar-nav-link')) {
-      if (window.innerWidth < 1024) {
-        closeSidebar();
-      }
+  navLinksContainer?.addEventListener('click', (event) => {
+    if (event.target.closest('.sidebar-nav-link') && window.innerWidth < 1024) {
+      closeSidebar();
     }
   });
 
-  // Logout handler
   logoutBtn?.addEventListener('click', async () => {
     try {
       if (window.firebaseHelpers?.logout) {
         await window.firebaseHelpers.logout();
       } else {
-        console.error('Firebase logout not available');
+        console.error('[Sidebar] Firebase logout helper not available');
       }
     } catch (error) {
       console.error('Logout error:', error);
@@ -229,77 +284,35 @@ function populateNavigationLinks() {
     }
   });
 
-  // Close sidebar on window resize (when going from mobile to desktop)
   window.addEventListener('resize', () => {
     if (window.innerWidth >= 1024 && sidebarState.isOpen) {
       sidebarState.isOpen = false;
       updateSidebarVisibility();
     }
   });
+
+  updateSidebarVisibility();
 }
 
 function updateSidebarVisibility() {
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebar-overlay');
+  const toggleBtn = document.getElementById('sidebar-toggle-btn');
 
-  if (sidebarState.isOpen) {
-    sidebar?.classList.remove('-translate-x-full');
-    overlay?.classList.remove('hidden');
-  } else {
-    sidebar?.classList.add('-translate-x-full');
-    overlay?.classList.add('hidden');
-  }
+  const isOpen = sidebarState.isOpen;
+
+  sidebar?.classList.toggle('-translate-x-full', !isOpen);
+  overlay?.classList.toggle('hidden', !isOpen);
+  overlay?.setAttribute('aria-hidden', String(!isOpen));
+  toggleBtn?.setAttribute('aria-expanded', String(isOpen));
 }
 
-function checkAdminStatus() {
-  // Listen to auth state and check admin status
-  firebase.auth().onAuthStateChanged(async (user) => {
-    if (user) {
-      sidebarState.currentUser = user;
-      // Update user email in sidebar
-      const userEmailEl = document.getElementById('sidebar-user-email');
-      if (userEmailEl) {
-        userEmailEl.textContent = user.email || user.uid;
-      }
-      // Check if admin
-      try {
-        if (window.firebaseHelpers?.getUserData) {
-          const userData = await window.firebaseHelpers.getUserData(user.uid);
-          const adminRole = window.firebaseHelpers.USER_ROLES?.ADMIN;
-          const adminEmails = window.ADMIN_EMAILS || [];
-          const userEmail = user.email?.toLowerCase();
-          const userRole = userData?.role;
-          const isAdmin =
-            (userRole === 'admin' || userRole === adminRole) ||
-            (adminEmails.includes(userEmail));
-          console.log('[Sidebar][AdminCheck] user:', user);
-          console.log('[Sidebar][AdminCheck] userData:', userData);
-          console.log('[Sidebar][AdminCheck] userRole:', userRole, 'adminRole:', adminRole);
-          console.log('[Sidebar][AdminCheck] userEmail:', userEmail, 'adminEmails:', adminEmails);
-          console.log('[Sidebar][AdminCheck] isAdmin:', isAdmin);
-          sidebarState.isAdmin = isAdmin;
-        }
-      } catch (error) {
-        console.warn('Error checking admin status:', error);
-        sidebarState.isAdmin = false;
-      }
-    } else {
-      sidebarState.currentUser = null;
-      sidebarState.isAdmin = false;
-    }
-    // Always re-populate navigation links after auth/admin check
-    setTimeout(populateNavigationLinks, 0);
-  });
-}
-
-// Initialize sidebar when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializeSidebar);
 } else {
   initializeSidebar();
 }
 
-// Export as window.SidebarNav namespace
 window.SidebarNav = {
   initialize: initializeSidebar,
   isAdmin: () => sidebarState.isAdmin,
@@ -310,7 +323,6 @@ window.SidebarNav = {
   }
 };
 
-// Legacy global exports for backwards compatibility
 Object.assign(window, {
   initializeSidebar,
   SidebarNav: window.SidebarNav
