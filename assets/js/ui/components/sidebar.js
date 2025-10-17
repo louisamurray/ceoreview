@@ -24,7 +24,10 @@ function initializeSidebar() {
 }
 
 function createSidebarHTML() {
+  // DEBUG: Add a large overlay to test if sidebar is being covered
+  const debugOverlay = '<div id="sidebar-debug-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(255,0,0,0.2);z-index:1000000;pointer-events:none;font-size:2rem;text-align:center;line-height:200px;">DEBUG OVERLAY</div>';
   const sidebarHTML = `
+    ${debugOverlay}
     <!-- Sidebar Overlay (mobile) -->
     <div id="sidebar-overlay" class="fixed inset-0 z-30 hidden bg-black/50 transition-opacity lg:hidden"></div>
     
