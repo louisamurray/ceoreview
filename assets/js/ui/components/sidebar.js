@@ -99,6 +99,17 @@ function createSidebarHTML() {
 }
 
 function populateNavigationLinks() {
+  // DEBUG: Add a test element to check visibility
+  setTimeout(() => {
+    const navContainer = document.getElementById('sidebar-nav-links');
+    if (navContainer && !document.getElementById('sidebar-test-element')) {
+      const testDiv = document.createElement('div');
+      testDiv.id = 'sidebar-test-element';
+      testDiv.textContent = 'TEST ELEMENT';
+      testDiv.style.cssText = 'color: red !important; background: yellow !important; font-size: 2rem !important; padding: 1rem !important;';
+      navContainer.appendChild(testDiv);
+    }
+  }, 100);
   console.log('[Sidebar] Populating navigation links. isAdmin:', sidebarState.isAdmin, 'pathname:', window.location.pathname);
   const currentPage = window.location.pathname;
   const navContainer = document.getElementById('sidebar-nav-links');
