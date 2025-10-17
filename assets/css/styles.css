@@ -1,4 +1,16 @@
 /* DEBUG: Force sidebar nav links to be visible */
+/* DEBUG: Force sidebar and nav to be visible */
+#sidebar {
+  border: 3px solid red !important;
+  min-height: 400px !important;
+  z-index: 9999 !important;
+}
+#sidebar nav {
+  border: 3px solid green !important;
+  min-height: 200px !important;
+  overflow: visible !important;
+}
+/* Existing debug for nav links */
 #sidebar-nav-links {
   background: #fffae6 !important;
   border: 2px solid #eab308 !important;
