@@ -724,10 +724,12 @@ function hideAdminContent() {
   console.log('[Admin] Hiding content - nav found:', !!nav, 'main found:', !!main);
   if (nav) {
     nav.classList.add('content-hidden');
+    nav.classList.remove('content-visible');
     console.log('[Admin] Nav hidden, display is now:', window.getComputedStyle(nav).display);
   }
   if (main) {
     main.classList.add('content-hidden');
+    main.classList.remove('content-visible');
     console.log('[Admin] Main hidden, display is now:', window.getComputedStyle(main).display);
   }
 }
@@ -738,10 +740,12 @@ function showAdminContent() {
   console.log('[Admin] Showing content - nav found:', !!nav, 'main found:', !!main);
   if (nav) {
     nav.classList.remove('content-hidden');
+    nav.classList.add('content-visible');
     console.log('[Admin] Nav shown, display is now:', window.getComputedStyle(nav).display);
   }
   if (main) {
     main.classList.remove('content-hidden');
+    main.classList.add('content-visible');
     console.log('[Admin] Main shown, display is now:', window.getComputedStyle(main).display);
   }
 }
