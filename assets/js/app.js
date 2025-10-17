@@ -49,6 +49,189 @@ function markFormAsSaved() {
   window.formHasUnsavedChanges = false;
 }
 
+const STATUS_CLASSES = {
+  error: 'text-sm min-h-[1.5em] text-red-600',
+  info: 'text-sm min-h-[1.5em] text-slate-600',
+  success: 'text-sm min-h-[1.5em] text-green-600'
+};
+
+function getFieldValue(id, { trim = true } = {}) {
+  const input = document.getElementById(id);
+  if (!input) return '';
+  const value = input.value ?? '';
+  return trim ? value.trim() : value;
+}
+
+function getFirebaseHelpers() {
+  const helpers = window.firebaseHelpers;
+  if (!helpers) {
+    throw new Error('Firebase not initialized. Please reload the page.');
+  }
+  return helpers;
+}
+
+function createStatusManager(element, defaultClass) {
+  if (!element) {
+    return {
+      clear() {},
+      error() {},
+      success() {},
+      info() {},
+      set() {}
+    };
+  }
+
+  const baseClass = defaultClass || element.className || STATUS_CLASSES.info;
+
+  const apply = (text, className = baseClass) => {
+    element.textContent = text;
+    element.className = className;
+  };
+
+  return {
+    clear() {
+      apply('', baseClass);
+    },
+    error(text) {
+      apply(text, STATUS_CLASSES.error);
+    },
+    success(text) {
+      apply(text, STATUS_CLASSES.success);
+    },
+    info(text) {
+      apply(text, STATUS_CLASSES.info);
+    },
+    set(text, className) {
+      apply(text, className || baseClass);
+    }
+  };
+}
+
+function bindAuthForm({ formId, statusId, defaultStatusClass, onSubmit }) {
+  const form = document.getElementById(formId);
+  if (!form) {
+    console.warn(`Auth form not found: ${formId}`);
+    return;
+  }
+
+  const statusElement = statusId ? document.getElementById(statusId) : null;
+  const status = createStatusManager(statusElement, defaultStatusClass);
+  const submitButton = form.querySelector('[type="submit"]');
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.setAttribute('aria-busy', 'true');
+    }
+
+    try {
+      await onSubmit({ status, form });
+    } finally {
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.removeAttribute('aria-busy');
+      }
+    }
+  });
+}
+
+function setupAuthFormHandlers() {
+  bindAuthForm({
+    formId: 'login-form',
+    statusId: 'login-error',
+    defaultStatusClass: STATUS_CLASSES.error,
+    onSubmit: async ({ status }) => {
+      status.clear();
+
+      const email = getFieldValue('login-email');
+      const password = getFieldValue('login-password', { trim: false });
+
+      if (!email || !password) {
+        status.error('Please enter both email and password.');
+        return;
+      }
+
+      try {
+        const helpers = getFirebaseHelpers();
+        await helpers.loginWithEmail(email, password);
+      } catch (error) {
+        console.error('Login error:', error);
+        status.error(error.message || 'Login failed. Please try again.');
+      }
+    }
+  });
+
+  bindAuthForm({
+    formId: 'signup-form',
+    statusId: 'signup-error',
+    defaultStatusClass: STATUS_CLASSES.error,
+    onSubmit: async ({ status }) => {
+      status.clear();
+
+      const email = getFieldValue('signup-email');
+      const password = getFieldValue('signup-password', { trim: false });
+      const confirm = getFieldValue('signup-confirm', { trim: false });
+
+      if (!email || !password || !confirm) {
+        status.error('Please fill in all fields.');
+        return;
+      }
+
+      if (password !== confirm) {
+        status.error('Passwords do not match.');
+        return;
+      }
+
+      if (password.length < 6) {
+        status.error('Password must be at least 6 characters.');
+        return;
+      }
+
+      try {
+        const helpers = getFirebaseHelpers();
+        await helpers.signUpWithEmail(email, password);
+      } catch (error) {
+        console.error('Signup error:', error);
+        status.error(error.message || 'Sign up failed. Please try again.');
+      }
+    }
+  });
+
+  bindAuthForm({
+    formId: 'reset-form',
+    statusId: 'reset-status',
+    defaultStatusClass: STATUS_CLASSES.info,
+    onSubmit: async ({ status, form }) => {
+      status.clear();
+      const email = getFieldValue('reset-email');
+
+      if (!email) {
+        status.error('Please enter your email address.');
+        return;
+      }
+
+      status.info('Sending reset email…');
+
+      try {
+        const helpers = getFirebaseHelpers();
+        await helpers.sendPasswordReset(email);
+        status.success('Email sent! Check your inbox for further instructions.');
+        form.reset();
+        setTimeout(() => {
+          if (typeof window.showResetModal === 'function') {
+            window.showResetModal(false);
+          }
+        }, 2000);
+      } catch (error) {
+        console.error('Reset error:', error);
+        status.error(error.message || 'Unable to send reset email. Please try again.');
+      }
+    }
+  });
+}
+
 // ===== Main Application Initialization =====
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -110,116 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn('ButtonHandlers module not loaded');
   }
 
-  // Login form handler
-  const loginForm = document.getElementById('login-form');
-  if (loginForm) {
-    loginForm.onsubmit = async function(e) {
-      e.preventDefault();
-      const email = document.getElementById('login-email').value.trim();
-      const password = document.getElementById('login-password').value;
-      const errorDiv = document.getElementById('login-error');
-      errorDiv.textContent = '';
-      
-      // Validate inputs
-      if (!email || !password) {
-        errorDiv.textContent = 'Please enter both email and password.';
-        return;
-      }
-      
-      try {
-        if (!window.firebaseHelpers) {
-          throw new Error('Firebase not initialized. Please reload the page.');
-        }
-        await window.firebaseHelpers.loginWithEmail(email, password);
-        // Success: modal will close via auth state listener
-      } catch (err) {
-        console.error('Login error:', err);
-        errorDiv.textContent = err.message || 'Login failed. Please try again.';
-      }
-    };
-  } else {
-    console.warn('Login form not found');
-  }
-
-  // Sign-up form handler
-  const signupForm = document.getElementById('signup-form');
-  if (signupForm) {
-    signupForm.onsubmit = async function(e) {
-      e.preventDefault();
-      const email = document.getElementById('signup-email').value.trim();
-      const password = document.getElementById('signup-password').value;
-      const confirm = document.getElementById('signup-confirm').value;
-      const errorDiv = document.getElementById('signup-error');
-      errorDiv.textContent = '';
-      
-      // Validate inputs
-      if (!email || !password || !confirm) {
-        errorDiv.textContent = 'Please fill in all fields.';
-        return;
-      }
-      
-      if (password !== confirm) {
-        errorDiv.textContent = 'Passwords do not match.';
-        return;
-      }
-      if (password.length < 6) {
-        errorDiv.textContent = 'Password must be at least 6 characters.';
-        return;
-      }
-      try {
-        if (!window.firebaseHelpers) {
-          throw new Error('Firebase not initialized. Please reload the page.');
-        }
-        await window.firebaseHelpers.signUpWithEmail(email, password);
-        // Success: modal will close via auth state listener
-      } catch (err) {
-        console.error('Signup error:', err);
-        errorDiv.textContent = err.message || 'Sign up failed. Please try again.';
-      }
-    };
-  } else {
-    console.warn('Signup form not found');
-  }
-
-  const resetForm = document.getElementById('reset-form');
-  if (resetForm) {
-    resetForm.onsubmit = async function(e) {
-      e.preventDefault();
-      const email = document.getElementById('reset-email').value.trim();
-      const status = document.getElementById('reset-status');
-      
-      if (!email) {
-        if (status) status.textContent = 'Please enter your email address.';
-        return;
-      }
-      
-      if (status) {
-        status.textContent = 'Sending reset email…';
-        status.className = 'text-sm min-h-[1.5em] text-slate-600';
-      }
-      try {
-        if (!window.firebaseHelpers) {
-          throw new Error('Firebase not initialized. Please reload the page.');
-        }
-        await window.firebaseHelpers.sendPasswordReset(email);
-        if (status) {
-          status.textContent = 'Email sent! Check your inbox for further instructions.';
-          status.className = 'text-sm min-h-[1.5em] text-emerald-600';
-        }
-        setTimeout(() => {
-          showResetModal(false);
-        }, 2000);
-      } catch (err) {
-        console.error('Reset error:', err);
-        if (status) {
-          status.textContent = err.message || 'Unable to send reset email. Please try again.';
-          status.className = 'text-sm min-h-[1.5em] text-red-600';
-        }
-      }
-    };
-  } else {
-    console.warn('Reset form not found');
-  }
+  setupAuthFormHandlers();
   
   attachLoginLogoutHandlers();
   
