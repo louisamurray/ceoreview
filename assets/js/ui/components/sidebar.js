@@ -118,25 +118,9 @@ function populateNavigationLinks() {
       </a>
     `;
   }
-  
-  // Show Admin Dashboard link if admin (conditional)
-  navLinksHTML += `
-    <a
-      id="admin-dashboard-link"
-      href="/admin.html"
-      class="sidebar-nav-link hidden flex items-center gap-3 rounded-lg px-4 py-3 text-slate-300 transition hover:bg-slate-800 hover:text-white"
-    >
-      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-      </svg>
-      <span>Admin Dashboard</span>
-      <span class="ml-auto rounded bg-red-600 px-2 py-1 text-xs font-semibold text-white">Admin</span>
-    </a>
-  `;
-  
-  // Show different links based on current page
+
+  // On admin page - always show New Review
   if (currentPage.includes('/admin.html')) {
-    // On admin page - show New Review link
     navLinksHTML += `
       <a
         href="/index.html"
@@ -162,7 +146,24 @@ function populateNavigationLinks() {
       </a>
     `;
   }
-  
+
+  // Show Admin Dashboard link if admin (conditional)
+  if (sidebarState.isAdmin) {
+    navLinksHTML += `
+      <a
+        id="admin-dashboard-link"
+        href="/admin.html"
+        class="sidebar-nav-link flex items-center gap-3 rounded-lg px-4 py-3 text-slate-300 transition hover:bg-slate-800 hover:text-white"
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+        </svg>
+        <span>Admin Dashboard</span>
+        <span class="ml-auto rounded bg-red-600 px-2 py-1 text-xs font-semibold text-white">Admin</span>
+      </a>
+    `;
+  }
+
   navContainer.innerHTML = navLinksHTML;
 }function setupSidebarListeners() {
   const sidebar = document.getElementById('sidebar');
