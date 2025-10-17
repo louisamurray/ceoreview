@@ -97,6 +97,7 @@ function createSidebarHTML() {
 }
 
 function populateNavigationLinks() {
+  console.log('[Sidebar] Populating navigation links. isAdmin:', sidebarState.isAdmin, 'pathname:', window.location.pathname);
   const currentPage = window.location.pathname;
   const navContainer = document.getElementById('sidebar-nav-links');
   
@@ -165,6 +166,7 @@ function populateNavigationLinks() {
   }
 
   navContainer.innerHTML = navLinksHTML;
+  console.log('[Sidebar] navLinksHTML:', navLinksHTML);
 }function setupSidebarListeners() {
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebar-overlay');
