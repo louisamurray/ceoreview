@@ -29,7 +29,7 @@ function createSidebarHTML() {
     <!-- Sidebar -->
     <aside
       id="sidebar"
-      class="fixed left-0 top-0 z-40 h-screen w-64 -translate-x-full transform bg-slate-900 shadow-lg transition-transform duration-300 lg:static lg:z-0 lg:h-screen lg:w-64 lg:translate-x-0 lg:transform-none lg:shadow-none"
+      class="fixed left-0 top-0 z-40 h-screen w-64 -translate-x-full transform bg-slate-900 shadow-lg transition-transform duration-300 lg:sticky lg:top-0 lg:z-0 lg:h-screen lg:w-64 lg:translate-x-0 lg:transform-none lg:shadow-none"
     >
       <!-- Header -->
       <div class="border-b border-slate-800 p-6">
