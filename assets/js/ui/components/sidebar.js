@@ -11,12 +11,12 @@ const sidebarState = {
 };
 
 function initializeSidebar() {
+  if (sidebarInitialized) return;
+  sidebarInitialized = true;
   // Create sidebar HTML
   createSidebarHTML();
-  
   // Setup event listeners
   setupSidebarListeners();
-  
   // Check if user is admin
   checkAdminStatus();
 }
@@ -260,8 +260,8 @@ function checkAdminStatus() {
       sidebarState.currentUser = null;
       sidebarState.isAdmin = false;
     }
-    // Always re-populate navigation links after auth/admin check
-    populateNavigationLinks();
+  // Always re-populate navigation links after auth/admin check
+  setTimeout(populateNavigationLinks, 0);
   });
 }
 
