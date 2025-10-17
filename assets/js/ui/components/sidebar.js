@@ -4,6 +4,8 @@
  * Exported as window.SidebarNav namespace
  */
 
+
+let sidebarInitialized = false;
 const sidebarState = {
   isOpen: false,
   isAdmin: false,
