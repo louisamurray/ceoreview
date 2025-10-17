@@ -1,3 +1,10 @@
+#sidebar, #sidebar nav, #sidebar-nav-links {
+  position: relative !important;
+  z-index: 99999 !important;
+  height: auto !important;
+  min-height: 200px !important;
+  overflow: visible !important;
+}
 /* DEBUG: Force sidebar nav links to be visible */
 /* DEBUG: Force sidebar and nav to be visible */
 #sidebar {
