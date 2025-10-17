@@ -719,15 +719,15 @@ function showUserBadge(email) {
 }
 
 function hideAdminContent() {
-  const nav = document.querySelector('nav');
-  const main = document.querySelector('main');
+  const nav = document.querySelector('nav[data-admin-nav]');
+  const main = document.querySelector('main[data-admin-main]');
   if (nav) nav.style.display = 'none';
   if (main) main.style.display = 'none';
 }
 
 function showAdminContent() {
-  const nav = document.querySelector('nav');
-  const main = document.querySelector('main');
+  const nav = document.querySelector('nav[data-admin-nav]');
+  const main = document.querySelector('main[data-admin-main]');
   if (nav) nav.style.display = '';
   if (main) main.style.display = '';
 }
