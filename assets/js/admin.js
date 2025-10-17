@@ -721,15 +721,29 @@ function showUserBadge(email) {
 function hideAdminContent() {
   const nav = document.querySelector('nav[data-admin-nav]');
   const main = document.querySelector('main[data-admin-main]');
-  if (nav) nav.style.display = 'none';
-  if (main) main.style.display = 'none';
+  console.log('[Admin] Hiding content - nav found:', !!nav, 'main found:', !!main);
+  if (nav) {
+    nav.style.display = 'none';
+    console.log('[Admin] Nav hidden');
+  }
+  if (main) {
+    main.style.display = 'none';
+    console.log('[Admin] Main hidden');
+  }
 }
 
 function showAdminContent() {
   const nav = document.querySelector('nav[data-admin-nav]');
   const main = document.querySelector('main[data-admin-main]');
-  if (nav) nav.style.display = '';
-  if (main) main.style.display = '';
+  console.log('[Admin] Showing content - nav found:', !!nav, 'main found:', !!main);
+  if (nav) {
+    nav.style.display = '';
+    console.log('[Admin] Nav shown');
+  }
+  if (main) {
+    main.style.display = '';
+    console.log('[Admin] Main shown');
+  }
 }
 
 function setStatus(message, variant = 'info') {
